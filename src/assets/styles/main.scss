@@ -4,9 +4,9 @@
 // ========================================
 
 // Importar archivos de estilos
-@import "./variables.scss";
-@import "./mixins.scss";
-@import "./base.scss";
+@use "variables.scss";
+@use "mixins.scss";
+@use "base.scss";
 
 // ========================================
 // ESTILOS ADICIONALES ESPECÍFICOS
@@ -14,28 +14,28 @@
 
 // Componentes personalizados adicionales
 .page-container {
-  padding: $spacing-page;
+  padding: variables.$spacing-page;
   max-width: 1200px;
   margin: 0 auto;
 }
 
 .form-section {
-  margin-bottom: $spacing-section;
+  margin-bottom: variables.$spacing-section;
   
   .section-title {
-    font-size: $font-size-2xl;
-    font-weight: $font-weight-medium;
-    margin-bottom: $spacing-lg;
-    color: $color-text-secondary;
-    border-bottom: 2px solid $color-primary;
-    padding-bottom: $spacing-sm;
+    font-size: variables.$font-size-2xl;
+    font-weight: variables.$font-weight-medium;
+    margin-bottom: variables.$spacing-lg;
+    color: variables.$color-text-secondary;
+    border-bottom: 2px solid variables.$color-primary;
+    padding-bottom: variables.$spacing-sm;
   }
 }
 
 .table-container {
-  background: $color-surface;
-  border-radius: $border-radius-md;
-  @include elevation(1);
+  background: variables.$color-surface;
+  border-radius: variables.$border-radius-md;
+  @include mixins.elevation(1);
   overflow: hidden;
   
   .v-data-table {
@@ -46,12 +46,12 @@
 }
 
 // Responsive adicional
-@include respond-to-down(sm) {
+@include mixins.respond-to-down(sm) {
   .page-container {
-    padding: $spacing-sm;
+    padding: variables.$spacing-sm;
   }
   
   .card {
-    padding: $spacing-sm;
+    padding: variables.$spacing-sm;
   }
 }
