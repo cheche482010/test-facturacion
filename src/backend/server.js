@@ -34,7 +34,7 @@ app.use((req, res, next) => {
 
 // Middleware de autenticación global (excepto para login)
 app.use((req, res, next) => {
-  const publicPaths = ['/api/auth/login', '/api/auth/register', '/api/config/init']
+  const publicPaths = ['/api/auth/login', '/api/auth/register', '/api/config', '/api/config/init']
   if (publicPaths.includes(req.path)) {
     return next()
   }
@@ -94,15 +94,6 @@ async function startServer() {
     // Inicializar modelos y asociaciones
     const models = defineModels(sequelize)
     console.log('Modelos y asociaciones inicializados.')
-    
-    // Sincronizar modelos (en desarrollo)
-    if (process.env.NODE_ENV === 'development') {
-      await sequelize.sync({ alter: true })
-      console.log('Modelos sincronizados.')
-      
-      // Crear datos iniciales
-      await initializeData(models)
-    }
     
     app.listen(PORT, () => {
       console.log(`Servidor corriendo en puerto ${PORT}`)
