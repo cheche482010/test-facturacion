@@ -1,0 +1,227 @@
+// Variables globales
+$color-primary: #1976D2;
+$color-secondary: #424242;
+$color-accent: #82B1FF;
+$color-error: #FF5252;
+$color-info: #2196F3;
+$color-success: #4CAF50;
+$color-warning: #FFC107;
+
+$font-size-base: 14px;
+$font-size-small: 12px;
+$font-size-large: 16px;
+$font-size-h1: 24px;
+$font-size-h2: 20px;
+$font-size-h3: 18px;
+
+$spacing-base: 8px;
+$spacing-small: 4px;
+$spacing-large: 16px;
+$spacing-xl: 24px;
+
+$border-radius: 4px;
+$border-radius-large: 8px;
+
+// Mixins
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin card-shadow {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+@mixin hover-shadow {
+  transition: box-shadow 0.3s ease;
+  &:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+}
+
+// Estilos globales
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Roboto', sans-serif;
+  font-size: $font-size-base;
+  line-height: 1.5;
+  color: #333;
+  background-color: #f5f5f5;
+}
+
+// Utilidades
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+.mb-0 { margin-bottom: 0; }
+.mb-1 { margin-bottom: $spacing-small; }
+.mb-2 { margin-bottom: $spacing-base; }
+.mb-3 { margin-bottom: $spacing-large; }
+.mb-4 { margin-bottom: $spacing-xl; }
+
+.mt-0 { margin-top: 0; }
+.mt-1 { margin-top: $spacing-small; }
+.mt-2 { margin-top: $spacing-base; }
+.mt-3 { margin-top: $spacing-large; }
+.mt-4 { margin-top: $spacing-xl; }
+
+.ml-0 { margin-left: 0; }
+.ml-1 { margin-left: $spacing-small; }
+.ml-2 { margin-left: $spacing-base; }
+.ml-3 { margin-left: $spacing-large; }
+
+.mr-0 { margin-right: 0; }
+.mr-1 { margin-right: $spacing-small; }
+.mr-2 { margin-right: $spacing-base; }
+.mr-3 { margin-right: $spacing-large; }
+
+.p-0 { padding: 0; }
+.p-1 { padding: $spacing-small; }
+.p-2 { padding: $spacing-base; }
+.p-3 { padding: $spacing-large; }
+.p-4 { padding: $spacing-xl; }
+
+// Componentes personalizados
+.page-container {
+  padding: $spacing-large;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.card {
+  background: white;
+  border-radius: $border-radius;
+  @include card-shadow;
+  padding: $spacing-large;
+  margin-bottom: $spacing-large;
+}
+
+.card-header {
+  @include flex-between;
+  margin-bottom: $spacing-large;
+  padding-bottom: $spacing-base;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.card-title {
+  font-size: $font-size-h2;
+  font-weight: 500;
+  color: $color-secondary;
+  margin: 0;
+}
+
+.card-actions {
+  @include flex-center;
+  gap: $spacing-base;
+}
+
+// Formularios
+.form-section {
+  margin-bottom: $spacing-xl;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: $spacing-large;
+  margin-bottom: $spacing-large;
+}
+
+.form-group {
+  margin-bottom: $spacing-large;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: $spacing-small;
+  font-weight: 500;
+  color: $color-secondary;
+}
+
+.form-help {
+  font-size: $font-size-small;
+  color: #666;
+  margin-top: $spacing-small;
+}
+
+.form-error {
+  color: $color-error;
+  font-size: $font-size-small;
+  margin-top: $spacing-small;
+}
+
+// Tablas
+.table-container {
+  background: white;
+  border-radius: $border-radius;
+  @include card-shadow;
+  overflow: hidden;
+}
+
+.table-header {
+  background: #f8f9fa;
+  padding: $spacing-large;
+  @include flex-between;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.table-title {
+  font-size: $font-size-h3;
+  font-weight: 500;
+  margin: 0;
+}
+
+.table-actions {
+  @include flex-center;
+  gap: $spacing-base;
+}
+
+// Estados
+.status-active {
+  color: $color-success;
+}
+
+.status-inactive {
+  color: $color-error;
+}
+
+.status-pending {
+  color: $color-warning;
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .page-container {
+    padding: $spacing-base;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $spacing-base;
+  }
+  
+  .table-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $spacing-base;
+  }
+}
+

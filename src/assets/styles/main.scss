@@ -1,0 +1,57 @@
+// ========================================
+// ARCHIVO PRINCIPAL DE ESTILOS SCSS
+// SISTEMA DE FACTURACIÓN
+// ========================================
+
+// Importar archivos de estilos
+@import "./variables.scss";
+@import "./mixins.scss";
+@import "./base.scss";
+
+// ========================================
+// ESTILOS ADICIONALES ESPECÍFICOS
+// ========================================
+
+// Componentes personalizados adicionales
+.page-container {
+  padding: $spacing-page;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.form-section {
+  margin-bottom: $spacing-section;
+  
+  .section-title {
+    font-size: $font-size-2xl;
+    font-weight: $font-weight-medium;
+    margin-bottom: $spacing-lg;
+    color: $color-text-secondary;
+    border-bottom: 2px solid $color-primary;
+    padding-bottom: $spacing-sm;
+  }
+}
+
+.table-container {
+  background: $color-surface;
+  border-radius: $border-radius-md;
+  @include elevation(1);
+  overflow: hidden;
+  
+  .v-data-table {
+    .v-data-table__wrapper {
+      overflow-x: auto;
+    }
+  }
+}
+
+// Responsive adicional
+@include respond-to-down(sm) {
+  .page-container {
+    padding: $spacing-sm;
+  }
+  
+  .card {
+    padding: $spacing-sm;
+  }
+}
