@@ -1,8 +1,9 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import { createRouter, createWebHashHistory } from 'vue-router'
-import Vuetify from 'vuetify'
-import 'vuetify/styles'
+import { createVuetify } from 'vuetify'
+import * as components from 'vuetify/components'
+import * as directives from 'vuetify/directives'
 import '@mdi/font/css/materialdesignicons.css'
 
 import App from './App.vue'
@@ -22,8 +23,13 @@ import Settings from './views/Settings.vue'
 // Importar estilos globales
 import './assets/styles/main.scss'
 
+// Importar estilos de Vuetify
+import 'vuetify/styles'
+
 // Configurar Vuetify
-const vuetify = new Vuetify({
+const vuetify = createVuetify({
+  components,
+  directives,
   theme: {
     defaultTheme: 'light',
     themes: {
@@ -41,7 +47,7 @@ const vuetify = new Vuetify({
     }
   },
   icons: {
-    iconfont: 'mdi'
+    defaultSet: 'mdi'
   }
 })
 
