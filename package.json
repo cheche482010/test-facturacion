@@ -8,6 +8,7 @@
     "dev": "concurrently \"npm run dev:renderer\" \"npm run dev:main\"",
     "dev:renderer": "vite",
     "dev:main": "wait-on tcp:3000 && cross-env NODE_ENV=development electron electron/main.js",
+    "migrate": "node src/backend/scripts/migrate.js",
     "build": "npm run build:renderer && npm run build:electron",
     "build:renderer": "vite build",
     "build:electron": "electron-builder",
