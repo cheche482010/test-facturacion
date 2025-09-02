@@ -1,3 +1,6 @@
+@use "mixins";
+@use "variables";
+
 // ========================================
 // ESTILOS BASE - SISTEMA DE FACTURACIÓN
 // ========================================
@@ -18,18 +21,18 @@
 // HTML y Body
 html {
   font-size: 16px;
-  line-height: $line-height-normal;
+  line-height: variables.$line-height-normal;
   -webkit-text-size-adjust: 100%;
   -ms-text-size-adjust: 100%;
 }
 
 body {
-  font-family: $font-family-primary;
-  font-size: $font-size-base;
-  font-weight: $font-weight-normal;
-  line-height: $line-height-normal;
-  color: $color-text-primary;
-  background-color: $color-background;
+  font-family: variables.$font-family-primary;
+  font-size: variables.$font-size-base;
+  font-weight: variables.$font-weight-normal;
+  line-height: variables.$line-height-normal;
+  color: variables.$color-text-primary;
+  background-color: variables.$color-background;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -41,47 +44,47 @@ body {
 
 // Encabezados
 h1, h2, h3, h4, h5, h6 {
-  font-family: $font-family-primary;
-  font-weight: $font-weight-medium;
-  line-height: $line-height-tight;
-  margin-bottom: $spacing-sm;
-  color: $color-text-primary;
+  font-family: variables.$font-family-primary;
+  font-weight: variables.$font-weight-medium;
+  line-height: variables.$line-height-tight;
+  margin-bottom: variables.$spacing-sm;
+  color: variables.$color-text-primary;
 }
 
 h1 {
-  font-size: $font-size-4xl;
-  margin-bottom: $spacing-md;
+  font-size: variables.$font-size-4xl;
+  margin-bottom: variables.$spacing-md;
 }
 
 h2 {
-  font-size: $font-size-3xl;
-  margin-bottom: $spacing-sm;
+  font-size: variables.$font-size-3xl;
+  margin-bottom: variables.$spacing-sm;
 }
 
 h3 {
-  font-size: $font-size-2xl;
-  margin-bottom: $spacing-sm;
+  font-size: variables.$font-size-2xl;
+  margin-bottom: variables.$spacing-sm;
 }
 
 h4 {
-  font-size: $font-size-xl;
-  margin-bottom: $spacing-xs;
+  font-size: variables.$font-size-xl;
+  margin-bottom: variables.$spacing-xs;
 }
 
 h5 {
-  font-size: $font-size-lg;
-  margin-bottom: $spacing-xs;
+  font-size: variables.$font-size-lg;
+  margin-bottom: variables.$spacing-xs;
 }
 
 h6 {
-  font-size: $font-size-base;
-  margin-bottom: $spacing-xs;
+  font-size: variables.$font-size-base;
+  margin-bottom: variables.$spacing-xs;
 }
 
 // Párrafos
 p {
-  margin-bottom: $spacing-md;
-  line-height: $line-height-relaxed;
+  margin-bottom: variables.$spacing-md;
+  line-height: variables.$line-height-relaxed;
   
   &:last-child {
     margin-bottom: 0;
@@ -90,28 +93,28 @@ p {
 
 // Enlaces
 a {
-  color: $color-primary;
+  color: variables.$color-primary;
   text-decoration: none;
-  @include transition(color);
+  @include mixins.transition(color);
   
   &:hover {
-    color: $color-primary;
+    color: variables.$color-primary;
   }
   
   &:focus {
-    outline: 2px solid $color-primary;
+    outline: 2px solid variables.$color-primary;
     outline-offset: 2px;
   }
 }
 
 // Listas
 ul, ol {
-  margin-bottom: $spacing-md;
-  padding-left: $spacing-lg;
+  margin-bottom: variables.$spacing-md;
+  padding-left: variables.$spacing-lg;
   
   li {
-    margin-bottom: $spacing-xs;
-    line-height: $line-height-relaxed;
+    margin-bottom: variables.$spacing-xs;
+    line-height: variables.$line-height-relaxed;
   }
 }
 
@@ -122,23 +125,23 @@ ul, ol {
 // Labels
 label {
   display: block;
-  font-weight: $font-weight-medium;
-  margin-bottom: $spacing-xs;
-  color: $color-text-primary;
+  font-weight: variables.$font-weight-medium;
+  margin-bottom: variables.$spacing-xs;
+  color: variables.$color-text-primary;
 }
 
 // Inputs
 input, textarea, select {
-  font-family: $font-family-primary;
-  font-size: $font-size-sm;
-  line-height: $line-height-normal;
+  font-family: variables.$font-family-primary;
+  font-size: variables.$font-size-sm;
+  line-height: variables.$line-height-normal;
 }
 
 // Botones
 button {
-  font-family: $font-family-primary;
-  font-size: $font-size-sm;
-  line-height: $line-height-normal;
+  font-family: variables.$font-family-primary;
+  font-size: variables.$font-size-sm;
+  line-height: variables.$line-height-normal;
 }
 
 // ========================================
@@ -148,23 +151,23 @@ button {
 table {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: $spacing-md;
+  margin-bottom: variables.$spacing-md;
   
   th, td {
-    padding: $spacing-sm;
+    padding: variables.$spacing-sm;
     text-align: left;
-    border-bottom: $border-width solid $border-color;
+    border-bottom: variables.$border-width solid variables.$border-color;
   }
   
   th {
-    font-weight: $font-weight-medium;
-    background-color: $table-header-bg;
-    color: $color-text-primary;
+    font-weight: variables.$font-weight-medium;
+    background-color: variables.$table-header-bg;
+    color: variables.$color-text-primary;
   }
   
   tr {
     &:hover {
-      background-color: $table-row-hover;
+      background-color: variables.$table-row-hover;
     }
   }
 }
@@ -198,66 +201,66 @@ img {
 
 // Texto truncado
 .text-truncate {
-  @include text-truncate;
+  @include mixins.text-truncate;
 }
 
 // Texto en múltiples líneas
 .text-multiline {
-  @include text-truncate-multiline(3);
+  @include mixins.text-truncate-multiline(3);
 }
 
 // Pesos de fuente
 .font-light {
-  font-weight: $font-weight-light;
+  font-weight: variables.$font-weight-light;
 }
 
 .font-normal {
-  font-weight: $font-weight-normal;
+  font-weight: variables.$font-weight-normal;
 }
 
 .font-medium {
-  font-weight: $font-weight-medium;
+  font-weight: variables.$font-weight-medium;
 }
 
 .font-semibold {
-  font-weight: $font-weight-semibold;
+  font-weight: variables.$font-weight-semibold;
 }
 
 .font-bold {
-  font-weight: $font-weight-bold;
+  font-weight: variables.$font-weight-bold;
 }
 
 // Tamaños de fuente
 .text-xs {
-  font-size: $font-size-xs;
+  font-size: variables.$font-size-xs;
 }
 
 .text-sm {
-  font-size: $font-size-sm;
+  font-size: variables.$font-size-sm;
 }
 
 .text-base {
-  font-size: $font-size-base;
+  font-size: variables.$font-size-base;
 }
 
 .text-lg {
-  font-size: $font-size-lg;
+  font-size: variables.$font-size-lg;
 }
 
 .text-xl {
-  font-size: $font-size-xl;
+  font-size: variables.$font-size-xl;
 }
 
 .text-2xl {
-  font-size: $font-size-2xl;
+  font-size: variables.$font-size-2xl;
 }
 
 .text-3xl {
-  font-size: $font-size-3xl;
+  font-size: variables.$font-size-3xl;
 }
 
 .text-4xl {
-  font-size: $font-size-4xl;
+  font-size: variables.$font-size-4xl;
 }
 
 // ========================================
@@ -266,75 +269,75 @@ img {
 
 // Márgenes
 .m-0 { margin: 0; }
-.m-xs { margin: $spacing-xs; }
-.m-sm { margin: $spacing-sm; }
-.m-md { margin: $spacing-md; }
-.m-lg { margin: $spacing-lg; }
-.m-xl { margin: $spacing-xl; }
+.m-xs { margin: variables.$spacing-xs; }
+.m-sm { margin: variables.$spacing-sm; }
+.m-md { margin: variables.$spacing-md; }
+.m-lg { margin: variables.$spacing-lg; }
+.m-xl { margin: variables.$spacing-xl; }
 
 .mt-0 { margin-top: 0; }
-.mt-xs { margin-top: $spacing-xs; }
-.mt-sm { margin-top: $spacing-sm; }
-.mt-md { margin-top: $spacing-md; }
-.mt-lg { margin-top: $spacing-lg; }
-.mt-xl { margin-top: $spacing-xl; }
+.mt-xs { margin-top: variables.$spacing-xs; }
+.mt-sm { margin-top: variables.$spacing-sm; }
+.mt-md { margin-top: variables.$spacing-md; }
+.mt-lg { margin-top: variables.$spacing-lg; }
+.mt-xl { margin-top: variables.$spacing-xl; }
 
 .mb-0 { margin-bottom: 0; }
-.mb-xs { margin-bottom: $spacing-xs; }
-.mb-sm { margin-bottom: $spacing-sm; }
-.mb-md { margin-bottom: $spacing-md; }
-.mb-lg { margin-bottom: $spacing-lg; }
-.mb-xl { margin-bottom: $spacing-xl; }
+.mb-xs { margin-bottom: variables.$spacing-xs; }
+.mb-sm { margin-bottom: variables.$spacing-sm; }
+.mb-md { margin-bottom: variables.$spacing-md; }
+.mb-lg { margin-bottom: variables.$spacing-lg; }
+.mb-xl { margin-bottom: variables.$spacing-xl; }
 
 .ml-0 { margin-left: 0; }
-.ml-xs { margin-left: $spacing-xs; }
-.ml-sm { margin-left: $spacing-sm; }
-.ml-md { margin-left: $spacing-md; }
-.ml-lg { margin-left: $spacing-lg; }
-.ml-xl { margin-left: $spacing-xl; }
+.ml-xs { margin-left: variables.$spacing-xs; }
+.ml-sm { margin-left: variables.$spacing-sm; }
+.ml-md { margin-left: variables.$spacing-md; }
+.ml-lg { margin-left: variables.$spacing-lg; }
+.ml-xl { margin-left: variables.$spacing-xl; }
 
 .mr-0 { margin-right: 0; }
-.mr-xs { margin-right: $spacing-xs; }
-.mr-sm { margin-right: $spacing-sm; }
-.mr-md { margin-right: $spacing-md; }
-.mr-lg { margin-right: $spacing-lg; }
-.mr-xl { margin-right: $spacing-xl; }
+.mr-xs { margin-right: variables.$spacing-xs; }
+.mr-sm { margin-right: variables.$spacing-sm; }
+.mr-md { margin-right: variables.$spacing-md; }
+.mr-lg { margin-right: variables.$spacing-lg; }
+.mr-xl { margin-right: variables.$spacing-xl; }
 
 // Padding
 .p-0 { padding: 0; }
-.p-xs { padding: $spacing-xs; }
-.p-sm { padding: $spacing-sm; }
-.p-md { padding: $spacing-md; }
-.p-lg { padding: $spacing-lg; }
-.p-xl { padding: $spacing-xl; }
+.p-xs { padding: variables.$spacing-xs; }
+.p-sm { padding: variables.$spacing-sm; }
+.p-md { padding: variables.$spacing-md; }
+.p-lg { padding: variables.$spacing-lg; }
+.p-xl { padding: variables.$spacing-xl; }
 
 .pt-0 { padding-top: 0; }
-.pt-xs { padding-top: $spacing-xs; }
-.pt-sm { padding-top: $spacing-sm; }
-.pt-md { padding-top: $spacing-md; }
-.pt-lg { padding-top: $spacing-lg; }
-.pt-xl { padding-top: $spacing-xl; }
+.pt-xs { padding-top: variables.$spacing-xs; }
+.pt-sm { padding-top: variables.$spacing-sm; }
+.pt-md { padding-top: variables.$spacing-md; }
+.pt-lg { padding-top: variables.$spacing-lg; }
+.pt-xl { padding-top: variables.$spacing-xl; }
 
 .pb-0 { padding-bottom: 0; }
-.pb-xs { padding-bottom: $spacing-xs; }
-.pb-sm { padding-bottom: $spacing-sm; }
-.pb-md { padding-bottom: $spacing-md; }
-.pb-lg { padding-bottom: $spacing-lg; }
-.pb-xl { padding-bottom: $spacing-xl; }
+.pb-xs { padding-bottom: variables.$spacing-xs; }
+.pb-sm { padding-bottom: variables.$spacing-sm; }
+.pb-md { padding-bottom: variables.$spacing-md; }
+.pb-lg { padding-bottom: variables.$spacing-lg; }
+.pb-xl { padding-bottom: variables.$spacing-xl; }
 
 .pl-0 { padding-left: 0; }
-.pl-xs { padding-left: $spacing-xs; }
-.pl-sm { padding-left: $spacing-sm; }
-.pl-md { padding-left: $spacing-md; }
-.pl-lg { padding-left: $spacing-lg; }
-.pl-xl { padding-left: $spacing-xl; }
+.pl-xs { padding-left: variables.$spacing-xs; }
+.pl-sm { padding-left: variables.$spacing-sm; }
+.pl-md { padding-left: variables.$spacing-md; }
+.pl-lg { padding-left: variables.$spacing-lg; }
+.pl-xl { padding-left: variables.$spacing-xl; }
 
 .pr-0 { padding-right: 0; }
-.pr-xs { padding-right: $spacing-xs; }
-.pr-sm { padding-right: $spacing-sm; }
-.pr-md { padding-right: $spacing-md; }
-.pr-lg { padding-right: $spacing-lg; }
-.pr-xl { padding-right: $spacing-xl; }
+.pr-xs { padding-right: variables.$spacing-xs; }
+.pr-sm { padding-right: variables.$spacing-sm; }
+.pr-md { padding-right: variables.$spacing-md; }
+.pr-lg { padding-right: variables.$spacing-lg; }
+.pr-xl { padding-right: variables.$spacing-xl; }
 
 // ========================================
 // UTILIDADES DE DISPLAY
@@ -373,31 +376,31 @@ img {
 // ========================================
 
 .flex-center {
-  @include flex-center;
+  @include mixins.flex-center;
 }
 
 .flex-center-vertical {
-  @include flex-center-vertical;
+  @include mixins.flex-center-vertical;
 }
 
 .flex-center-horizontal {
-  @include flex-center-horizontal;
+  @include mixins.flex-center-horizontal;
 }
 
 .flex-between {
-  @include flex-between;
+  @include mixins.flex-between;
 }
 
 .flex-around {
-  @include flex-around;
+  @include mixins.flex-around;
 }
 
 .flex-column {
-  @include flex-column;
+  @include mixins.flex-column;
 }
 
 .flex-column-center {
-  @include flex-column-center;
+  @include mixins.flex-column-center;
 }
 
 // ========================================
@@ -501,7 +504,7 @@ img {
 // ========================================
 
 .border {
-  border: $border-width solid $border-color;
+  border: variables.$border-width solid variables.$border-color;
 }
 
 .border-0 {
@@ -509,19 +512,19 @@ img {
 }
 
 .border-top {
-  border-top: $border-width solid $border-color;
+  border-top: variables.$border-width solid variables.$border-color;
 }
 
 .border-bottom {
-  border-bottom: $border-width solid $border-color;
+  border-bottom: variables.$border-width solid variables.$border-color;
 }
 
 .border-left {
-  border-left: $border-width solid $border-color;
+  border-left: variables.$border-width solid variables.$border-color;
 }
 
 .border-right {
-  border-right: $border-width solid $border-color;
+  border-right: variables.$border-width solid variables.$border-color;
 }
 
 // ========================================
@@ -529,19 +532,19 @@ img {
 // ========================================
 
 .shadow-sm {
-  @include elevation(1);
+  @include mixins.elevation(1);
 }
 
 .shadow-md {
-  @include elevation(2);
+  @include mixins.elevation(2);
 }
 
 .shadow-lg {
-  @include elevation(3);
+  @include mixins.elevation(3);
 }
 
 .shadow-xl {
-  @include elevation(4);
+  @include mixins.elevation(4);
 }
 
 .shadow-none {
@@ -553,15 +556,15 @@ img {
 // ========================================
 
 .transition {
-  @include transition;
+  @include mixins.transition;
 }
 
 .transition-fast {
-  @include transition-fast;
+  @include mixins.transition-fast;
 }
 
 .transition-slow {
-  @include transition-slow;
+  @include mixins.transition-slow;
 }
 
 // ========================================
@@ -569,28 +572,28 @@ img {
 // ========================================
 
 // Ocultar en móvil
-@include respond-to-down(sm) {
+@include mixins.respond-to-down(sm) {
   .d-sm-none {
     display: none;
   }
 }
 
 // Mostrar solo en móvil
-@include respond-to-down(sm) {
+@include mixins.respond-to-down(sm) {
   .d-sm-block {
     display: block;
   }
 }
 
 // Ocultar en tablet
-@include respond-to-down(md) {
+@include mixins.respond-to-down(md) {
   .d-md-none {
     display: none;
   }
 }
 
 // Mostrar solo en tablet
-@include respond-to-down(md) {
+@include mixins.respond-to-down(md) {
   .d-md-block {
     display: block;
   }
@@ -603,21 +606,21 @@ img {
 // Contenedor principal
 .app-container {
   min-height: 100vh;
-  background-color: $color-background;
+  background-color: variables.$color-background;
 }
 
 // Contenido principal
 .main-content {
-  padding: $spacing-page;
+  padding: variables.$spacing-page;
   
-  @include respond-to-down(sm) {
-    padding: $spacing-sm;
+  @include mixins.respond-to-down(sm) {
+    padding: variables.$spacing-sm;
   }
 }
 
 // Sección de página
 .page-section {
-  margin-bottom: $spacing-section;
+  margin-bottom: variables.$spacing-section;
   
   &:last-child {
     margin-bottom: 0;
@@ -626,8 +629,8 @@ img {
 
 // Card genérica
 .card {
-  @include card-base;
-  margin-bottom: $spacing-md;
+  @include mixins.card-base;
+  margin-bottom: variables.$spacing-md;
   
   &:last-child {
     margin-bottom: 0;
@@ -636,58 +639,58 @@ img {
 
 // Botón genérico
 .btn {
-  @include button-base;
+  @include mixins.button-base;
   
   &.btn-primary {
-    background-color: $color-primary;
+    background-color: variables.$color-primary;
     color: white;
     
     &:hover {
-      background-color: $color-primary;
+      background-color: variables.$color-primary;
     }
   }
   
   &.btn-secondary {
-    background-color: $color-secondary;
+    background-color: variables.$color-secondary;
     color: white;
     
     &:hover {
-      background-color: $color-secondary;
+      background-color: variables.$color-secondary;
     }
   }
   
   &.btn-success {
-    background-color: $color-success;
+    background-color: variables.$color-success;
     color: white;
     
     &:hover {
-      background-color: $color-success;
+      background-color: variables.$color-success;
     }
   }
   
   &.btn-warning {
-    background-color: $color-warning;
+    background-color: variables.$color-warning;
     color: white;
     
     &:hover {
-      background-color: $color-warning;
+      background-color: variables.$color-warning;
     }
   }
   
   &.btn-error {
-    background-color: $color-error;
+    background-color: variables.$color-error;
     color: white;
     
     &:hover {
-      background-color: $color-error;
+      background-color: variables.$color-error;
     }
   }
 }
 
 // Input genérico
 .input {
-  @include input-base;
-  margin-bottom: $spacing-sm;
+  @include mixins.input-base;
+  margin-bottom: variables.$spacing-sm;
   
   &:last-child {
     margin-bottom: 0;
