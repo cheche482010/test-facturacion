@@ -83,7 +83,7 @@ const writeConfig = (config) => {
 }
 
 // GET /api/config - Obtener configuración
-router.get('/', validateToken, checkPermission('config', 'read'), (req, res) => {
+router.get('/', (req, res) => {
   try {
     const config = readConfig()
     res.json({
