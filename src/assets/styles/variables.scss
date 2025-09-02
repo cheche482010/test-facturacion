@@ -1,0 +1,226 @@
+// ========================================
+// VARIABLES SCSS - SISTEMA DE FACTURACIÓN
+// ========================================
+
+// ========================================
+// COLORES PRINCIPALES
+// ========================================
+
+// Colores base
+$color-primary: #1976D2;
+$color-secondary: #424242;
+$color-accent: #82B1FF;
+$color-success: #4CAF50;
+$color-warning: #FFC107;
+$color-error: #FF5252;
+$color-info: #2196F3;
+
+// Colores de fondo
+$color-background: #fafafa;
+$color-surface: #ffffff;
+$color-card: #ffffff;
+
+// Colores de texto
+$color-text-primary: rgba(0, 0, 0, 0.87);
+$color-text-secondary: rgba(0, 0, 0, 0.6);
+$color-text-disabled: rgba(0, 0, 0, 0.38);
+
+// Colores de estado
+$color-hover: rgba(0, 0, 0, 0.04);
+$color-selected: rgba(0, 0, 0, 0.08);
+$color-disabled: rgba(0, 0, 0, 0.12);
+
+// ========================================
+// TIPOGRAFÍA
+// ========================================
+
+// Familias de fuentes
+$font-family-primary: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+$font-family-monospace: 'Roboto Mono', 'Consolas', 'Monaco', monospace;
+
+// Tamaños de fuente
+$font-size-xs: 0.75rem;    // 12px
+$font-size-sm: 0.875rem;   // 14px
+$font-size-base: 1rem;     // 16px
+$font-size-lg: 1.125rem;   // 18px
+$font-size-xl: 1.25rem;    // 20px
+$font-size-2xl: 1.5rem;    // 24px
+$font-size-3xl: 1.875rem;  // 30px
+$font-size-4xl: 2.25rem;   // 36px
+
+// Pesos de fuente
+$font-weight-light: 300;
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+// Alturas de línea
+$line-height-tight: 1.25;
+$line-height-normal: 1.5;
+$line-height-relaxed: 1.75;
+
+// ========================================
+// ESPACIADO
+// ========================================
+
+// Espaciado base
+$spacing-base: 0.25rem;    // 4px
+$spacing-xs: $spacing-base;      // 4px
+$spacing-sm: $spacing-base * 2;  // 8px
+$spacing-md: $spacing-base * 4;  // 16px
+$spacing-lg: $spacing-base * 6;  // 24px
+$spacing-xl: $spacing-base * 8;  // 32px
+$spacing-2xl: $spacing-base * 12; // 48px
+$spacing-3xl: $spacing-base * 16; // 64px
+
+// Espaciado específico
+$spacing-page: $spacing-lg;
+$spacing-section: $spacing-xl;
+$spacing-card: $spacing-md;
+$spacing-element: $spacing-sm;
+
+// ========================================
+// BORDES Y RADIOS
+// ========================================
+
+// Radios de borde
+$border-radius-sm: 4px;
+$border-radius-md: 8px;
+$border-radius-lg: 12px;
+$border-radius-xl: 16px;
+$border-radius-full: 9999px;
+
+// Bordes
+$border-width: 1px;
+$border-color: rgba(0, 0, 0, 0.12);
+$border-color-light: rgba(0, 0, 0, 0.08);
+
+// ========================================
+// SOMBRAS
+// ========================================
+
+// Sombras de elevación
+$shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+$shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+$shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+$shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+// ========================================
+// TRANSICIONES
+// ========================================
+
+// Duración de transiciones
+$transition-fast: 150ms;
+$transition-normal: 250ms;
+$transition-slow: 350ms;
+
+// Funciones de transición
+$transition-ease: cubic-bezier(0.4, 0, 0.2, 1);
+$transition-ease-in: cubic-bezier(0.4, 0, 1, 1);
+$transition-ease-out: cubic-bezier(0, 0, 0.2, 1);
+$transition-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+// ========================================
+// BREAKPOINTS
+// ========================================
+
+// Puntos de quiebre para responsive
+$breakpoint-xs: 0;
+$breakpoint-sm: 600px;
+$breakpoint-md: 960px;
+$breakpoint-lg: 1280px;
+$breakpoint-xl: 1920px;
+
+// ========================================
+// Z-INDEX
+// ========================================
+
+// Niveles de z-index
+$z-index-dropdown: 1000;
+$z-index-sticky: 1020;
+$z-index-fixed: 1030;
+$z-index-modal-backdrop: 1040;
+$z-index-modal: 1050;
+$z-index-popover: 1060;
+$z-index-tooltip: 1070;
+$z-index-toast: 1080;
+
+// ========================================
+// ESPECÍFICOS DEL SISTEMA
+// ========================================
+
+// Colores de estado del sistema
+$color-stock-low: #FF9800;
+$color-stock-out: #F44336;
+$color-stock-ok: #4CAF50;
+
+// Colores de roles de usuario
+$color-role-admin: #D32F2F;
+$color-role-cajero: #1976D2;
+$color-role-inventario: #388E3C;
+$color-role-vendedor: #7B1FA2;
+
+// Colores de estado de ventas
+$color-sale-pending: #FF9800;
+$color-sale-paid: #4CAF50;
+$color-sale-partial: #2196F3;
+$color-sale-cancelled: #F44336;
+
+// ========================================
+// VARIABLES DE LAYOUT
+// ========================================
+
+// Header
+$header-height: 64px;
+$header-bg: $color-primary;
+$header-text: white;
+
+// Sidebar
+$sidebar-width: 280px;
+$sidebar-collapsed-width: 64px;
+$sidebar-bg: $color-surface;
+$sidebar-border: $border-color-light;
+
+// Footer
+$footer-height: 48px;
+$footer-bg: $color-background;
+$footer-text: $color-text-secondary;
+
+// ========================================
+// VARIABLES DE COMPONENTES
+// ========================================
+
+// Cards
+$card-padding: $spacing-md;
+$card-border-radius: $border-radius-md;
+$card-shadow: $shadow-sm;
+
+// Buttons
+$button-height: 36px;
+$button-padding-x: $spacing-md;
+$button-border-radius: $border-radius-sm;
+
+// Inputs
+$input-height: 40px;
+$input-padding-x: $spacing-sm;
+$input-border-radius: $border-radius-sm;
+
+// Tables
+$table-header-bg: $color-background;
+$table-row-hover: $color-hover;
+$table-border: $border-color-light;
+
+// ========================================
+// VARIABLES DE ANIMACIÓN
+// ========================================
+
+// Duración de animaciones
+$animation-duration-fast: 200ms;
+$animation-duration-normal: 300ms;
+$animation-duration-slow: 500ms;
+
+// Funciones de animación
+$animation-ease: $transition-ease;
+$animation-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
