@@ -1,5 +1,4 @@
-@use "sass:list";
-@use "variables";
+@use "variables" as *;
 
 // ========================================
 // MIXINS SCSS - SISTEMA DE FACTURACIÓN
@@ -12,28 +11,28 @@
 // Mixin para breakpoints
 @mixin respond-to($breakpoint) {
   @if $breakpoint == xs {
-    @media (min-width: variables.$breakpoint-xs) { @content; }
+    @media (min-width: $breakpoint-xs) { @content; }
   } @else if $breakpoint == sm {
-    @media (min-width: variables.$breakpoint-sm) { @content; }
+    @media (min-width: $breakpoint-sm) { @content; }
   } @else if $breakpoint == md {
-    @media (min-width: variables.$breakpoint-md) { @content; }
+    @media (min-width: $breakpoint-md) { @content; }
   } @else if $breakpoint == lg {
-    @media (min-width: variables.$breakpoint-lg) { @content; }
+    @media (min-width: $breakpoint-lg) { @content; }
   } @else if $breakpoint == xl {
-    @media (min-width: variables.$breakpoint-xl) { @content; }
+    @media (min-width: $breakpoint-xl) { @content; }
   }
 }
 
 // Mixin para breakpoints hacia abajo
 @mixin respond-to-down($breakpoint) {
   @if $breakpoint == sm {
-    @media (max-width: variables.$breakpoint-sm - 1px) { @content; }
+    @media (max-width: $breakpoint-sm) { @content; }
   } @else if $breakpoint == md {
-    @media (max-width: variables.$breakpoint-md - 1px) { @content; }
+    @media (max-width: $breakpoint-md) { @content; }
   } @else if $breakpoint == lg {
-    @media (max-width: variables.$breakpoint-lg - 1px) { @content; }
+    @media (max-width: $breakpoint-lg) { @content; }
   } @else if $breakpoint == xl {
-    @media (max-width: variables.$breakpoint-xl - 1px) { @content; }
+    @media (max-width: $breakpoint-xl) { @content; }
   }
 }
 
@@ -158,25 +157,25 @@
 // ========================================
 
 // Borde con radio
-@mixin border-radius($radius: variables.$border-radius-md) {
+@mixin border-radius($radius: $border-radius-md) {
   border-radius: $radius;
 }
 
 // Borde redondeado completo
 @mixin border-radius-full {
-  border-radius: variables.$border-radius-full;
+  border-radius: $border-radius-full;
 }
 
 // Sombra de elevación
 @mixin elevation($level: 1) {
   @if $level == 1 {
-    box-shadow: variables.$shadow-sm;
+    box-shadow: $shadow-sm;
   } @else if $level == 2 {
-    box-shadow: variables.$shadow-md;
+    box-shadow: $shadow-md;
   } @else if $level == 3 {
-    box-shadow: variables.$shadow-lg;
+    box-shadow: $shadow-lg;
   } @else if $level == 4 {
-    box-shadow: variables.$shadow-xl;
+    box-shadow: $shadow-xl;
   }
 }
 
@@ -190,7 +189,7 @@
 // ========================================
 
 // Transición básica
-@mixin transition($property: all, $duration: variables.$transition-normal, $easing: variables.$transition-ease) {
+@mixin transition($property: all, $duration: $transition-normal, $easing: $transition-ease) {
   transition: $property $duration $easing;
 }
 
@@ -198,19 +197,19 @@
 @mixin transition-multiple($properties...) {
   $transitions: ();
   @each $property in $properties {
-    $transitions: list.append($transitions, $property variables.$transition-normal variables.$transition-ease, comma);
+    $transitions: append($transitions, $property $transition-normal $transition-ease, comma);
   }
   transition: $transitions;
 }
 
 // Transición rápida
 @mixin transition-fast($property: all) {
-  transition: $property variables.$transition-fast variables.$transition-ease;
+  transition: $property $transition-fast $transition-ease;
 }
 
 // Transición lenta
 @mixin transition-slow($property: all) {
-  transition: $property variables.$transition-slow variables.$transition-ease;
+  transition: $property $transition-slow $transition-ease;
 }
 
 // ========================================
@@ -229,7 +228,7 @@
 // Focus visible
 @mixin focus-visible {
   &:focus-visible {
-    outline: 2px solid variables.$color-primary;
+    outline: 2px solid $color-primary;
     outline-offset: 2px;
   }
 }
@@ -237,7 +236,7 @@
 // Focus con sombra
 @mixin focus-shadow {
   &:focus {
-    box-shadow: 0 0 0 3px rgba(variables.$color-primary, 0.1);
+    box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
   }
 }
 
@@ -250,13 +249,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: variables.$button-height;
-  padding: 0 variables.$button-padding-x;
+  height: $button-height;
+  padding: 0 $button-padding-x;
   border: none;
-  border-radius: variables.$button-border-radius;
-  font-family: variables.$font-family-primary;
-  font-size: variables.$font-size-sm;
-  font-weight: variables.$font-weight-medium;
+  border-radius: $button-border-radius;
+  font-family: $font-family-primary;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
   text-decoration: none;
   cursor: pointer;
   @include transition(all);
@@ -271,32 +270,32 @@
 // Input base
 @mixin input-base {
   width: 100%;
-  height: variables.$input-height;
-  padding: 0 variables.$input-padding-x;
-  border: variables.$border-width solid variables.$border-color;
-  border-radius: variables.$input-border-radius;
-  font-family: variables.$font-family-primary;
-  font-size: variables.$font-size-sm;
-  background-color: variables.$color-surface;
+  height: $input-height;
+  padding: 0 $input-padding-x;
+  border: $border-width solid $border-color;
+  border-radius: $input-border-radius;
+  font-family: $font-family-primary;
+  font-size: $font-size-sm;
+  background-color: $color-surface;
   @include transition(border-color);
   @include focus-visible;
   
   &:focus {
-    border-color: variables.$color-primary;
+    border-color: $color-primary;
     outline: none;
   }
   
   &:disabled {
-    background-color: variables.$color-disabled;
+    background-color: $color-disabled;
     cursor: not-allowed;
   }
 }
 
 // Card base
 @mixin card-base {
-  background-color: variables.$color-card;
-  border-radius: variables.$card-border-radius;
-  padding: variables.$card-padding;
+  background-color: $color-card;
+  border-radius: $card-border-radius;
+  padding: $card-padding;
   @include elevation(1);
 }
 
@@ -342,7 +341,7 @@
 }
 
 // Selección de texto
-@mixin text-selection($background: variables.$color-primary, $color: white) {
+@mixin text-selection($background: $color-primary, $color: white) {
   &::selection {
     background-color: $background;
     color: $color;
@@ -359,23 +358,23 @@
 // ========================================
 
 // Fade in
-@mixin fade-in($duration: variables.$animation-duration-normal) {
+@mixin fade-in($duration: $animation-duration-normal) {
   animation: fadeIn $duration ease-in-out;
 }
 
 // Slide in desde arriba
-@mixin slide-in-top($duration: variables.$animation-duration-normal) {
+@mixin slide-in-top($duration: $animation-duration-normal) {
   animation: slideInTop $duration ease-out;
 }
 
 // Slide in desde la izquierda
-@mixin slide-in-left($duration: variables.$animation-duration-normal) {
+@mixin slide-in-left($duration: $animation-duration-normal) {
   animation: slideInLeft $duration ease-out;
 }
 
 // Bounce
-@mixin bounce($duration: variables.$animation-duration-normal) {
-  animation: bounce $duration variables.$animation-bounce;
+@mixin bounce($duration: $animation-duration-normal) {
+  animation: bounce $duration $animation-bounce;
 }
 
 // ========================================

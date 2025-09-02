@@ -25,16 +25,6 @@ export default defineConfig({
       '@assets': resolve(__dirname, 'src/assets')
     }
   },
-  css: {
-    preprocessorOptions: {
-      scss: {
-        additionalData: `
-          @import "@/assets/styles/variables.scss";
-          @import "@/assets/styles/mixins.scss";
-        `
-      }
-    }
-  },
   server: {
     port: 3000,
     host: true
