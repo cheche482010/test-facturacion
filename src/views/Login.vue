@@ -85,7 +85,7 @@ const handleLogin = async () => {
   error.value = ''
   
   try {
-    await authStore.login(form.username, form.password)
+    await authStore.login({ username: form.username, password: form.password })
     router.push('/dashboard')
   } catch (err) {
     error.value = err.message || 'Error al iniciar sesión'
