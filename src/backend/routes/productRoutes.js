@@ -1,410 +1,164 @@
-const express = require('express')
-const { Product } = require('../models')
-const { validateToken, checkPermission } = require('../middleware/auth')
-const { Op } = require('sequelize')
+const express = require('express');
+const { models } = require('../config/database');
+const { Op } = require('sequelize');
 
-const router = express.Router()
+const router = express.Router();
+const { Product } = models;
 
-// Middleware para validar datos de producto
-const validateProductData = (req, res, next) => {
-  const { name, cost_price, unit } = req.body
-  
-  if (!name || !cost_price || !unit) {
-    return res.status(400).json({
-      success: false,
-      message: 'Nombre, precio de costo y unidad son requeridos'
-    })
-  }
-  
-  if (cost_price < 0) {
-    return res.status(400).json({
-      success: false,
-      message: 'El precio de costo no puede ser negativo'
-    })
-  }
-  
-  const validUnits = ['unidad', 'kg', 'litros', 'metros', 'cajas', 'paquetes']
-  if (!validUnits.includes(unit)) {
-    return res.status(400).json({
-      success: false,
-      message: 'Unidad de medida inválida'
-    })
-  }
-  
-  next()
-}
+// --- Helper para mapear datos ---
+// Mapea de snake_case (DB) a camelCase (API)
+const toCamelCase = (product) => {
+  if (!product) return null;
+  // Usar .get({ plain: true }) para obtener un objeto JS plano de la instancia de Sequelize
+  const plainProduct = product.get({ plain: true });
+  return {
+    id: plainProduct.id,
+    code: plainProduct.code,
+    name: plainProduct.name,
+    description: plainProduct.description,
+    cost: parseFloat(plainProduct.cost_price),
+    profitPercentage: parseFloat(plainProduct.profit_percentage),
+    price: parseFloat(plainProduct.retail_price),
+    stock: plainProduct.stock_quantity,
+    status: plainProduct.is_active ? 'active' : 'discontinued' // Mapear is_active a status
+  };
+};
 
-// GET /api/products - Listar productos
-router.get('/', validateToken, checkPermission('products', 'read'), async (req, res) => {
+// --- Rutas CRUD ---
+
+// GET /api/products - Listar todos los productos
+router.get('/', async (req, res) => {
   try {
-    const { page = 1, limit = 20, search, category_id, is_active } = req.query
-    
-    const where = {}
-    
-    if (search) {
-      where[Op.or] = [
-        { name: { [Op.like]: `%${search}%` } },
-        { code: { [Op.like]: `%${search}%` } },
-        { barcode: { [Op.like]: `%${search}%` } }
-      ]
-    }
-    
-    if (category_id) {
-      where.category_id = category_id
-    }
-    
-    if (is_active !== undefined) {
-      where.is_active = is_active === 'true'
-    }
-    
-    const offset = (page - 1) * limit
-    
-    const { count, rows } = await Product.findAndCountAll({
-      where,
-      limit: parseInt(limit),
-      offset: parseInt(offset),
+    const products = await Product.findAll({
+      where: { is_active: true },
       order: [['name', 'ASC']]
-    })
-    
-    res.json({
-      success: true,
-      data: {
-        products: rows,
-        pagination: {
-          page: parseInt(page),
-          limit: parseInt(limit),
-          total: count,
-          pages: Math.ceil(count / limit)
-        }
-      }
-    })
-    
+    });
+    res.json(products.map(toCamelCase));
   } catch (error) {
-    console.error('Error al listar productos:', error)
-    res.status(500).json({
-      success: false,
-      message: 'Error interno del servidor'
-    })
+    console.error('Error al listar productos:', error);
+    res.status(500).json({ message: 'Error interno del servidor' });
   }
-})
+});
 
-// GET /api/products/:id - Obtener producto por ID
-router.get('/:id', validateToken, checkPermission('products', 'read'), async (req, res) => {
+// GET /api/products/search - Buscar productos para autocomplete
+router.get('/search', async (req, res) => {
   try {
-    const { id } = req.params
-    
-    const product = await Product.findByPk(id)
-    
-    if (!product) {
-      return res.status(404).json({
-        success: false,
-        message: 'Producto no encontrado'
-      })
+    const { term } = req.query;
+    if (!term || term.length < 2) {
+      return res.json([]);
     }
-    
-    res.json({
-      success: true,
-      data: product
-    })
-    
-  } catch (error) {
-    console.error('Error al obtener producto:', error)
-    res.status(500).json({
-      success: false,
-      message: 'Error interno del servidor'
-    })
-  }
-})
 
-// GET /api/products/search/:term - Buscar productos por término
-router.get('/search/:term', validateToken, checkPermission('products', 'read'), async (req, res) => {
-  try {
-    const { term } = req.params
-    
     const products = await Product.findAll({
       where: {
+        is_active: true,
         [Op.or]: [
           { name: { [Op.like]: `%${term}%` } },
-          { code: { [Op.like]: `%${term}%` } },
-          { barcode: { [Op.like]: `%${term}%` } }
-        ],
-        is_active: true
+          { code: { [Op.like]: `%${term}%` } }
+        ]
       },
-      limit: 20,
-      order: [['name', 'ASC']]
-    })
-    
-    res.json({
-      success: true,
-      data: products
-    })
-    
-  } catch (error) {
-    console.error('Error al buscar productos:', error)
-    res.status(500).json({
-      success: false,
-      message: 'Error interno del servidor'
-    })
-  }
-})
+      limit: 10
+    });
 
-// GET /api/products/barcode/:barcode - Buscar producto por código de barras
-router.get('/barcode/:barcode', validateToken, checkPermission('products', 'read'), async (req, res) => {
-  try {
-    const { barcode } = req.params
-    
-    const product = await Product.findByBarcode(barcode)
-    
-    if (!product) {
-      return res.status(404).json({
-        success: false,
-        message: 'Producto no encontrado'
-      })
-    }
-    
-    res.json({
-      success: true,
-      data: product
-    })
-    
+    res.json(products.map(toCamelCase));
   } catch (error) {
-    console.error('Error al buscar producto por código de barras:', error)
-    res.status(500).json({
-      success: false,
-      message: 'Error interno del servidor'
-    })
+    console.error('Error al buscar productos:', error);
+    res.status(500).json({ message: 'Error interno del servidor' });
   }
-})
+});
 
-// POST /api/products - Crear producto
-router.post('/', validateToken, checkPermission('products', 'create'), validateProductData, async (req, res) => {
+// POST /api/products - Crear un nuevo producto
+router.post('/', async (req, res) => {
   try {
-    const productData = {
-      ...req.body,
-      created_by: req.user.id
+    const { code, name, description, cost, profitPercentage, stock } = req.body;
+
+    // Validación básica
+    if (!code || !name || cost === undefined || profitPercentage === undefined || stock === undefined) {
+      return res.status(400).json({ message: 'Faltan campos requeridos: code, name, cost, profitPercentage, stock.' });
     }
-    
-    const product = await Product.create(productData)
-    
-    res.status(201).json({
-      success: true,
-      message: 'Producto creado exitosamente',
-      data: product
-    })
-    
+
+    // Calcular precio de venta
+    const calculatedPrice = parseFloat(cost) * (1 + parseFloat(profitPercentage) / 100);
+
+    const newProduct = await Product.create({
+      code,
+      name,
+      description,
+      cost_price: cost,
+      profit_percentage: profitPercentage,
+      retail_price: calculatedPrice.toFixed(2),
+      stock_quantity: stock,
+      // El modelo en index.js es complejo, así que nos aseguramos de llenar los campos requeridos
+      // con valores por defecto si no vienen en el request.
+      unit: 'unidad', // Valor por defecto
+      tax_rate: 16, // Valor por defecto
+      is_taxable: true, // Valor por defecto
+      created_by: 1 // Placeholder para el ID de usuario, se debe reemplazar con auth real
+    });
+
+    res.status(201).json(toCamelCase(newProduct));
   } catch (error) {
-    console.error('Error al crear producto:', error)
-    
     if (error.name === 'SequelizeUniqueConstraintError') {
-      return res.status(400).json({
-        success: false,
-        message: 'El código o código de barras ya existe'
-      })
+      return res.status(409).json({ message: `El código de producto '${req.body.code}' ya existe.` });
     }
-    
-    res.status(500).json({
-      success: false,
-      message: 'Error interno del servidor'
-    })
+    console.error('Error al crear producto:', error);
+    res.status(500).json({ message: 'Error interno del servidor' });
   }
-})
+});
 
-// PUT /api/products/:id - Actualizar producto
-router.put('/:id', validateToken, checkPermission('products', 'update'), validateProductData, async (req, res) => {
+// PUT /api/products/:id - Actualizar un producto
+router.put('/:id', async (req, res) => {
   try {
-    const { id } = req.params
-    
-    const product = await Product.findByPk(id)
-    
+    const { id } = req.params;
+    const product = await Product.findByPk(id);
+
     if (!product) {
-      return res.status(404).json({
-        success: false,
-        message: 'Producto no encontrado'
-      })
+      return res.status(404).json({ message: 'Producto no encontrado' });
     }
-    
-    const updateData = {
-      ...req.body,
-      updated_by: req.user.id
-    }
-    
-    await product.update(updateData)
-    
-    res.json({
-      success: true,
-      message: 'Producto actualizado exitosamente',
-      data: product
-    })
-    
-  } catch (error) {
-    console.error('Error al actualizar producto:', error)
-    
-    if (error.name === 'SequelizeUniqueConstraintError') {
-      return res.status(400).json({
-        success: false,
-        message: 'El código o código de barras ya existe'
-      })
-    }
-    
-    res.status(500).json({
-      success: false,
-      message: 'Error interno del servidor'
-    })
-  }
-})
 
-// DELETE /api/products/:id - Desactivar producto
-router.delete('/:id', validateToken, checkPermission('products', 'delete'), async (req, res) => {
+    const { code, name, description, cost, profitPercentage, stock } = req.body;
+    
+    const newCost = cost !== undefined ? parseFloat(cost) : product.cost_price;
+    const newProfitPercentage = profitPercentage !== undefined ? parseFloat(profitPercentage) : product.profit_percentage;
+    const calculatedPrice = newCost * (1 + newProfitPercentage / 100);
+
+    const updatedProduct = await product.update({
+      code: code || product.code,
+      name: name || product.name,
+      description: description === undefined ? product.description : description,
+      cost_price: newCost,
+      profit_percentage: newProfitPercentage,
+      retail_price: calculatedPrice.toFixed(2),
+      stock_quantity: stock !== undefined ? stock : product.stock_quantity,
+      updated_by: 1 // Placeholder para el ID de usuario
+    });
+
+    res.json(toCamelCase(updatedProduct));
+  } catch (error) {
+     if (error.name === 'SequelizeUniqueConstraintError') {
+      return res.status(409).json({ message: `El código de producto '${req.body.code}' ya existe.` });
+    }
+    console.error('Error al actualizar producto:', error);
+    res.status(500).json({ message: 'Error interno del servidor' });
+  }
+});
+
+// DELETE /api/products/:id - Eliminar un producto (hard delete)
+router.delete('/:id', async (req, res) => {
   try {
-    const { id } = req.params
-    
-    const product = await Product.findByPk(id)
-    
+    const { id } = req.params;
+    const product = await Product.findByPk(id);
+
     if (!product) {
-      return res.status(404).json({
-        success: false,
-        message: 'Producto no encontrado'
-      })
+      return res.status(404).json({ message: 'Producto no encontrado' });
     }
-    
-    // Verificar si el producto tiene stock
-    if (product.stock_quantity > 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'No se puede desactivar un producto con stock disponible'
-      })
-    }
-    
-    await product.update({ 
-      is_active: false,
-      updated_by: req.user.id
-    })
-    
-    res.json({
-      success: true,
-      message: 'Producto desactivado exitosamente'
-    })
-    
-  } catch (error) {
-    console.error('Error al desactivar producto:', error)
-    res.status(500).json({
-      success: false,
-      message: 'Error interno del servidor'
-    })
-  }
-})
 
-// POST /api/products/:id/stock - Actualizar stock de producto
-router.post('/:id/stock', validateToken, checkPermission('inventory', 'update'), async (req, res) => {
-  try {
-    const { id } = req.params
-    const { quantity, type = 'set', reason = '' } = req.body
-    
-    if (!quantity || quantity < 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'Cantidad válida requerida'
-      })
-    }
-    
-    const product = await Product.findByPk(id)
-    
-    if (!product) {
-      return res.status(404).json({
-        success: false,
-        message: 'Producto no encontrado'
-      })
-    }
-    
-    const oldStock = product.stock_quantity
-    await product.updateStock(quantity, type)
-    
-    // Aquí podrías registrar el movimiento en una tabla de historial
-    
-    res.json({
-      success: true,
-      message: 'Stock actualizado exitosamente',
-      data: {
-        product_id: product.id,
-        old_stock: oldStock,
-        new_stock: product.stock_quantity,
-        change: product.stock_quantity - oldStock
-      }
-    })
-    
-  } catch (error) {
-    console.error('Error al actualizar stock:', error)
-    res.status(500).json({
-      success: false,
-      message: 'Error interno del servidor'
-    })
-  }
-})
+    await product.destroy();
+    res.status(204).send(); // No Content
 
-// GET /api/products/low-stock/list - Listar productos con stock bajo
-router.get('/low-stock/list', validateToken, checkPermission('inventory', 'read'), async (req, res) => {
-  try {
-    const products = await Product.getLowStock()
-    
-    res.json({
-      success: true,
-      data: products
-    })
-    
   } catch (error) {
-    console.error('Error al obtener productos con stock bajo:', error)
-    res.status(500).json({
-      success: false,
-      message: 'Error interno del servidor'
-    })
+    console.error('Error al eliminar producto:', error);
+    res.status(500).json({ message: 'Error interno del servidor' });
   }
-})
+});
 
-// POST /api/products/bulk-update - Actualización masiva de productos
-router.post('/bulk-update', validateToken, checkPermission('products', 'update'), async (req, res) => {
-  try {
-    const { products } = req.body
-    
-    if (!Array.isArray(products) || products.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'Lista de productos requerida'
-      })
-    }
-    
-    const results = []
-    
-    for (const productData of products) {
-      try {
-        const product = await Product.findByPk(productData.id)
-        
-        if (product) {
-          await product.update({
-            ...productData,
-            updated_by: req.user.id
-          })
-          results.push({ id: product.id, success: true })
-        } else {
-          results.push({ id: productData.id, success: false, error: 'Producto no encontrado' })
-        }
-      } catch (error) {
-        results.push({ id: productData.id, success: false, error: error.message })
-      }
-    }
-    
-    res.json({
-      success: true,
-      message: 'Actualización masiva completada',
-      data: results
-    })
-    
-  } catch (error) {
-    console.error('Error en actualización masiva:', error)
-    res.status(500).json({
-      success: false,
-      message: 'Error interno del servidor'
-    })
-  }
-})
-
-module.exports = router
+module.exports = router;

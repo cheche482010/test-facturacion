@@ -30,14 +30,14 @@
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.4.0",
     "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
     "electron": "^27.0.0",
     "electron-builder": "^24.6.4",
     "eslint": "^8.51.0",
     "eslint-plugin-vue": "^9.17.0",
     "sass": "^1.69.5",
     "vite": "^4.4.9",
-    "wait-on": "^7.0.1",
-    "cross-env": "^7.0.3"
+    "wait-on": "^7.0.1"
   },
   "dependencies": {
     "@mdi/font": "^7.3.67",
@@ -47,6 +47,7 @@
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.2",
+    "lodash": "^4.17.21",
     "mysql2": "^3.6.5",
     "pinia": "^2.1.7",
     "sequelize": "^6.35.0",
