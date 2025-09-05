@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs')
 const { Op } = require('sequelize')
 const { sequelize, models } = require('../config/database')
+const User = require('../models/UserModel')
 const { validateToken } = require('../middleware/auth')
 
 const router = express.Router()
@@ -87,7 +88,7 @@ router.post('/login', validateLoginData, async (req, res) => {
     const { username, password } = req.body
     
     // Buscar usuario por username o email
-    const user = await models.User.findOne({
+    const user = await User.findOne({
       where: {
         [Op.or]: [
           { username: username },
@@ -121,7 +122,7 @@ router.post('/login', validateLoginData, async (req, res) => {
     const token = generateToken(user)
     
     // Obtener permisos del usuario
-    const permissions = models.User.ROLE_PERMISSIONS[user.role] || {}
+    const permissions = User.ROLE_PERMISSIONS[user.role] || {}
     
     res.json({
       success: true,
@@ -155,7 +156,7 @@ router.post('/register', validateRegisterData, async (req, res) => {
     const { username, email, password, full_name, role = 'cajero' } = req.body
     
     // Verificar si el usuario ya existe
-    const existingUser = await models.User.findOne({
+    const existingUser = await User.findOne({
       where: {
         [Op.or]: [
           { username: username },
@@ -172,7 +173,7 @@ router.post('/register', validateRegisterData, async (req, res) => {
     }
     
     // Crear nuevo usuario
-    const user = await models.User.create({
+    const user = await User.create({
       username,
       email,
       password,
@@ -211,7 +212,7 @@ router.post('/register', validateRegisterData, async (req, res) => {
 // GET /api/auth/me
 router.get('/me', validateToken, async (req, res) => {
   try {
-    const user = await models.User.findByPk(req.user.id, {
+    const user = await User.findByPk(req.user.id, {
       attributes: { exclude: ['password'] }
     })
     
@@ -223,7 +224,7 @@ router.get('/me', validateToken, async (req, res) => {
     }
     
     // Obtener permisos del usuario
-    const permissions = models.User.ROLE_PERMISSIONS[user.role] || {}
+    const permissions = User.ROLE_PERMISSIONS[user.role] || {}
     
     res.json({
       success: true,
@@ -263,7 +264,7 @@ router.post('/change-password', validateToken, async (req, res) => {
       })
     }
     
-    const user = await models.User.findByPk(req.user.id)
+    const user = await User.findByPk(req.user.id)
     
     // Verificar contraseña actual
     const isValidPassword = await user.comparePassword(current_password)
