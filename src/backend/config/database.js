@@ -1,6 +1,7 @@
 const { Sequelize } = require('sequelize')
 const path = require('path')
 const fs = require('fs')
+const defineModels = require('../models')
 
 // Cargar variables de entorno
 require('dotenv').config()
@@ -76,6 +77,9 @@ const config = dbConfig[env] || sqliteConfig
 
 // Crear instancia de Sequelize
 const sequelize = new Sequelize(config)
+
+// Definir modelos
+const models = defineModels(sequelize)
 
 // Función para probar la conexión
 async function testConnection() {
@@ -171,6 +175,7 @@ async function restoreDatabase(backupPath) {
 
 module.exports = {
   sequelize,
+  models,
   testConnection,
   initDatabase,
   backupDatabase,

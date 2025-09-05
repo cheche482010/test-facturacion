@@ -2,7 +2,6 @@ const express = require('express')
 const cors = require('cors')
 const path = require('path')
 const { sequelize } = require('./config/database')
-const defineModels = require('./models/index')
 const initializeData = require('./scripts/initData')
 const authRoutes = require('./routes/authRoutes')
 const productRoutes = require('./routes/productRoutes')
@@ -90,10 +89,6 @@ async function startServer() {
   try {
     await sequelize.authenticate()
     console.log('Conexión a la base de datos establecida correctamente.')
-    
-    // Inicializar modelos y asociaciones
-    const models = defineModels(sequelize)
-    console.log('Modelos y asociaciones inicializados.')
     
     app.listen(PORT, () => {
       console.log(`Servidor corriendo en puerto ${PORT}`)
