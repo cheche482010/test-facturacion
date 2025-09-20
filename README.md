@@ -1,383 +1,285 @@
-# Sistema de Facturación con Electron.js + MySQL
+# Sistema de Facturación Electron
 
-Un sistema completo de facturación desarrollado con Electron.js, Vue.js 3, y MySQL, diseñado para funcionar tanto en modo bodega como tienda.
+Sistema completo de facturación y gestión de inventario desarrollado con Electron.js, Vue.js 3, y soporte para MySQL/SQLite. Diseñado para funcionar como aplicación de escritorio con dos modos de operación: **Modo Bodega** (ventas rápidas) y **Modo Tienda** (funcionalidad completa con clientes y reportes).
 
 ## 🚀 Características Principales
 
-### Modos de Operación
-- **Modo Bodega**: Ventas rápidas sin registro de clientes, enfoque en inventario
-- **Modo Tienda**: Funcionalidad completa con clientes, IVA, historiales y reportes avanzados
-
-### Módulos Principales
-- ✅ **Gestión de Productos**: Códigos, precios, stock, categorías
-- ✅ **Inventario**: Control de stock, movimientos, alertas
-- ✅ **Ventas**: Facturación, múltiples métodos de pago, tickets
-- ✅ **Clientes**: Gestión completa (solo modo tienda)
-- ✅ **Reportes**: Ventas, inventario, utilidades, dashboard
-- ✅ **Configuración**: Empresa, impresoras, backup, usuarios
-- ✅ **Backup**: Automático y manual, restauración
-
-### Tecnologías Utilizadas
-- **Frontend**: Vue.js 3 + Vuetify 3 + Pinia
-- **Backend**: Node.js + Express + Sequelize
-- **Base de Datos**: MySQL (con fallback a SQLite)
-- **Desktop**: Electron.js
-- **Estilos**: SCSS + Material Design
+- **Gestión de Productos**: Catálogo completo con códigos de barras, precios automáticos y control de inventario
+- **Ventas Inteligentes**: Procesamiento rápido con múltiples métodos de pago
+- **Control de Inventario**: Seguimiento en tiempo real con alertas de stock bajo
+- **Reportes y Analytics**: Dashboard completo con gráficos y estadísticas
+- **Autenticación**: Sistema de usuarios con roles (Administrador, Cajero)
+- **Modo Dual**: Bodega (sin clientes) y Tienda (con clientes y facturación completa)
+- **Base de Datos Flexible**: Soporte para MySQL y SQLite
 
 ## 📋 Requisitos del Sistema
 
-- **Node.js**: v16 o superior
-- **MySQL**: v5.7 o superior (opcional, puede usar SQLite)
+- **Node.js** v16 o superior
+- **MySQL** v8.0 o superior (opcional, puede usar SQLite)
+- **Windows** 10/11 (para generar .exe)
 - **RAM**: Mínimo 4GB recomendado
 - **Espacio**: 500MB libres
 
 ## 🛠️ Instalación
 
-### Opción 1: Setup Automático (Recomendado)
-
-1. **Clonar el repositorio**
-```bash
+### 1. Clonar el Repositorio
+\`\`\`bash
 git clone <url-del-repositorio>
-cd sistema-facturacion
-```
+cd electron-billing-system
+\`\`\`
 
-2. **Ejecutar setup automático**
-```bash
-npm run setup
-```
-
-Este comando automáticamente:
-- ✅ Crea todos los directorios necesarios
-- ✅ Copia `env.example` a `.env`
-- ✅ Instala todas las dependencias
-- ✅ Verifica MySQL
-- ✅ Crea la base de datos
-- ✅ Muestra instrucciones finales
-
-### Opción 2: Instalación Manual
-
-1. **Clonar el repositorio**
-```bash
-git clone <url-del-repositorio>
-cd sistema-facturacion
-```
-
-2. **Instalar dependencias**
-```bash
+### 2. Instalar Dependencias
+\`\`\`bash
 npm install
-```
+\`\`\`
 
-3. **Configurar variables de entorno**
-```bash
-# Copiar archivo de ejemplo
-cp env.example .env
+### 3. Configurar Base de Datos
 
-# Editar configuración
-nano .env  # o usar tu editor preferido
-```
+El sistema soporta dos tipos de base de datos que puedes configurar mediante variables de entorno:
 
-4. **Configurar base de datos**
-```bash
-# Crear base de datos MySQL (opcional)
-mysql -u root -p
-CREATE DATABASE facturacion_db;
-```
+#### Opción A: MySQL (Recomendado para Producción)
 
-5. **Ejecutar en modo desarrollo**
-```bash
-npm run dev
-```
+**Crear Base de Datos MySQL:**
+\`\`\`sql
+CREATE DATABASE facturacion_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'billing_user'@'localhost' IDENTIFIED BY 'tu_password_seguro';
+GRANT ALL PRIVILEGES ON facturacion_db.* TO 'billing_user'@'localhost';
+FLUSH PRIVILEGES;
+\`\`\`
 
-6. **Construir para producción**
-```bash
-npm run dist
-```
+#### Opción B: SQLite (Más Simple, para Desarrollo)
 
-### 📋 Configuración del Archivo .env
+No requiere instalación adicional. La base de datos se creará automáticamente en `data/database.sqlite`.
 
-El archivo `.env` contiene todas las configuraciones del sistema:
+### 4. Variables de Entorno
 
-```env
-# Configuración de base de datos
-DB_TYPE=mysql                    # mysql o sqlite
+Crear archivo `.env` en la raíz del proyecto:
+
+#### Para MySQL:
+\`\`\`env
+# Tipo de Base de Datos (mysql o sqlite)
+DB_TYPE=mysql
+
+# Configuración MySQL
 DB_HOST=localhost
 DB_PORT=3306
 DB_NAME=facturacion_db
-DB_USER=root
-DB_PASSWORD=
+DB_USER=billing_user
+DB_PASSWORD=tu_password_seguro
 
-# Configuración de seguridad
-JWT_SECRET=tu_clave_secreta_muy_segura_aqui_cambiar_en_produccion
+# Autenticación
+JWT_SECRET=tu_jwt_secret_muy_seguro_aqui
 
-# Configuración de la empresa
-COMPANY_NAME=Mi Empresa
-COMPANY_RIF=J-12345678-9
-OPERATION_MODE=tienda           # bodega o tienda
+# Servidor
+PORT=3001
+NODE_ENV=development
+\`\`\`
 
-# Configuración de tasa de cambio
-DOLAR_API_URL=https://ve.dolarapi.com/v1/dolares/oficial
-MANUAL_EXCHANGE_RATE=35.50
-```
+#### Para SQLite:
+\`\`\`env
+# Tipo de Base de Datos (mysql o sqlite)
+DB_TYPE=sqlite
 
-**⚠️ IMPORTANTE**: 
-- Cambia `JWT_SECRET` por una clave segura en producción
-- Configura los datos de tu empresa
-- Ajusta la configuración de base de datos según tu entorno
+# Autenticación
+JWT_SECRET=tu_jwt_secret_muy_seguro_aqui
 
-## 🏗️ Estructura del Proyecto
+# Servidor
+PORT=3001
+NODE_ENV=development
+\`\`\`
 
-```
-sistema-facturacion/
-├── src/
-│   ├── backend/           # Servidor Express
-│   │   ├── config/        # Configuración BD
-│   │   ├── models/        # Modelos Sequelize
-│   │   ├── routes/        # Rutas API
-│   │   ├── middleware/    # Middlewares
-│   │   └── server.js      # Servidor principal
-│   ├── stores/            # Stores Pinia
-│   ├── views/             # Componentes Vue
-│   ├── assets/            # Recursos estáticos
-│   ├── App.vue            # Componente principal
-│   └── main.js            # Entrada Vue
-├── data/                  # Datos de la aplicación
-├── dist/                  # Build de producción
-├── electron/              # Archivos Electron
-└── package.json
-```
+### 5. Inicializar Base de Datos
+\`\`\`bash
+npm run db:setup
+\`\`\`
 
-## 🔧 Configuración Inicial
+Este comando creará las tablas y datos iniciales incluyendo:
+- Usuario administrador por defecto: `admin@sistema.com` / `admin123`
+- Categorías básicas de productos
+- Configuración inicial del sistema
 
-### 1. Primer Inicio
-Al iniciar por primera vez, el sistema:
-- Creará la base de datos automáticamente
-- Inicializará la configuración por defecto
-- Creará un usuario administrador
+## 🚀 Ejecución
 
-### 2. Usuario por Defecto
-```
-Usuario: admin
-Contraseña: admin123
-```
+### Modo Desarrollo
+\`\`\`bash
+# Iniciar en modo desarrollo (con hot reload)
+npm run dev
+\`\`\`
 
-### 3. Configuración del Negocio
-Ir a **Configuración > Empresa** para configurar:
-- Datos fiscales
-- Información de contacto
-- Configuración de facturación
+### Modo Producción
+\`\`\`bash
+# Construir la aplicación
+npm run build
 
-## 📊 Funcionalidades por Módulo
+# Ejecutar aplicación construida
+npm start
+\`\`\`
 
-### Gestión de Productos
-- ✅ Códigos internos y de barras
-- ✅ Precios automáticos (costo + %)
-- ✅ Múltiples precios (detal, mayorista, USD)
-- ✅ Control de stock
-- ✅ Categorías y marcas
-- ✅ Imágenes de productos
+### Generar Ejecutable (.exe)
+\`\`\`bash
+# Generar instalador para Windows
+npm run build:win
 
-### Inventario
-- ✅ Control de stock en tiempo real
-- ✅ Movimientos (entradas, salidas, ajustes)
-- ✅ Alertas de stock bajo
-- ✅ Valorización de inventario
-- ✅ Análisis de rotación
+# El archivo .exe se generará en la carpeta /dist
+\`\`\`
 
-### Ventas
-- ✅ Facturación rápida
-- ✅ Múltiples métodos de pago
-- ✅ Descuentos y promociones
-- ✅ Impresión de tickets/facturas
-- ✅ Ventas a crédito
-- ✅ Cancelación y devoluciones
+## 📱 Uso del Sistema
 
-### Clientes (Modo Tienda)
-- ✅ Fichas completas
-- ✅ Historial de compras
-- ✅ Límites de crédito
-- ✅ Categorías (normal, preferencial, VIP)
-- ✅ Pagos y saldos pendientes
+### Primer Inicio
 
-### Reportes
-- ✅ Dashboard en tiempo real
-- ✅ Reportes de ventas por período
-- ✅ Análisis de productos más vendidos
-- ✅ Reportes de utilidades
-- ✅ Estado de inventario
-- ✅ Exportación a PDF/Excel
+1. **Login Inicial**:
+   - Usuario: `admin@sistema.com`
+   - Contraseña: `admin123`
 
-### Configuración
-- ✅ Datos del negocio
-- ✅ Configuración de impresoras
-- ✅ Tasa de cambio automática
-- ✅ Backup automático
-- ✅ Gestión de usuarios y roles
+2. **Configuración Inicial**:
+   - Ir a **Configuración** → **Sistema**
+   - Configurar datos de la empresa
+   - Seleccionar modo de operación (Bodega/Tienda)
+   - Configurar impresoras y hardware
 
-## 🔐 Sistema de Permisos
+### Flujo de Trabajo Típico
 
-### Roles Disponibles
-- **Administrador**: Acceso completo
-- **Cajero**: Ventas y reportes básicos
-- **Inventario**: Gestión de productos e inventario
-- **Vendedor**: Ventas y clientes
+#### Modo Bodega (Ventas Rápidas)
+1. **Productos** → Agregar productos al catálogo
+2. **Ventas** → Procesar ventas sin registro de clientes
+3. **Inventario** → Monitorear stock y movimientos
 
-### Permisos por Recurso
-- `products`: create, read, update, delete
-- `inventory`: create, read, update, delete
-- `sales`: create, read, update, delete
-- `customers`: create, read, update, delete
-- `reports`: read
-- `config`: read, update
-- `backup`: create, read, restore
+#### Modo Tienda (Completo)
+1. **Clientes** → Registrar base de clientes
+2. **Productos** → Gestión completa con precios diferenciados
+3. **Ventas** → Facturación con IVA y documentos fiscales
+4. **Reportes** → Analytics completos y reportes fiscales
 
-## 🖨️ Impresión
+## 🔧 Comandos Disponibles
 
-### Tipos de Documentos
-- **Tickets**: Para ventas rápidas
-- **Facturas**: Con datos fiscales completos
-- **Notas de crédito/débito**: Para devoluciones
-
-### Configuración de Impresoras
-- Detección automática de impresoras
-- Configuración de ancho de papel
-- Logo personalizado
-- Códigos QR
-
-## 💾 Backup y Restauración
-
-### Backup Automático
-- Programable (diario, semanal)
-- Compresión automática
-- Limpieza de backups antiguos
-- Metadatos de respaldo
-
-### Backup Manual
-- Creación bajo demanda
-- Descarga de archivos
-- Restauración selectiva
-
-## 🔄 API REST
-
-### Endpoints Principales
-```
-POST   /api/auth/login          # Autenticación
-GET    /api/products            # Listar productos
-POST   /api/products            # Crear producto
-GET    /api/sales               # Listar ventas
-POST   /api/sales               # Crear venta
-GET    /api/reports/sales       # Reporte de ventas
-GET    /api/config              # Obtener configuración
-```
-
-### Autenticación
-Todas las rutas requieren token JWT en el header:
-```
-Authorization: Bearer <token>
-```
-
-## 🚀 Comandos Disponibles
-
-```bash
+\`\`\`bash
 # Desarrollo
-npm run dev              # Iniciar en modo desarrollo
-npm run dev:renderer     # Solo frontend
-npm run dev:main         # Solo backend
+npm run dev              # Modo desarrollo con hot reload
+npm run dev:vue          # Solo frontend (Vue.js)
+npm run dev:electron     # Solo backend (Electron main)
 
 # Construcción
-npm run build            # Construir frontend
-npm run build:electron   # Construir aplicación Electron
-npm run dist             # Construir todo para distribución
+npm run build            # Construir aplicación completa
+npm run build:vue        # Construir solo frontend
+npm run build:electron   # Construir solo backend
 
-# Utilidades
-npm run lint             # Linter
-npm run lint:fix         # Linter con auto-fix
-npm test                 # Tests
-```
+# Base de Datos
+npm run db:setup         # Configurar BD y datos iniciales
+npm run db:seed          # Insertar datos de prueba
+npm run db:reset         # Resetear base de datos completamente
 
-## 📱 Características de Electron
+# Distribución
+npm run build            # Generar ejecutable
+\`\`\`
 
-### Funcionalidades del Sistema
-- Integración con impresoras del sistema
-- Acceso a archivos locales
-- Notificaciones del sistema
-- Auto-actualizaciones
-- Modo offline
+## 🗄️ Configuración de Base de Datos
 
-### Configuración de Ventana
-- Tamaño mínimo: 1200x800
-- Tamaño por defecto: 1400x900
-- Modo desarrollador en desarrollo
-- DevTools automático
+### Cambiar Tipo de Base de Datos
 
-## 🔧 Personalización
+Para cambiar entre MySQL y SQLite, simplemente modifica la variable `DB_TYPE` en tu archivo `.env`:
 
-### Temas
-Los colores se pueden personalizar en `src/assets/styles/main.scss`:
-```scss
-$color-primary: #1976D2;
-$color-secondary: #424242;
-$color-success: #4CAF50;
-```
+\`\`\`env
+# Para usar MySQL
+DB_TYPE=mysql
 
-### Configuración de Base de Datos
-Modificar `src/backend/config/database.js`:
-```javascript
-const dbConfig = {
-  development: {
-    username: 'root',
-    password: '',
-    database: 'sistema_facturacion',
-    host: 'localhost',
-    dialect: 'mysql'
-  }
-}
-```
+# Para usar SQLite
+DB_TYPE=sqlite
+\`\`\`
 
-## 🐛 Solución de Problemas
+### Ventajas de Cada Opción
+
+**MySQL:**
+- ✅ Mejor rendimiento con grandes volúmenes de datos
+- ✅ Soporte para múltiples usuarios concurrentes
+- ✅ Funciones avanzadas de base de datos
+- ❌ Requiere instalación y configuración adicional
+
+**SQLite:**
+- ✅ Configuración cero, funciona inmediatamente
+- ✅ Archivo único, fácil de respaldar
+- ✅ Ideal para desarrollo y pruebas
+- ❌ Limitado para uso concurrente intensivo
+
+## 📁 Estructura del Proyecto
+
+\`\`\`
+electron-billing-system/
+├── src/
+│   ├── main/                 # Proceso principal Electron
+│   │   ├── database/         # Modelos y configuración BD
+│   │   ├── routes/           # API REST endpoints
+│   │   ├── middleware/       # Middleware de autenticación
+│   │   └── main.js           # Punto de entrada Electron
+│   └── renderer/             # Frontend Vue.js
+│       ├── components/       # Componentes reutilizables
+│       ├── views/            # Vistas principales
+│       ├── stores/           # Estado global (Pinia)
+│       └── router/           # Configuración de rutas
+├── public/                   # Archivos estáticos
+├── dist/                     # Aplicación construida
+└── build/                    # Configuración de construcción
+\`\`\`
+
+## 🔒 Seguridad
+
+- **Autenticación JWT**: Tokens seguros con expiración
+- **Roles de Usuario**: Control de acceso granular
+- **Validación de Datos**: Sanitización en frontend y backend
+- **Backup Automático**: Respaldos programados de la BD
+- **Logs de Auditoría**: Registro completo de operaciones
+
+## 🛠️ Solución de Problemas
 
 ### Error de Conexión a Base de Datos
-1. Verificar que MySQL esté ejecutándose
-2. Comprobar credenciales en `.env`
-3. Crear base de datos manualmente si es necesario
+\`\`\`bash
+# Verificar que MySQL esté ejecutándose
+mysql -u billing_user -p facturacion_db
 
-### Error de Permisos
-1. Verificar que el usuario tenga permisos de escritura en `/data`
-2. Ejecutar como administrador si es necesario
+# Verificar variables de entorno
+cat .env
+\`\`\`
 
-### Problemas de Impresión
-1. Verificar que las impresoras estén instaladas
-2. Comprobar permisos de Electron
-3. Reiniciar la aplicación
+### Problemas de Permisos
+\`\`\`bash
+# Ejecutar como administrador en Windows
+# Verificar permisos de carpeta de instalación
+\`\`\`
 
-## 📄 Licencia
+### Error al Generar .exe
+\`\`\`bash
+# Limpiar cache y reconstruir
+npm run clean
+npm install
+npm run build:win
+\`\`\`
 
-Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
-
-## 🤝 Contribución
-
-1. Fork el proyecto
-2. Crear una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abrir un Pull Request
+### Rendimiento Lento
+- Verificar que la BD tenga índices apropiados
+- Revisar logs en `logs/application.log`
+- Monitorear uso de memoria en Task Manager
 
 ## 📞 Soporte
 
-Para soporte técnico o consultas:
-- Crear un issue en GitHub
-- Contactar al equipo de desarrollo
-- Revisar la documentación técnica
+Para soporte técnico o reportar bugs:
 
-## 🔄 Changelog
+1. **Logs del Sistema**: Ubicados en `logs/`
+2. **Base de Datos**: Backup automático en `backups/`
+3. **Configuración**: Archivo `.env` y `config/`
 
-### v1.0.0 (2024-01-XX)
-- ✅ Sistema base completo
-- ✅ Gestión de productos e inventario
-- ✅ Sistema de ventas
-- ✅ Reportes básicos
-- ✅ Configuración del sistema
-- ✅ Backup y restauración
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia MIT. Ver archivo `LICENSE` para más detalles.
+
+## 🔄 Actualizaciones
+
+Para actualizar el sistema:
+
+1. Hacer backup de la base de datos
+2. Descargar nueva versión
+3. Ejecutar `npm install`
+4. Ejecutar `npm run db:migrate`
+5. Reiniciar la aplicación
 
 ---
 
-**Desarrollado con ❤️ para facilitar la gestión de negocios**
+**Desarrollado con ❤️ usando Electron.js + Vue.js + MySQL/SQLite**
