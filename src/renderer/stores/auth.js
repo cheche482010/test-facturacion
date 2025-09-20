@@ -1,199 +1,125 @@
-import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import axios from 'axios'
+import { defineStore } from "pinia"
 
-export const useAuthStore = defineStore('auth', () => {
-  // Estado
-  const token = ref(localStorage.getItem('token') || null)
-  const user = ref(null)
-  const loading = ref(false)
-  const error = ref(null)
+export const useAuthStore = defineStore("auth", {
+  state: () => ({
+    user: null,
+    token: localStorage.getItem("token"),
+    isAuthenticated: false,
+  }),
 
-  // Getters
-  const isAuthenticated = computed(() => !!token.value)
-  const userRole = computed(() => user.value?.role || null)
-  const userPermissions = computed(() => user.value?.permissions || {})
+  getters: {
+    hasRole: (state) => (role) => {
+      return state.user?.role === role
+    },
 
-  // Configurar axios
-  const setupAxios = () => {
-    if (token.value) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token.value}`
-    } else {
-      delete axios.defaults.headers.common['Authorization']
-    }
-  }
-
-  // Métodos
-  const login = async (credentials) => {
-    try {
-      loading.value = true
-      error.value = null
-
-      const response = await axios.post('/api/auth/login', credentials)
-      
-      if (response.data.success) {
-        const { token: newToken, user: userData } = response.data.data
-        
-        token.value = newToken
-        user.value = userData
-        
-        localStorage.setItem('token', newToken)
-        setupAxios()
-        
-        return response.data
-      } else {
-        throw new Error(response.data.message || 'Error en el login')
+    hasPermission: (state) => (permission) => {
+      const rolePermissions = {
+        admin: ["all"],
+        supervisor: ["sales", "inventory", "reports", "customers"],
+        cashier: ["sales"],
       }
-    } catch (err) {
-      error.value = err.response?.data?.message || err.message || 'Error de conexión'
-      throw err
-    } finally {
-      loading.value = false
-    }
-  }
 
-  const register = async (userData) => {
-    try {
-      loading.value = true
-      error.value = null
+      const userPermissions = rolePermissions[state.user?.role] || []
+      return userPermissions.includes("all") || userPermissions.includes(permission)
+    },
+  },
 
-      const response = await axios.post('/api/auth/register', userData)
-      
-      if (response.data.success) {
-        const { token: newToken, user: newUser } = response.data.data
-        
-        token.value = newToken
-        user.value = newUser
-        
-        localStorage.setItem('token', newToken)
-        setupAxios()
-        
-        return response.data
-      } else {
-        throw new Error(response.data.message || 'Error en el registro')
+  actions: {
+    async login(credentials) {
+      try {
+        const response = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(credentials),
+        })
+
+        const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(data.message || "Error de autenticación")
+        }
+
+        this.token = data.token
+        this.user = data.user
+        this.isAuthenticated = true
+
+        localStorage.setItem("token", data.token)
+
+        return data
+      } catch (error) {
+        throw error
       }
-    } catch (err) {
-      error.value = err.response?.data?.message || err.message || 'Error de conexión'
-      throw err
-    } finally {
-      loading.value = false
-    }
-  }
+    },
 
-  const getUser = async () => {
-    try {
-      loading.value = true
-      error.value = null
-
-      const response = await axios.get('/api/auth/me')
-      
-      if (response.data.success) {
-        user.value = response.data.data.user
-        return response.data.data.user
-      } else {
-        throw new Error(response.data.message || 'Error al obtener usuario')
+    async logout() {
+      try {
+        await fetch("/api/auth/logout", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${this.token}`,
+          },
+        })
+      } catch (error) {
+        console.error("Error during logout:", error)
+      } finally {
+        this.user = null
+        this.token = null
+        this.isAuthenticated = false
+        localStorage.removeItem("token")
       }
-    } catch (err) {
-      error.value = err.response?.data?.message || err.message || 'Error de conexión'
-      throw err
-    } finally {
-      loading.value = false
-    }
-  }
+    },
 
-  const logout = async () => {
-    try {
-      // Intentar hacer logout en el servidor
-      if (token.value) {
-        await axios.post('/api/auth/logout')
+    async checkAuth() {
+      if (!this.token) return false
+
+      try {
+        const response = await fetch("/api/auth/me", {
+          headers: {
+            Authorization: `Bearer ${this.token}`,
+          },
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          this.user = data.user
+          this.isAuthenticated = true
+          return true
+        } else {
+          this.logout()
+          return false
+        }
+      } catch (error) {
+        this.logout()
+        return false
       }
-    } catch (err) {
-      console.warn('Error en logout del servidor:', err)
-    } finally {
-      // Limpiar estado local
-      token.value = null
-      user.value = null
-      error.value = null
-      
-      localStorage.removeItem('token')
-      setupAxios()
-    }
-  }
+    },
 
-  const changePassword = async (passwordData) => {
-    try {
-      loading.value = true
-      error.value = null
+    async changePassword(currentPassword, newPassword) {
+      try {
+        const response = await fetch("/api/auth/change-password", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${this.token}`,
+          },
+          body: JSON.stringify({
+            currentPassword,
+            newPassword,
+          }),
+        })
 
-      const response = await axios.post('/api/auth/change-password', passwordData)
-      
-      if (response.data.success) {
-        return response.data
-      } else {
-        throw new Error(response.data.message || 'Error al cambiar contraseña')
+        const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(data.message || "Error al cambiar contraseña")
+        }
+
+        return data
+      } catch (error) {
+        throw error
       }
-    } catch (err) {
-      error.value = err.response?.data?.message || err.message || 'Error de conexión'
-      throw err
-    } finally {
-      loading.value = false
-    }
-  }
-
-  const verifyToken = async () => {
-    try {
-      const response = await axios.get('/api/auth/verify')
-      return response.data.success
-    } catch (err) {
-      return false
-    }
-  }
-
-  const hasPermission = (resource, action) => {
-    if (!user.value || !user.value.permissions) {
-      return false
-    }
-    
-    const permissions = user.value.permissions[resource] || []
-    return permissions.includes(action)
-  }
-
-  const hasRole = (role) => {
-    return user.value?.role === role
-  }
-
-  const hasAnyRole = (roles) => {
-    if (!Array.isArray(roles)) {
-      roles = [roles]
-    }
-    return roles.includes(user.value?.role)
-  }
-
-  // Inicializar axios
-  setupAxios()
-
-  return {
-    // Estado
-    token,
-    user,
-    loading,
-    error,
-    
-    // Getters
-    isAuthenticated,
-    userRole,
-    userPermissions,
-    
-    // Métodos
-    login,
-    register,
-    getUser,
-    logout,
-    changePassword,
-    verifyToken,
-    hasPermission,
-    hasRole,
-    hasAnyRole
-  }
+    },
+  },
 })
-
