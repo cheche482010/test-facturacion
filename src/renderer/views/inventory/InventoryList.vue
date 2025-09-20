@@ -1,279 +1,146 @@
 <template>
-  <div>
-    <v-row class="mb-4">
-      <v-col cols="12" md="6">
-        <h1 class="text-h4">Control de Inventario</h1>
-      </v-col>
-      <v-col cols="12" md="6" class="text-right">
-        <v-btn
-          color="primary"
-          @click="openAdjustmentDialog()"
-          prepend-icon="mdi-package-variant-plus"
-          class="mr-2"
-        >
-          Ajuste de Stock
-        </v-btn>
-        <v-btn
-          color="success"
-          @click="openMovementDialog()"
-          prepend-icon="mdi-swap-horizontal"
-        >
-          Nuevo Movimiento
-        </v-btn>
-      </v-col>
-    </v-row>
+  <div class="text-black dark:text-white">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+      <div>
+        <h1 class="text-3xl font-bold">Control de Inventario</h1>
+        <p class="text-gray-500 dark:text-gray-400">Gestiona el stock y movimientos de inventario</p>
+      </div>
+      <button @click="openAdjustmentDialog()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center">
+        <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+        <span>Ajuste de Stock</span>
+      </button>
+    </div>
 
-    <!-- Alertas de stock -->
-    <v-row class="mb-4">
-      <v-col cols="12">
-        <v-alert
-          type="warning"
-          variant="tonal"
-          closable
-          @click:close="dismissAlerts"
-        >
-          <v-alert-title>Alertas de Inventario</v-alert-title>
-          <div class="mt-2">
-            <v-chip
-              v-for="alert in alerts"
-              :key="alert.id"
-              size="small"
-              color="warning"
-              class="mr-2 mb-1"
-            >
-              {{ alert.name }}: {{ alert.currentStock }} {{ alert.unit }}
-            </v-chip>
-          </div>
-        </v-alert>
-      </v-col>
-    </v-row>
-
-    <!-- Resumen de inventario -->
-    <v-row class="mb-4">
-      <v-col cols="12" md="3">
-        <v-card>
-          <v-card-text>
-            <div class="d-flex align-center">
-              <v-icon color="primary" size="40" class="mr-3">mdi-package-variant</v-icon>
-              <div>
-                <div class="text-h6">{{ totalProducts }}</div>
-                <div class="text-caption">Total Productos</div>
-              </div>
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md flex items-center">
+            <div class="bg-blue-500 rounded-full p-3 mr-4"><svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg></div>
+            <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Total Productos</p>
+            <p class="text-2xl font-bold">{{ summary.totalProducts }}</p>
             </div>
-          </v-card-text>
-        </v-card>
-      </v-col>
-      
-      <v-col cols="12" md="3">
-        <v-card>
-          <v-card-text>
-            <div class="d-flex align-center">
-              <v-icon color="success" size="40" class="mr-3">mdi-check-circle</v-icon>
-              <div>
-                <div class="text-h6">{{ productsInStock }}</div>
-                <div class="text-caption">En Stock</div>
-              </div>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md flex items-center">
+            <div class="bg-red-500 rounded-full p-3 mr-4"><svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div>
+            <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Stock Bajo</p>
+            <p class="text-2xl font-bold">{{ summary.lowStockCount }}</p>
             </div>
-          </v-card-text>
-        </v-card>
-      </v-col>
-      
-      <v-col cols="12" md="3">
-        <v-card>
-          <v-card-text>
-            <div class="d-flex align-center">
-              <v-icon color="warning" size="40" class="mr-3">mdi-alert</v-icon>
-              <div>
-                <div class="text-h6">{{ lowStockCount }}</div>
-                <div class="text-caption">Stock Bajo</div>
-              </div>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md flex items-center">
+            <div class="bg-green-500 rounded-full p-3 mr-4"><svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01" /></svg></div>
+            <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Valor Total</p>
+            <p class="text-2xl font-bold">{{ formatCurrency(summary.totalValue) }}</p>
             </div>
-          </v-card-text>
-        </v-card>
-      </v-col>
-      
-      <v-col cols="12" md="3">
-        <v-card>
-          <v-card-text>
-            <div class="d-flex align-center">
-              <v-icon color="error" size="40" class="mr-3">mdi-close-circle</v-icon>
-              <div>
-                <div class="text-h6">{{ outOfStockCount }}</div>
-                <div class="text-caption">Sin Stock</div>
-              </div>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md flex items-center">
+            <div class="bg-purple-500 rounded-full p-3 mr-4"><svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg></div>
+            <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Rotación</p>
+            <p class="text-2xl font-bold">85%</p>
             </div>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
+        </div>
+    </div>
 
-    <!-- Filtros -->
-    <v-card class="mb-4">
-      <v-card-text>
-        <v-row>
-          <v-col cols="12" md="4">
-            <v-text-field
-              v-model="search"
-              label="Buscar productos"
-              prepend-inner-icon="mdi-magnify"
-              variant="outlined"
-              density="compact"
-              clearable
-            />
-          </v-col>
-          <v-col cols="12" md="3">
-            <v-select
-              v-model="selectedCategory"
-              :items="categories"
-              item-title="name"
-              item-value="id"
-              label="Categoría"
-              variant="outlined"
-              density="compact"
-              clearable
-            />
-          </v-col>
-          <v-col cols="12" md="3">
-            <v-select
-              v-model="stockFilter"
-              :items="stockFilterOptions"
-              label="Filtro de Stock"
-              variant="outlined"
-              density="compact"
-              clearable
-            />
-          </v-col>
-          <v-col cols="12" md="2">
-            <v-btn
-              icon="mdi-refresh"
-              @click="loadInventory"
-              variant="outlined"
-            />
-          </v-col>
-        </v-row>
-      </v-card-text>
-    </v-card>
+    <!-- Tabs -->
+    <div class="mb-6 border-b border-gray-200 dark:border-slate-700">
+        <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+            <button @click="activeTab = 'inventory'" :class="[activeTab === 'inventory' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm']">
+                Inventario Actual
+            </button>
+            <button @click="activeTab = 'movements'" :class="[activeTab === 'movements' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm']">
+                Movimientos
+            </button>
+        </nav>
+    </div>
 
-    <!-- Tabla de inventario -->
-    <v-card>
-      <v-data-table
-        :headers="headers"
-        :items="filteredProducts"
-        :loading="loading"
-        :search="search"
-        class="elevation-1"
-      >
-        <template v-slot:item.name="{ item }">
-          <div>
-            <div class="font-weight-medium">{{ item.name }}</div>
-            <div class="text-caption text-medium-emphasis">
-              {{ item.internalCode }}
-            </div>
-          </div>
-        </template>
+    <!-- Search -->
+    <div class="mb-6">
+        <input type="text" v-model="search" placeholder="Buscar productos por nombre o código..." class="form-input" />
+    </div>
 
-        <template v-slot:item.category="{ item }">
-          <v-chip
-            v-if="item.category"
-            size="small"
-            color="primary"
-            variant="tonal"
-          >
-            {{ item.category.name }}
-          </v-chip>
-        </template>
+    <!-- Inventory Table -->
+    <div v-if="activeTab === 'inventory'" class="bg-white dark:bg-slate-800 rounded-lg shadow-md overflow-hidden">
+        <div class="p-4 border-b dark:border-slate-700">
+            <h2 class="text-xl font-semibold">Inventario Actual ({{ filteredProducts.length }})</h2>
+        </div>
+        <table class="w-full text-left">
+            <thead>
+                <tr class="border-b dark:border-slate-700 bg-gray-50 dark:bg-slate-700/50">
+                    <th class="py-3 px-4 font-semibold">Producto</th>
+                    <th class="py-3 px-4 font-semibold">Código</th>
+                    <th class="py-3 px-4 font-semibold">Stock Actual</th>
+                    <th class="py-3 px-4 font-semibold">Stock Mín.</th>
+                    <th class="py-3 px-4 font-semibold">Stock Máx.</th>
+                    <th class="py-3 px-4 font-semibold">Valor Stock</th>
+                    <th class="py-3 px-4 font-semibold">Estado</th>
+                    <th class="py-3 px-4 font-semibold">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-if="!filteredProducts.length"><td colspan="8" class="text-center py-8 text-gray-500">No se encontraron productos.</td></tr>
+                <tr v-for="product in filteredProducts" :key="product.id" class="border-b dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700/50">
+                    <td class="py-3 px-4">{{ product.name }}</td>
+                    <td class="py-3 px-4">{{ product.internalCode }}</td>
+                    <td class="py-3 px-4">{{ product.currentStock }} unidad</td>
+                    <td class="py-3 px-4">{{ product.minStock }}</td>
+                    <td class="py-3 px-4">{{ product.maxStock }}</td>
+                    <td class="py-3 px-4">{{ formatCurrency(product.currentStock * product.costPrice) }}</td>
+                    <td class="py-3 px-4">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full" :class="getStockStatusClass(product)">
+                            {{ getStockStatusText(product) }}
+                        </span>
+                    </td>
+                    <td class="py-3 px-4">
+                        <button @click="openAdjustmentDialog(product)" class="p-1 hover:bg-gray-200 dark:hover:bg-slate-700 rounded-full">
+                            <svg class="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z" /></svg>
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
-        <template v-slot:item.currentStock="{ item }">
-          <div class="d-flex align-center">
-            <v-chip
-              :color="getStockColor(item)"
-              size="small"
-              variant="tonal"
-              class="mr-2"
-            >
-              {{ item.currentStock }} {{ item.unit }}
-            </v-chip>
-            <v-progress-linear
-              :model-value="getStockPercentage(item)"
-              :color="getStockColor(item)"
-              height="4"
-              class="flex-grow-1"
-            />
-          </div>
-        </template>
+    <!-- Movements Table -->
+    <div v-if="activeTab === 'movements'" class="bg-white dark:bg-slate-800 rounded-lg shadow-md overflow-hidden">
+        <div class="p-4 border-b dark:border-slate-700">
+            <h2 class="text-xl font-semibold">Historial de Movimientos ({{ filteredMovements.length }})</h2>
+        </div>
+        <table class="w-full text-left">
+            <thead>
+                <tr class="border-b dark:border-slate-700 bg-gray-50 dark:bg-slate-700/50">
+                    <th class="py-3 px-4 font-semibold">Fecha</th>
+                    <th class="py-3 px-4 font-semibold">Producto</th>
+                    <th class="py-3 px-4 font-semibold">Tipo</th>
+                    <th class="py-3 px-4 font-semibold">Cantidad</th>
+                    <th class="py-3 px-4 font-semibold">Stock Anterior</th>
+                    <th class="py-3 px-4 font-semibold">Stock Nuevo</th>
+                    <th class="py-3 px-4 font-semibold">Usuario</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-if="!filteredMovements.length"><td colspan="7" class="text-center py-8 text-gray-500">No se encontraron movimientos.</td></tr>
+                <tr v-for="movement in filteredMovements" :key="movement.id" class="border-b dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700/50">
+                    <td class="py-3 px-4">{{ new Date(movement.movementDate).toLocaleString() }}</td>
+                    <td class="py-3 px-4">{{ productsById[movement.productId]?.name || 'N/A' }}</td>
+                    <td class="py-3 px-4">{{ movement.movementType }}</td>
+                    <td class="py-3 px-4">{{ movement.quantity }}</td>
+                    <td class="py-3 px-4">{{ movement.previousStock }}</td>
+                    <td class="py-3 px-4">{{ movement.newStock }}</td>
+                    <td class="py-3 px-4">{{ movement.user?.firstName || 'N/A' }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
-        <template v-slot:item.stockLimits="{ item }">
-          <div class="text-caption">
-            <div>Mín: {{ item.minStock }}</div>
-            <div>Máx: {{ item.maxStock }}</div>
-          </div>
-        </template>
 
-        <template v-slot:item.value="{ item }">
-          <div class="text-right">
-            <div class="font-weight-medium">
-              {{ formatCurrency(item.currentStock * item.costPrice) }}
-            </div>
-            <div class="text-caption text-medium-emphasis">
-              {{ formatCurrency(item.costPrice) }}/{{ item.unit }}
-            </div>
-          </div>
-        </template>
-
-        <template v-slot:item.lastMovement="{ item }">
-          <div class="text-caption">
-            {{ formatDate(item.lastMovementDate) }}
-          </div>
-        </template>
-
-        <template v-slot:item.actions="{ item }">
-          <v-btn
-            icon="mdi-history"
-            size="small"
-            variant="text"
-            @click="viewMovements(item)"
-          />
-          <v-btn
-            icon="mdi-pencil"
-            size="small"
-            variant="text"
-            @click="openAdjustmentDialog(item)"
-          />
-          <v-btn
-            icon="mdi-plus"
-            size="small"
-            variant="text"
-            color="success"
-            @click="quickAdjustment(item, 'add')"
-          />
-          <v-btn
-            icon="mdi-minus"
-            size="small"
-            variant="text"
-            color="error"
-            @click="quickAdjustment(item, 'subtract')"
-          />
-        </template>
-      </v-data-table>
-    </v-card>
-
-    <!-- Dialog de ajuste de stock -->
+    <!-- Dialogs -->
     <StockAdjustmentDialog
       v-model="adjustmentDialog"
       :product="selectedProduct"
       @saved="onAdjustmentSaved"
-    />
-
-    <!-- Dialog de movimiento de inventario -->
-    <InventoryMovementDialog
-      v-model="movementDialog"
-      @saved="onMovementSaved"
-    />
-
-    <!-- Dialog de historial de movimientos -->
-    <MovementHistoryDialog
-      v-model="historyDialog"
-      :product="selectedProduct"
     />
   </div>
 </template>
@@ -281,98 +148,58 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import StockAdjustmentDialog from '../../components/inventory/StockAdjustmentDialog.vue'
-import InventoryMovementDialog from '../../components/inventory/InventoryMovementDialog.vue'
-import MovementHistoryDialog from '../../components/inventory/MovementHistoryDialog.vue'
 import { useInventoryStore } from '../../stores/inventory'
 import { useProductStore } from '../../stores/products'
-import { useCategoryStore } from '../../stores/categories'
 
 const inventoryStore = useInventoryStore()
 const productStore = useProductStore()
-const categoryStore = useCategoryStore()
 
-// Estado reactivo
 const loading = ref(false)
 const search = ref('')
-const selectedCategory = ref(null)
-const stockFilter = ref(null)
+const activeTab = ref('inventory')
 const adjustmentDialog = ref(false)
-const movementDialog = ref(false)
-const historyDialog = ref(false)
 const selectedProduct = ref(null)
 
-// Opciones de filtros
-const stockFilterOptions = [
-  { title: 'Todos', value: null },
-  { title: 'Stock bajo', value: 'low' },
-  { title: 'Sin stock', value: 'empty' },
-  { title: 'Stock normal', value: 'normal' },
-  { title: 'Sobre stock', value: 'over' }
-]
-
-// Headers de la tabla
-const headers = [
-  { title: 'Producto', key: 'name', sortable: true },
-  { title: 'Categoría', key: 'category', sortable: false },
-  { title: 'Stock Actual', key: 'currentStock', sortable: true },
-  { title: 'Límites', key: 'stockLimits', sortable: false },
-  { title: 'Valor', key: 'value', sortable: true },
-  { title: 'Último Mov.', key: 'lastMovement', sortable: true },
-  { title: 'Acciones', key: 'actions', sortable: false, width: '160px' }
-]
-
-// Computed properties
 const products = computed(() => productStore.products)
-const categories = computed(() => categoryStore.categories)
+
+const summary = computed(() => {
+    return {
+        totalProducts: products.value.length,
+        lowStockCount: products.value.filter(p => p.currentStock > 0 && p.currentStock <= p.minStock).length,
+        totalValue: products.value.reduce((sum, p) => sum + (p.currentStock * p.costPrice), 0),
+    }
+})
 
 const filteredProducts = computed(() => {
-  let filtered = products.value
+    if (!search.value) return products.value;
+    const s = search.value.toLowerCase();
+    return products.value.filter(p => p.name.toLowerCase().includes(s) || p.internalCode?.toLowerCase().includes(s));
+})
 
-  if (selectedCategory.value) {
-    filtered = filtered.filter(p => p.categoryId === selectedCategory.value)
-  }
+const productsById = computed(() => Object.fromEntries(products.value.map(p => [p.id, p])));
+const movements = computed(() => inventoryStore.movements);
 
-  if (stockFilter.value) {
-    switch (stockFilter.value) {
-      case 'low':
-        filtered = filtered.filter(p => p.currentStock <= p.minStock && p.currentStock > 0)
-        break
-      case 'empty':
-        filtered = filtered.filter(p => p.currentStock === 0)
-        break
-      case 'normal':
-        filtered = filtered.filter(p => p.currentStock > p.minStock && p.currentStock <= p.maxStock)
-        break
-      case 'over':
-        filtered = filtered.filter(p => p.currentStock > p.maxStock)
-        break
+const filteredMovements = computed(() => {
+    if (!search.value) return movements.value;
+    const s = search.value.toLowerCase();
+    // This requires product names, so we need to map product data to movements
+    const productsById = Object.fromEntries(products.value.map(p => [p.id, p]));
+    return movements.value.filter(m => {
+        const product = productsById[m.productId];
+        return product && (product.name.toLowerCase().includes(s) || product.internalCode?.toLowerCase().includes(s));
+    });
+});
+
+const loadData = async () => {
+    loading.value = true;
+    try {
+        await productStore.fetchProducts();
+        await inventoryStore.fetchMovements();
+    } catch (error) {
+        console.error('Error loading inventory data:', error);
+    } finally {
+        loading.value = false;
     }
-  }
-
-  return filtered
-})
-
-const totalProducts = computed(() => products.value.length)
-const productsInStock = computed(() => products.value.filter(p => p.currentStock > 0).length)
-const lowStockCount = computed(() => products.value.filter(p => p.currentStock <= p.minStock && p.currentStock > 0).length)
-const outOfStockCount = computed(() => products.value.filter(p => p.currentStock === 0).length)
-
-const alerts = computed(() => {
-  return products.value.filter(p => p.currentStock <= p.minStock && p.currentStock >= 0)
-})
-
-// Métodos
-const loadInventory = async () => {
-  loading.value = true
-  try {
-    await productStore.fetchProducts()
-    await categoryStore.fetchCategories()
-    await inventoryStore.fetchMovements()
-  } catch (error) {
-    console.error('Error cargando inventario:', error)
-  } finally {
-    loading.value = false
-  }
 }
 
 const openAdjustmentDialog = (product = null) => {
@@ -380,68 +207,35 @@ const openAdjustmentDialog = (product = null) => {
   adjustmentDialog.value = true
 }
 
-const openMovementDialog = () => {
-  movementDialog.value = true
-}
-
-const viewMovements = (product) => {
-  selectedProduct.value = product
-  historyDialog.value = true
-}
-
-const quickAdjustment = async (product, action) => {
-  const quantity = action === 'add' ? 1 : -1
-  const newStock = Math.max(0, product.currentStock + quantity)
-  
-  try {
-    await inventoryStore.adjustStock(product.id, newStock, 'ajuste_rapido')
-    await loadInventory()
-  } catch (error) {
-    console.error('Error en ajuste rápido:', error)
-  }
-}
-
 const onAdjustmentSaved = () => {
   adjustmentDialog.value = false
   selectedProduct.value = null
-  loadInventory()
+  loadData()
 }
 
-const onMovementSaved = () => {
-  movementDialog.value = false
-  loadInventory()
-}
-
-const dismissAlerts = () => {
-  // Implementar lógica para marcar alertas como vistas
-}
-
-const getStockColor = (product) => {
-  if (product.currentStock === 0) return 'error'
-  if (product.currentStock <= product.minStock) return 'warning'
-  if (product.currentStock > product.maxStock) return 'info'
-  return 'success'
-}
-
-const getStockPercentage = (product) => {
-  if (product.maxStock === 0) return 0
-  return Math.min(100, (product.currentStock / product.maxStock) * 100)
-}
 
 const formatCurrency = (amount) => {
-  return new Intl.NumberFormat('es-VE', {
-    style: 'currency',
-    currency: 'VES'
-  }).format(amount)
+    if (typeof amount !== 'number') return '$0.00';
+    return amount.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
 }
 
-const formatDate = (date) => {
-  if (!date) return 'N/A'
-  return new Date(date).toLocaleDateString('es-VE')
-}
+const getStockStatusClass = (product) => {
+  if (product.currentStock === 0) return 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300';
+  if (product.currentStock <= product.minStock) return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300';
+  return 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300';
+};
 
-// Lifecycle
-onMounted(() => {
-  loadInventory()
-})
+const getStockStatusText = (product) => {
+  if (product.currentStock === 0) return 'Agotado';
+  if (product.currentStock <= product.minStock) return 'Stock Bajo';
+  return 'Normal';
+};
+
+onMounted(loadData)
 </script>
+
+<style scoped>
+.form-input {
+  @apply w-full px-3 py-2 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm;
+}
+</style>

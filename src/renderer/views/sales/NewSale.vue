@@ -1,308 +1,135 @@
 <template>
-  <div>
-    <v-row class="mb-4">
-      <v-col cols="12" md="6">
-        <h1 class="text-h4">Nueva Venta</h1>
-        <v-chip
-          :color="currentMode === 'bodega' ? 'orange' : 'green'"
-          size="small"
-          class="mt-2"
-        >
-          <v-icon left>{{ currentMode === 'bodega' ? 'mdi-warehouse' : 'mdi-store' }}</v-icon>
-          Modo {{ currentMode === 'bodega' ? 'Bodega' : 'Tienda' }}
-        </v-chip>
-      </v-col>
-      <v-col cols="12" md="6" class="text-right">
-        <v-btn
-          color="error"
-          variant="outlined"
-          @click="clearSale"
-          prepend-icon="mdi-delete"
-          class="mr-2"
-        >
-          Limpiar
-        </v-btn>
-        <v-btn
-          color="success"
-          @click="openPaymentDialog"
-          :disabled="cartItems.length === 0"
-          prepend-icon="mdi-cash"
-        >
-          Procesar Pago
-        </v-btn>
-      </v-col>
-    </v-row>
+  <div class="text-black dark:text-white">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+      <div class="flex items-center">
+        <router-link to="/" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-slate-700 mr-4">
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+        </router-link>
+        <div>
+            <h1 class="text-3xl font-bold">Punto de Venta</h1>
+            <p class="text-gray-500 dark:text-gray-400">Cree una nueva factura para un cliente.</p>
+        </div>
+      </div>
+      <button @click="clearSale" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 flex items-center">
+        <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        <span>Cancelar Venta</span>
+      </button>
+    </div>
 
-    <v-row>
-      <!-- Panel izquierdo: Búsqueda y productos -->
-      <v-col cols="12" lg="8">
-        <!-- Búsqueda de productos -->
-        <v-card class="mb-4">
-          <v-card-title>Buscar Productos</v-card-title>
-          <v-card-text>
-            <v-row>
-              <v-col cols="12" md="8">
-                <v-text-field
-                  v-model="productSearch"
-                  label="Código, nombre o código de barras"
-                  prepend-inner-icon="mdi-magnify"
-                  variant="outlined"
-                  density="compact"
-                  @keyup.enter="searchProducts"
-                  @input="onSearchInput"
-                  clearable
-                />
-              </v-col>
-              <v-col cols="12" md="4">
-                <v-btn
-                  color="primary"
-                  block
-                  @click="openBarcodeScanner"
-                  prepend-icon="mdi-barcode-scan"
-                >
-                  Escanear
-                </v-btn>
-              </v-col>
-            </v-row>
-
-            <!-- Resultados de búsqueda -->
-            <div v-if="searchResults.length > 0" class="mt-4">
-              <v-divider class="mb-3" />
-              <v-row>
-                <v-col
-                  v-for="product in searchResults"
-                  :key="product.id"
-                  cols="12" md="6" lg="4"
-                >
-                  <v-card
-                    variant="outlined"
-                    class="product-card"
-                    @click="addToCart(product)"
-                  >
-                    <v-card-text class="py-2">
-                      <div class="d-flex align-center">
-                        <v-avatar size="40" class="mr-3">
-                          <v-img
-                            v-if="product.image"
-                            :src="product.image"
-                            alt="Producto"
-                          />
-                          <v-icon v-else>mdi-package-variant</v-icon>
-                        </v-avatar>
-                        <div class="flex-grow-1">
-                          <div class="font-weight-medium text-truncate">
-                            {{ product.name }}
-                          </div>
-                          <div class="text-caption text-medium-emphasis">
-                            {{ product.internalCode }}
-                          </div>
-                          <div class="text-h6 text-primary">
-                            {{ formatCurrency(getProductPrice(product)) }}
-                          </div>
-                        </div>
-                        <div class="text-right">
-                          <v-chip
-                            :color="getStockColor(product)"
-                            size="small"
-                            variant="tonal"
-                          >
-                            {{ product.currentStock }}
-                          </v-chip>
-                        </div>
-                      </div>
-                    </v-card-text>
-                  </v-card>
-                </v-col>
-              </v-row>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Left Column -->
+      <div class="lg:col-span-2 space-y-6">
+        <!-- Customer Info -->
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md">
+          <h2 class="text-xl font-semibold mb-4">Información del Cliente</h2>
+          <div class="flex space-x-4">
+            <div class="flex-grow">
+              <CustomAutocomplete
+                v-model="selectedCustomer"
+                :items="customers"
+                item-title="displayName"
+                item-value="id"
+                placeholder="Busque o seleccione un cliente"
+                @update:modelValue="onCustomerSelected"
+              />
             </div>
-          </v-card-text>
-        </v-card>
+            <button class="bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 px-4 py-2 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900 flex items-center">
+              <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg>
+              <span>Nuevo Cliente</span>
+            </button>
+          </div>
+           <div v-if="!selectedCustomer" class="text-center py-6 border-2 border-dashed rounded-lg mt-4">
+            <p class="text-gray-500">Ningún cliente seleccionado</p>
+          </div>
+          <!-- Customer details would go here -->
+        </div>
 
-        <!-- Calculadora integrada -->
-        <v-card>
-          <v-card-title>Calculadora</v-card-title>
-          <v-card-text>
-            <Calculator @result="onCalculatorResult" />
-          </v-card-text>
-        </v-card>
-      </v-col>
+        <!-- Product Search -->
+        <div class="relative">
+          <svg class="h-5 w-5 text-gray-400 absolute top-3 left-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+          <input
+            type="text"
+            v-model="productSearch"
+            @input="onSearchInput"
+            placeholder="Buscar producto por nombre, código o escanear..."
+            class="w-full pl-12 pr-4 py-3 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <!-- Search results dropdown could be implemented here -->
+        </div>
 
-      <!-- Panel derecho: Carrito y resumen -->
-      <v-col cols="12" lg="4">
-        <!-- Información del cliente (solo en modo tienda) -->
-        <v-card v-if="currentMode === 'tienda'" class="mb-4">
-          <v-card-title>Cliente</v-card-title>
-          <v-card-text>
-            <v-autocomplete
-              v-model="selectedCustomer"
-              :items="customers"
-              item-title="displayName"
-              item-value="id"
-              label="Seleccionar cliente"
-              variant="outlined"
-              density="compact"
-              clearable
-              @update:model-value="onCustomerSelected"
-            >
-              <template v-slot:item="{ props, item }">
-                <v-list-item v-bind="props">
-                  <v-list-item-title>{{ item.raw.displayName }}</v-list-item-title>
-                  <v-list-item-subtitle>{{ item.raw.documentNumber }}</v-list-item-subtitle>
-                </v-list-item>
-              </template>
-            </v-autocomplete>
-
-            <div v-if="customerInfo" class="mt-2">
-              <v-chip size="small" :color="customerInfo.category === 'mayorista' ? 'primary' : 'default'">
-                {{ customerInfo.category }}
-              </v-chip>
-              <div class="text-caption mt-1">
-                Descuento: {{ customerInfo.discount }}%
-              </div>
+        <!-- Shopping Cart -->
+        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md">
+          <h2 class="text-xl font-semibold p-6 border-b dark:border-slate-700">Carrito de Compras</h2>
+          <div v-if="cartItems.length === 0" class="text-center py-16 text-gray-500">
+            <svg class="h-12 w-12 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+            <p>El carrito está vacío</p>
+          </div>
+          <div v-else class="divide-y dark:divide-slate-700">
+             <div v-for="(item, index) in cartItems" :key="index" class="p-4 flex items-center space-x-4">
+                <div class="flex-1">
+                    <p class="font-semibold">{{ item.product.name }}</p>
+                    <p class="text-sm text-gray-500">{{ formatCurrency(item.unitPrice) }}</p>
+                </div>
+                <div class="flex items-center">
+                    <button @click="updateQuantity(index, item.quantity - 1)" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-slate-700">-</button>
+                    <span class="px-4">{{ item.quantity }}</span>
+                    <button @click="updateQuantity(index, item.quantity + 1)" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-slate-700">+</button>
+                </div>
+                <p class="w-24 text-right font-semibold">{{ formatCurrency(item.unitPrice * item.quantity) }}</p>
+                <button @click="removeFromCart(index)" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-slate-700">
+                    <svg class="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                </button>
             </div>
-          </v-card-text>
-        </v-card>
+          </div>
+        </div>
+      </div>
 
-        <!-- Carrito de compras -->
-        <v-card class="mb-4">
-          <v-card-title class="d-flex justify-space-between align-center">
-            <span>Carrito ({{ cartItems.length }})</span>
-            <v-select
-              v-model="saleType"
-              :items="saleTypeOptions"
-              variant="outlined"
-              density="compact"
-              hide-details
-              style="max-width: 120px"
-            />
-          </v-card-title>
-          <v-card-text class="pa-0">
-            <div v-if="cartItems.length === 0" class="text-center py-8 text-medium-emphasis">
-              <v-icon size="48" class="mb-2">mdi-cart-outline</v-icon>
-              <div>Carrito vacío</div>
-              <div class="text-caption">Busca y agrega productos</div>
-            </div>
+      <!-- Right Column -->
+      <div class="lg:col-span-1">
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md sticky top-8">
+          <h2 class="text-xl font-semibold mb-4">Resumen de la Venta</h2>
+          <div class="space-y-3">
+            <div class="flex justify-between"><span>Subtotal</span><span>{{ formatCurrency(subtotal) }}</span></div>
+            <div class="flex justify-between"><span>Descuento</span><span class="text-green-500">-{{ formatCurrency(discountAmount) }}</span></div>
+            <div class="flex justify-between"><span>IVA ({{ defaultTaxRate }}%)</span><span>{{ formatCurrency(taxAmount) }}</span></div>
+            <div class="border-t dark:border-slate-700 my-3"></div>
+            <div class="flex justify-between font-bold text-lg"><span>Total</span><span>{{ formatCurrency(total) }}</span></div>
+          </div>
 
-            <v-list v-else density="compact">
-              <v-list-item
-                v-for="(item, index) in cartItems"
-                :key="index"
-                class="px-3"
-              >
-                <template v-slot:prepend>
-                  <v-avatar size="32">
-                    <v-img
-                      v-if="item.product.image"
-                      :src="item.product.image"
-                      alt="Producto"
-                    />
-                    <v-icon v-else size="16">mdi-package-variant</v-icon>
-                  </v-avatar>
-                </template>
+          <div class="mt-6">
+            <label for="global-discount" class="block text-sm font-medium mb-1">Descuento Global ($)</label>
+            <input type="number" v-model.number="manualDiscountAmount" id="global-discount" class="form-input" placeholder="0" />
+          </div>
 
-                <v-list-item-title class="text-wrap">
-                  {{ item.product.name }}
-                </v-list-item-title>
-                <v-list-item-subtitle>
-                  {{ formatCurrency(item.unitPrice) }} x {{ item.quantity }}
-                </v-list-item-subtitle>
+          <div class="mt-4">
+            <label for="payment-method" class="block text-sm font-medium mb-1">Método de Pago</label>
+            <select id="payment-method" v-model="paymentMethod" class="form-input">
+              <option>Efectivo (Bs)</option>
+              <option>Tarjeta</option>
+              <option>Transferencia</option>
+            </select>
+          </div>
 
-                <template v-slot:append>
-                  <div class="d-flex align-center">
-                    <v-btn
-                      icon="mdi-minus"
-                      size="x-small"
-                      variant="text"
-                      @click="updateQuantity(index, item.quantity - 1)"
-                    />
-                    <span class="mx-2 font-weight-medium">{{ item.quantity }}</span>
-                    <v-btn
-                      icon="mdi-plus"
-                      size="x-small"
-                      variant="text"
-                      @click="updateQuantity(index, item.quantity + 1)"
-                    />
-                    <v-btn
-                      icon="mdi-delete"
-                      size="x-small"
-                      variant="text"
-                      color="error"
-                      class="ml-2"
-                      @click="removeFromCart(index)"
-                    />
-                  </div>
-                </template>
-              </v-list-item>
-            </v-list>
-          </v-card-text>
-        </v-card>
+          <div class="mt-4">
+            <label for="notes" class="block text-sm font-medium mb-1">Notas</label>
+            <textarea id="notes" v-model="notes" rows="3" class="form-input" placeholder="Añadir notas a la factura..."></textarea>
+          </div>
 
-        <!-- Resumen de la venta -->
-        <v-card>
-          <v-card-title>Resumen</v-card-title>
-          <v-card-text>
-            <div class="d-flex justify-space-between mb-2">
-              <span>Subtotal:</span>
-              <span>{{ formatCurrency(subtotal) }}</span>
-            </div>
+          <div class="mt-6">
+            <button @click="openPaymentDialog" :disabled="cartItems.length === 0" class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed">
+              Procesar Venta
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
-            <div v-if="discountAmount > 0" class="d-flex justify-space-between mb-2">
-              <span>Descuento:</span>
-              <span class="text-success">-{{ formatCurrency(discountAmount) }}</span>
-            </div>
-
-            <div v-if="taxAmount > 0" class="d-flex justify-space-between mb-2">
-              <span>IVA ({{ defaultTaxRate }}%):</span>
-              <span>{{ formatCurrency(taxAmount) }}</span>
-            </div>
-
-            <v-divider class="my-2" />
-
-            <div class="d-flex justify-space-between text-h6 font-weight-bold">
-              <span>Total:</span>
-              <span>{{ formatCurrency(total) }}</span>
-            </div>
-
-            <!-- Controles de descuento -->
-            <v-row class="mt-3">
-              <v-col cols="6">
-                <v-text-field
-                  v-model.number="discountPercentage"
-                  label="Desc. %"
-                  variant="outlined"
-                  density="compact"
-                  type="number"
-                  suffix="%"
-                  @input="calculateTotals"
-                />
-              </v-col>
-              <v-col cols="6">
-                <v-text-field
-                  v-model.number="manualDiscountAmount"
-                  label="Desc. Bs"
-                  variant="outlined"
-                  density="compact"
-                  type="number"
-                  @input="onManualDiscountChange"
-                />
-              </v-col>
-            </v-row>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
-
-    <!-- Dialog de pago -->
+    <!-- Dialogs -->
     <PaymentDialog
       v-model="paymentDialog"
       :sale-data="saleData"
       @payment-completed="onPaymentCompleted"
-    />
-
-    <!-- Dialog de escáner de código de barras -->
-    <BarcodeScanner
-      v-model="scannerDialog"
-      @barcode-scanned="onBarcodeScanned"
     />
   </div>
 </template>
@@ -310,260 +137,137 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import PaymentDialog from '../../components/sales/PaymentDialog.vue'
-import BarcodeScanner from '../../components/sales/BarcodeScanner.vue'
-import Calculator from '../../components/sales/Calculator.vue'
+import CustomAutocomplete from '../../components/ui/CustomAutocomplete.vue'
 import { useProductStore } from '../../stores/products'
 import { useCustomerStore } from '../../stores/customers'
-import { useSalesStore } from '../../stores/sales'
 import { useAppStore } from '../../stores/app'
 
 const productStore = useProductStore()
 const customerStore = useCustomerStore()
-const salesStore = useSalesStore()
 const appStore = useAppStore()
 
-// Estado reactivo
+// State
 const productSearch = ref('')
 const searchResults = ref([])
 const cartItems = ref([])
 const selectedCustomer = ref(null)
 const customerInfo = ref(null)
-const saleType = ref('detal')
-const discountPercentage = ref(0)
 const manualDiscountAmount = ref(0)
 const paymentDialog = ref(false)
-const scannerDialog = ref(false)
+const paymentMethod = ref('Efectivo (Bs)')
+const notes = ref('')
 
-// Opciones
-const saleTypeOptions = [
-  { title: 'Detal', value: 'detal' },
-  { title: 'Mayorista', value: 'mayorista' },
-  { title: 'Mixta', value: 'mixta' }
-]
-
-// Computed properties
-const currentMode = computed(() => appStore.mode)
+// Computed
 const customers = computed(() => customerStore.customers.map(c => ({
   ...c,
   displayName: c.companyName || `${c.firstName} ${c.lastName}`
 })))
 const defaultTaxRate = computed(() => appStore.settings.defaultTaxRate || 16)
 
-const subtotal = computed(() => {
-  return cartItems.value.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0)
-})
-
-const discountAmount = computed(() => {
-  if (manualDiscountAmount.value > 0) {
-    return manualDiscountAmount.value
-  }
-  return subtotal.value * (discountPercentage.value / 100)
-})
-
-const taxAmount = computed(() => {
-  const taxableAmount = subtotal.value - discountAmount.value
-  return taxableAmount * (defaultTaxRate.value / 100)
-})
-
-const total = computed(() => {
-  return subtotal.value - discountAmount.value + taxAmount.value
-})
+const subtotal = computed(() => cartItems.value.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0))
+const discountAmount = computed(() => manualDiscountAmount.value || 0)
+const taxAmount = computed(() => (subtotal.value - discountAmount.value) * (defaultTaxRate.value / 100))
+const total = computed(() => subtotal.value - discountAmount.value + taxAmount.value)
 
 const saleData = computed(() => ({
   items: cartItems.value,
   customerId: selectedCustomer.value,
-  saleType: saleType.value,
-  operationMode: currentMode.value,
   subtotal: subtotal.value,
   discountAmount: discountAmount.value,
-  discountPercentage: discountPercentage.value,
   taxAmount: taxAmount.value,
-  total: total.value
+  total: total.value,
+  paymentMethod: paymentMethod.value,
+  notes: notes.value
 }))
 
-// Métodos
-const searchProducts = async () => {
-  if (!productSearch.value.trim()) {
-    searchResults.value = []
-    return
+// Methods
+const onSearchInput = async () => {
+  if (productSearch.value.length < 2) {
+    searchResults.value = [];
+    return;
   }
-
   try {
-    const results = await productStore.searchProducts(productSearch.value)
-    searchResults.value = results.slice(0, 12) // Limitar resultados
+    const results = await productStore.searchProducts(productSearch.value);
+    if (results.length === 1) {
+        addToCart(results[0]);
+        productSearch.value = '';
+    } else {
+        searchResults.value = results;
+    }
   } catch (error) {
-    console.error('Error buscando productos:', error)
-  }
-}
-
-const onSearchInput = () => {
-  if (productSearch.value.length >= 2) {
-    searchProducts()
-  } else {
-    searchResults.value = []
+    console.error('Error searching products:', error);
   }
 }
 
 const addToCart = (product) => {
-  if (product.currentStock <= 0) {
-    // Mostrar alerta de stock insuficiente
-    return
-  }
-
-  const existingIndex = cartItems.value.findIndex(item => item.product.id === product.id)
-  
+  if (product.currentStock <= 0) return;
+  const existingIndex = cartItems.value.findIndex(item => item.product.id === product.id);
   if (existingIndex >= 0) {
-    updateQuantity(existingIndex, cartItems.value[existingIndex].quantity + 1)
+    updateQuantity(existingIndex, cartItems.value[existingIndex].quantity + 1);
   } else {
     cartItems.value.push({
       product,
       quantity: 1,
-      unitPrice: getProductPrice(product),
-      discountPercentage: 0,
-      discountAmount: 0
-    })
+      unitPrice: product.retailPrice, // Simplified pricing
+    });
   }
-
-  // Limpiar búsqueda
-  productSearch.value = ''
-  searchResults.value = []
 }
 
 const updateQuantity = (index, newQuantity) => {
   if (newQuantity <= 0) {
-    removeFromCart(index)
-    return
+    removeFromCart(index);
+    return;
   }
-
-  const item = cartItems.value[index]
-  if (newQuantity > item.product.currentStock) {
-    // Mostrar alerta de stock insuficiente
-    return
-  }
-
-  cartItems.value[index].quantity = newQuantity
-  calculateTotals()
+  if (newQuantity > cartItems.value[index].product.currentStock) return;
+  cartItems.value[index].quantity = newQuantity;
 }
 
 const removeFromCart = (index) => {
-  cartItems.value.splice(index, 1)
-  calculateTotals()
-}
-
-const getProductPrice = (product) => {
-  switch (saleType.value) {
-    case 'mayorista':
-      return product.wholesalePrice || product.retailPrice
-    case 'detal':
-    default:
-      return product.retailPrice
-  }
-}
-
-const getStockColor = (product) => {
-  if (product.currentStock === 0) return 'error'
-  if (product.currentStock <= product.minStock) return 'warning'
-  return 'success'
+  cartItems.value.splice(index, 1);
 }
 
 const onCustomerSelected = async (customerId) => {
   if (customerId) {
-    customerInfo.value = await customerStore.getCustomerById(customerId)
-    if (customerInfo.value?.discount > 0) {
-      discountPercentage.value = customerInfo.value.discount
-      calculateTotals()
-    }
+    customerInfo.value = await customerStore.getCustomerById(customerId);
   } else {
-    customerInfo.value = null
-    discountPercentage.value = 0
-    calculateTotals()
-  }
-}
-
-const calculateTotals = () => {
-  // Recalcular precios según tipo de venta
-  cartItems.value.forEach(item => {
-    item.unitPrice = getProductPrice(item.product)
-  })
-}
-
-const onManualDiscountChange = () => {
-  if (manualDiscountAmount.value > 0) {
-    discountPercentage.value = 0
+    customerInfo.value = null;
   }
 }
 
 const clearSale = () => {
-  cartItems.value = []
-  selectedCustomer.value = null
-  customerInfo.value = null
-  discountPercentage.value = 0
-  manualDiscountAmount.value = 0
-  productSearch.value = ''
-  searchResults.value = []
+  cartItems.value = [];
+  selectedCustomer.value = null;
+  customerInfo.value = null;
+  manualDiscountAmount.value = 0;
+  productSearch.value = '';
+  searchResults.value = [];
+  notes.value = '';
 }
 
 const openPaymentDialog = () => {
-  paymentDialog.value = true
-}
-
-const openBarcodeScanner = () => {
-  scannerDialog.value = true
-}
-
-const onBarcodeScanned = async (barcode) => {
-  scannerDialog.value = false
-  const product = await productStore.getProductByBarcode(barcode)
-  if (product) {
-    addToCart(product)
-  }
-}
-
-const onCalculatorResult = (result) => {
-  // Usar resultado de calculadora como descuento o cantidad
-  if (cartItems.value.length > 0) {
-    manualDiscountAmount.value = result
-    discountPercentage.value = 0
-  }
+  paymentDialog.value = true;
 }
 
 const onPaymentCompleted = (saleResult) => {
-  paymentDialog.value = false
-  clearSale()
-  
-  // Mostrar confirmación y opción de imprimir
-  console.log('Venta completada:', saleResult)
+  paymentDialog.value = false;
+  clearSale();
+  console.log('Sale completed:', saleResult);
 }
 
 const formatCurrency = (amount) => {
-  return new Intl.NumberFormat('es-VE', {
-    style: 'currency',
-    currency: 'VES'
-  }).format(amount)
+  if (typeof amount !== 'number') return '$0.00';
+  return amount.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
 }
 
-// Watchers
-watch(saleType, () => {
-  calculateTotals()
-})
-
-// Lifecycle
 onMounted(async () => {
-  await productStore.fetchProducts()
-  if (appStore.mode === 'tienda') {
-    await customerStore.fetchCustomers()
-  }
-})
+  await productStore.fetchProducts();
+  await customerStore.fetchCustomers();
+});
+
 </script>
 
 <style scoped>
-.product-card {
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.product-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+.form-input {
+  @apply w-full px-3 py-2 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-md shadow-sm;
 }
 </style>
