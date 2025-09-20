@@ -9,88 +9,79 @@ router.get("/dashboard", authenticateToken, requirePermission("reports"), async 
   try {
     const today = new Date()
     const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
-    const startOfYear = new Date(today.getFullYear(), 0, 1)
+    const sevenDaysAgo = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7)
 
-    // Today's sales
-    const todaySales = await Sale.findOne({
-      where: {
-        saleDate: {
-          [sequelize.Op.gte]: startOfDay,
-        },
-      },
-      attributes: [
-        [sequelize.fn("COUNT", sequelize.col("id")), "count"],
-        [sequelize.fn("SUM", sequelize.col("total")), "total"],
-      ],
+    // General stats
+    const totalProducts = await Product.count()
+    const totalCustomers = await Customer.count()
+    const totalSales = await Sale.sum("total")
+    const inventoryValue = await Product.sum(sequelize.literal("currentStock * costPrice"))
+
+    // Sales today
+    const todaySales = await Sale.sum("total", {
+      where: { saleDate: { [sequelize.Op.gte]: startOfDay } },
     })
 
-    // Monthly sales
-    const monthlySales = await Sale.findOne({
-      where: {
-        saleDate: {
-          [sequelize.Op.gte]: startOfMonth,
-        },
-      },
+    // Sales last 7 days for chart
+    const salesLast7Days = await Sale.findAll({
+      where: { saleDate: { [sequelize.Op.gte]: sevenDaysAgo } },
       attributes: [
-        [sequelize.fn("COUNT", sequelize.col("id")), "count"],
+        [sequelize.fn("DATE", sequelize.col("saleDate")), "date"],
         [sequelize.fn("SUM", sequelize.col("total")), "total"],
       ],
+      group: [sequelize.fn("DATE", sequelize.col("saleDate"))],
+      order: [[sequelize.fn("DATE", sequelize.col("saleDate")), "ASC"]],
     })
 
-    // Low stock products
+    // Alerts
     const lowStockProducts = await Product.findAll({
       where: {
-        stock: {
-          [sequelize.Op.lte]: sequelize.col("minStock"),
-        },
-        isActive: true,
+        currentStock: { [sequelize.Op.lte]: sequelize.col("minStock") },
+        status: 'activo',
       },
-      attributes: ["id", "name", "stock", "minStock"],
-      limit: 10,
-    })
-
-    // Top selling products this month
-    const topProducts = await SaleItem.findAll({
-      include: [
-        {
-          model: Sale,
-          where: {
-            saleDate: {
-              [sequelize.Op.gte]: startOfMonth,
-            },
-          },
-          attributes: [],
-        },
-        {
-          model: Product,
-          attributes: ["name"],
-        },
-      ],
-      attributes: [
-        "productId",
-        [sequelize.fn("SUM", sequelize.col("quantity")), "totalSold"],
-        [sequelize.fn("SUM", sequelize.col("SaleItem.total")), "totalRevenue"],
-      ],
-      group: ["productId", "Product.id"],
-      order: [[sequelize.fn("SUM", sequelize.col("quantity")), "DESC"]],
+      attributes: ["id", "name", "currentStock", "minStock"],
       limit: 5,
     })
 
+    // Quick summary
+    const activeProducts = await Product.count({ where: { status: 'activo' } })
+    const activeCustomers = await Customer.count({ where: { status: "active" } })
+    const lowStockCount = await Product.count({
+      where: {
+        currentStock: { [sequelize.Op.lte]: sequelize.col("minStock") },
+        status: 'activo',
+      },
+    })
+    const pendingInvoices = await Sale.count({ where: { status: "pending" } })
+
+    // Recent sales
+    const recentSales = await Sale.findAll({
+      limit: 5,
+      order: [["saleDate", "DESC"]],
+      include: [{ model: Customer, attributes: ["name"] }],
+    })
+
     res.json({
-      todaySales: {
-        count: Number.parseInt(todaySales?.dataValues?.count || 0),
-        total: Number.parseFloat(todaySales?.dataValues?.total || 0),
+      summary: {
+        totalProducts,
+        totalCustomers,
+        totalSales: totalSales || 0,
+        todaySales: todaySales || 0,
+        inventoryValue: inventoryValue || 0,
       },
-      monthlySales: {
-        count: Number.parseInt(monthlySales?.dataValues?.count || 0),
-        total: Number.parseFloat(monthlySales?.dataValues?.total || 0),
-      },
+      salesLast7Days,
       lowStockProducts,
-      topProducts,
+      quickSummary: {
+        activeProducts,
+        activeCustomers,
+        lowStockCount,
+        pendingInvoices,
+      },
+      recentSales,
     })
   } catch (error) {
-    res.status(500).json({ error: error.message })
+    console.error("Error fetching dashboard data:", error)
+    res.status(500).json({ error: "Failed to fetch dashboard data" })
   }
 })
 
