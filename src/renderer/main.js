@@ -7,6 +7,7 @@ import "vuetify/styles"
 
 import App from "./App.vue"
 import router from "./router"
+import { useAuthStore } from "./stores/auth"
 
 // Configuración de Vuetify
 const vuetify = createVuetify({
@@ -49,3 +50,12 @@ app.use(router)
 app.use(vuetify)
 
 app.mount("#app")
+
+// Inicialización de la autenticación
+async function initializeAuth() {
+  const authStore = useAuthStore()
+  if (authStore.token) {
+    await authStore.checkAuth()
+  }
+}
+initializeAuth()

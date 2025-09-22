@@ -1,4 +1,5 @@
 import { defineStore } from "pinia"
+import api from "@/services/api.js"
 
 export const useSalesStore = defineStore("sales", {
   state: () => ({
@@ -38,9 +39,8 @@ export const useSalesStore = defineStore("sales", {
       this.loading = true
       try {
         const queryParams = new URLSearchParams(filters).toString()
-        const response = await fetch(`/api/sales?${queryParams}`)
-        if (!response.ok) throw new Error("Error fetching sales")
-        this.sales = await response.json()
+        const data = await api.get(`/sales?${queryParams}`)
+        this.sales = data
       } catch (error) {
         this.error = error.message
         console.error("Error fetching sales:", error)
@@ -51,17 +51,7 @@ export const useSalesStore = defineStore("sales", {
 
     async createSale(saleData) {
       try {
-        const response = await fetch("/api/sales", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(saleData),
-        })
-
-        if (!response.ok) throw new Error("Error creating sale")
-
-        const newSale = await response.json()
+        const newSale = await api.post("/sales", saleData)
         this.sales.unshift(newSale)
         return newSale
       } catch (error) {
@@ -72,17 +62,7 @@ export const useSalesStore = defineStore("sales", {
 
     async updateSale(id, saleData) {
       try {
-        const response = await fetch(`/api/sales/${id}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(saleData),
-        })
-
-        if (!response.ok) throw new Error("Error updating sale")
-
-        const updatedSale = await response.json()
+        const updatedSale = await api.put(`/sales/${id}`, saleData)
         const index = this.sales.findIndex((s) => s.id === id)
         if (index !== -1) {
           this.sales[index] = updatedSale
@@ -96,17 +76,7 @@ export const useSalesStore = defineStore("sales", {
 
     async cancelSale(id, reason) {
       try {
-        const response = await fetch(`/api/sales/${id}/cancel`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ reason }),
-        })
-
-        if (!response.ok) throw new Error("Error canceling sale")
-
-        const canceledSale = await response.json()
+        const canceledSale = await api.put(`/sales/${id}/cancel`, { reason })
         const index = this.sales.findIndex((s) => s.id === id)
         if (index !== -1) {
           this.sales[index] = canceledSale
@@ -120,11 +90,11 @@ export const useSalesStore = defineStore("sales", {
 
     async generateInvoice(saleId, format = "pdf") {
       try {
-        const response = await fetch(`/api/sales/${saleId}/invoice?format=${format}`)
-        if (!response.ok) throw new Error("Error generating invoice")
+        // Nuestro servicio api.js ahora maneja esto. No necesitamos opciones especiales aquí.
+        const response = await api.get(`/sales/${saleId}/invoice?format=${format}`)
 
         if (format === "pdf") {
-          const blob = await response.blob()
+          const blob = await response.blob() // Convertimos la respuesta a blob
           const url = window.URL.createObjectURL(blob)
           const a = document.createElement("a")
           a.href = url
@@ -142,11 +112,8 @@ export const useSalesStore = defineStore("sales", {
     async getSalesReport(filters = {}) {
       try {
         const queryParams = new URLSearchParams(filters).toString()
-        const response = await fetch(`/api/sales/report?${queryParams}`)
-
-        if (!response.ok) throw new Error("Error generating sales report")
-
-        return await response.json()
+        const data = await api.get(`/sales/report?${queryParams}`)
+        return data
       } catch (error) {
         this.error = error.message
         throw error

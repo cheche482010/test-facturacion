@@ -1,4 +1,5 @@
 import { defineStore } from "pinia"
+import api from "@/services/api.js"
 
 export const useReportsStore = defineStore("reports", {
   state: () => ({
@@ -13,17 +14,7 @@ export const useReportsStore = defineStore("reports", {
   actions: {
     async fetchDashboardData() {
       try {
-        const response = await fetch("/api/reports/dashboard", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        })
-
-        if (!response.ok) {
-          throw new Error("Error al cargar datos del dashboard")
-        }
-
-        const data = await response.json()
+        const data = await api.get("/reports/dashboard")
         this.dashboardData = data
         return data
       } catch (error) {
@@ -34,17 +25,7 @@ export const useReportsStore = defineStore("reports", {
     async fetchSalesReport(params) {
       try {
         const queryParams = new URLSearchParams(params)
-        const response = await fetch(`/api/reports/sales?${queryParams}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        })
-
-        if (!response.ok) {
-          throw new Error("Error al cargar reporte de ventas")
-        }
-
-        const data = await response.json()
+        const data = await api.get(`/reports/sales?${queryParams}`)
         this.salesReports = data
         return data
       } catch (error) {
@@ -55,17 +36,7 @@ export const useReportsStore = defineStore("reports", {
     async fetchProductReport(params) {
       try {
         const queryParams = new URLSearchParams(params)
-        const response = await fetch(`/api/reports/products?${queryParams}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        })
-
-        if (!response.ok) {
-          throw new Error("Error al cargar reporte de productos")
-        }
-
-        const data = await response.json()
+        const data = await api.get(`/reports/products?${queryParams}`)
         this.productReports = data
         return data
       } catch (error) {
@@ -76,17 +47,7 @@ export const useReportsStore = defineStore("reports", {
     async fetchInventoryReport(params) {
       try {
         const queryParams = new URLSearchParams(params)
-        const response = await fetch(`/api/reports/inventory?${queryParams}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        })
-
-        if (!response.ok) {
-          throw new Error("Error al cargar reporte de inventario")
-        }
-
-        const data = await response.json()
+        const data = await api.get(`/reports/inventory?${queryParams}`)
         this.inventoryReports = data
         return data
       } catch (error) {
@@ -97,17 +58,7 @@ export const useReportsStore = defineStore("reports", {
     async fetchFinancialReport(params) {
       try {
         const queryParams = new URLSearchParams(params)
-        const response = await fetch(`/api/reports/financial?${queryParams}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        })
-
-        if (!response.ok) {
-          throw new Error("Error al cargar reporte financiero")
-        }
-
-        const data = await response.json()
+        const data = await api.get(`/reports/financial?${queryParams}`)
         this.financialReports = data
         return data
       } catch (error) {
@@ -118,17 +69,7 @@ export const useReportsStore = defineStore("reports", {
     async fetchUserReport(params) {
       try {
         const queryParams = new URLSearchParams(params)
-        const response = await fetch(`/api/reports/users?${queryParams}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        })
-
-        if (!response.ok) {
-          throw new Error("Error al cargar reporte de usuarios")
-        }
-
-        const data = await response.json()
+        const data = await api.get(`/reports/users?${queryParams}`)
         this.userReports = data
         return data
       } catch (error) {

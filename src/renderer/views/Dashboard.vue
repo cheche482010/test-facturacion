@@ -130,8 +130,8 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { useReportsStore } from '../../stores/reports'
-import { formatCurrency, formatDate } from '../utils/formatters'
+import { useReportsStore } from '@/stores/reports'
+import { formatCurrency, formatDate } from '@/utils/formatters'
 
 const reportsStore = useReportsStore()
 const loading = ref(true)
