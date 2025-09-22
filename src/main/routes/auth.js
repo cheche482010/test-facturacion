@@ -8,16 +8,18 @@ const router = express.Router()
 // Login
 router.post("/login", async (req, res) => {
   try {
-    const { username, password } = req.body
+    // El frontend envía 'username', pero contiene el email.
+    // Lo leemos como 'username' y lo usamos para buscar en el campo 'email'.
+    const { username: email, password } = req.body
 
-    const user = await User.findOne({ where: { username, isActive: true } })
+    const user = await User.findOne({ where: { email: email, isActive: true } })
     if (!user) {
-      return res.status(401).json({ error: "Credenciales inválidas" })
+      return res.status(401).json({ error: "Usuario no encontrado" })
     }
 
     const isValidPassword = await user.validatePassword(password)
     if (!isValidPassword) {
-      return res.status(401).json({ error: "Credenciales inválidas" })
+      return res.status(401).json({ error: "Contraseña incorrecta" })
     }
 
     // Actualizar último login
@@ -56,14 +58,10 @@ router.get("/me", authenticateToken, async (req, res) => {
 })
 
 // Logout
-router.post("/logout", authenticateToken, async (req, res) => {
-  try {
-    // In a more complex system, you might want to blacklist the token
-    // For now, we'll just return success and let the client handle token removal
-    res.json({ message: "Sesión cerrada exitosamente" })
-  } catch (error) {
-    res.status(500).json({ error: error.message })
-  }
+// La lógica de invalidar el token se maneja en el cliente.
+// El endpoint solo necesita confirmar que la llamada fue recibida.
+router.post("/logout", authenticateToken, (req, res) => {
+  res.json({ message: "Sesión cerrada exitosamente" })
 })
 
 // Change password
