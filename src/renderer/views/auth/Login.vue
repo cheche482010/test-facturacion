@@ -86,19 +86,21 @@ export default {
     const authStore = useAuthStore()
     return { authStore }
   },
-  async mounted() {
-    // Check if already authenticated
-    if (this.authStore.isAuthenticated) {
-      this.$router.push('/dashboard')
-    }
+  created() {
+    // Al entrar a la vista de Login, se limpia cualquier sesión previa.
+    // Esto asegura que al recargar en desarrollo siempre se muestre el login,
+    // evitando la redirección automática si un token viejo sigue en el estado.
+    this.authStore.logout()
   },
   methods: {
     async login() {
-      if (!this.$refs.form.validate()) return
-      
+      // Validamos el formulario de forma asíncrona
+      const { valid } = await this.$refs.form.validate()
+      if (!valid) return
+
       this.loading = true
       this.error = null
-      
+
       try {
         await this.authStore.login(this.credentials)
         this.$router.push('/dashboard')
