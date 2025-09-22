@@ -309,13 +309,13 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import PaymentDialog from '../../components/sales/PaymentDialog.vue'
-import BarcodeScanner from '../../components/sales/BarcodeScanner.vue'
-import Calculator from '../../components/sales/Calculator.vue'
-import { useProductStore } from '../../stores/products'
-import { useCustomerStore } from '../../stores/customers'
-import { useSalesStore } from '../../stores/sales'
-import { useAppStore } from '../../stores/app'
+import PaymentDialog from '@/components/sales/PaymentDialog.vue'
+import BarcodeScanner from '@/components/sales/BarcodeScanner.vue'
+import Calculator from '@/components/sales/Calculator.vue'
+import { useProductStore } from '@/stores/products.js'
+import { useCustomerStore } from '@/stores/customers.js'
+import { useSalesStore } from '@/stores/sales.js'
+import { useAppStore } from '@/stores/app.js'
 
 const productStore = useProductStore()
 const customerStore = useCustomerStore()

@@ -1,4 +1,6 @@
 import { defineStore } from "pinia"
+import api from "@/services/api.js"
+import router from "@/router"
 
 export const useAuthStore = defineStore("auth", {
   state: () => ({
@@ -27,19 +29,7 @@ export const useAuthStore = defineStore("auth", {
   actions: {
     async login(credentials) {
       try {
-        const response = await fetch("/api/auth/login", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(credentials),
-        })
-
-        const data = await response.json()
-
-        if (!response.ok) {
-          throw new Error(data.message || "Error de autenticación")
-        }
+        const data = await api.post("/auth/login", credentials)
 
         this.token = data.token
         this.user = data.user
@@ -55,12 +45,7 @@ export const useAuthStore = defineStore("auth", {
 
     async logout() {
       try {
-        await fetch("/api/auth/logout", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${this.token}`,
-          },
-        })
+        await api.post("/auth/logout")
       } catch (error) {
         console.error("Error during logout:", error)
       } finally {
@@ -68,6 +53,7 @@ export const useAuthStore = defineStore("auth", {
         this.token = null
         this.isAuthenticated = false
         localStorage.removeItem("token")
+        router.push("/login")
       }
     },
 
@@ -75,51 +61,28 @@ export const useAuthStore = defineStore("auth", {
       if (!this.token) return false
 
       try {
-        const response = await fetch("/api/auth/me", {
-          headers: {
-            Authorization: `Bearer ${this.token}`,
-          },
-        })
-
-        if (response.ok) {
-          const data = await response.json()
-          this.user = data.user
-          this.isAuthenticated = true
-          return true
-        } else {
-          this.logout()
-          return false
-        }
+        const data = await api.get("/auth/me")
+        this.user = data.user
+        this.isAuthenticated = true
+        return true
       } catch (error) {
         this.logout()
         return false
       }
-    },
-
-    async changePassword(currentPassword, newPassword) {
-      try {
-        const response = await fetch("/api/auth/change-password", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${this.token}`,
-          },
-          body: JSON.stringify({
-            currentPassword,
-            newPassword,
-          }),
-        })
-
-        const data = await response.json()
-
-        if (!response.ok) {
-          throw new Error(data.message || "Error al cambiar contraseña")
-        }
-
-        return data
-      } catch (error) {
-        throw error
-      }
-    },
+    }
   },
-})
+
+  async changePassword(currentPassword, newPassword) {
+    try {
+      const data = await api.post("/auth/change-password", {
+        currentPassword,
+        newPassword,
+      })
+
+      return data
+    } catch (error) {
+      throw error
+    }
+  },
+},
+)

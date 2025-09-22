@@ -1,24 +1,28 @@
-import { defineConfig } from "vite"
-import vue from "@vitejs/plugin-vue"
-import { resolve } from "path"
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import path from 'path'
 
-export default defineConfig({
+// https://vitejs.dev/config/
+export default defineConfig(({ command }) => ({
+  root: process.cwd(),
+  // Usa rutas relativas para el build y absolutas para el desarrollo
+  base: command === 'build' ? './' : '/',
   plugins: [vue()],
-  root: ".",
-  build: {
-    outDir: "dist",
-    rollupOptions: {
-      input: {
-        main: resolve(__dirname, "index.html"),
-      },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, 'src/renderer'),
     },
   },
   server: {
-    port: 5173,
-  },
-  resolve: {
-    alias: {
-      "@": resolve(__dirname, "src/renderer"),
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+    },
+    fs: {
+      // Permite servir archivos desde fuera del espacio de trabajo, soluciona problemas de rutas en Windows.
+      strict: false,
     },
   },
-})
+}))
