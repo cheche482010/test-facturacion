@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "concurrently \"npm run dev:vue\" \"npm run dev:electron\"",
     "dev:vue": "vite",
-    "dev:electron": "wait-on http://localhost:5173 && electron .",
+    "dev:electron": "NODE_ENV=development wait-on http://localhost:5173 && electron .",
     "build": "vite build && electron-builder",
     "build:vue": "vite build",
     "build:electron": "electron-builder",
