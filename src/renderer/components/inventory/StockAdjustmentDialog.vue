@@ -96,11 +96,10 @@
                   </div>
                 </v-alert>
               </v-col>
-            </div>
+            </v-row>
 
-            <div v-else>
-              <!-- Ajuste masivo -->
-              <v-row>
+            <!-- Ajuste masivo -->
+            <v-row v-else>
                 <v-col cols="12">
                   <v-select
                     v-model="formData.category"
@@ -157,9 +156,9 @@
                     rows="2"
                   />
                 </v-col>
-              </v-row>
-            </div>
-          </v-form>
+            </v-row>
+          </div>
+        </v-form>
       </v-card-text>
 
       <v-card-actions>
@@ -258,15 +257,27 @@ const adjustmentMessage = computed(() => {
   return 'Sin cambios'
 })
 
+// Métodos
+const resetForm = () => {
+  formData.value = {
+    newStock: props.product?.currentStock || 0,
+    reason: '',
+    notes: '',
+    category: null,
+    adjustmentType: 'fixed',
+    adjustmentValue: 0
+  }
+  form.value?.resetValidation()
+}
+
 // Watchers
 watch(() => props.product, (newProduct) => {
   if (newProduct) {
     formData.value.newStock = newProduct.currentStock
   }
   resetForm()
-}, { immediate: true })
+}, { deep: true, immediate: true })
 
-// Métodos
 const saveAdjustment = async () => {
   if (!form.value.validate()) return
 
@@ -295,6 +306,7 @@ const saveAdjustment = async () => {
     console.error('Error guardando ajuste:', error)
   } finally {
     saving.value = false
+    closeDialog()
   }
 }
 
@@ -302,14 +314,4 @@ const closeDialog = () => {
   dialog.value = false
 }
 
-const resetForm = () => {
-  formData.value = {
-    newStock: props.product?.currentStock || 0,
-    reason: '',
-    notes: '',
-    category: null,
-    adjustmentType: 'fixed',
-    adjustmentValue: 0
-  }
-}
 </script>
