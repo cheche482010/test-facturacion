@@ -1,10 +1,13 @@
 const express = require("express")
 const { InventoryMovement, Product, User, Category, sequelize } = require("../database/models")
 const { Op } = require("sequelize")
+const { authenticateToken } = require("../middleware/auth")
 
 const router = express.Router()
 
-// Obtener movimientos de inventario
+// Todas las rutas de inventario requieren autenticación
+router.use(authenticateToken)
+
 router.get("/movements", async (req, res) => {
   try {
     const { productId, startDate, endDate, movementType, limit = 100 } = req.query
@@ -41,7 +44,6 @@ router.get("/movements", async (req, res) => {
   }
 })
 
-// Obtener movimientos por producto
 router.get("/movements/product/:productId", async (req, res) => {
   try {
     const { productId } = req.params
@@ -63,7 +65,6 @@ router.get("/movements/product/:productId", async (req, res) => {
   }
 })
 
-// Ajustar stock
 router.post("/adjust-stock", async (req, res) => {
   const transaction = await sequelize.transaction()
 
@@ -120,7 +121,6 @@ router.post("/adjust-stock", async (req, res) => {
   }
 })
 
-// Ajuste masivo
 router.post("/mass-adjustment", async (req, res) => {
   const transaction = await sequelize.transaction()
 
@@ -195,7 +195,6 @@ router.post("/mass-adjustment", async (req, res) => {
   }
 })
 
-// Reporte de inventario
 router.get("/report", async (req, res) => {
   try {
     const { category, stockFilter, includeValue = true } = req.query
@@ -250,7 +249,6 @@ router.get("/report", async (req, res) => {
   }
 })
 
-// Alertas de stock
 router.get("/alerts", async (req, res) => {
   try {
     const lowStockProducts = await Product.findAll({

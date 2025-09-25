@@ -1,10 +1,13 @@
 const express = require("express")
 const { Sale, SaleItem, Product, Customer, User, InventoryMovement, sequelize } = require("../database/models")
 const { Op } = require("sequelize")
+const { authenticateToken } = require("../middleware/auth")
 
 const router = express.Router()
 
-// Obtener todas las ventas
+// Todas las rutas de ventas requieren autenticación
+router.use(authenticateToken)
+
 router.get("/", async (req, res) => {
   try {
     const { startDate, endDate, customerId, status, limit = 50 } = req.query
@@ -46,7 +49,6 @@ router.get("/", async (req, res) => {
   }
 })
 
-// Crear nueva venta
 router.post("/", async (req, res) => {
   const transaction = await sequelize.transaction()
 
@@ -167,7 +169,6 @@ router.post("/", async (req, res) => {
   }
 })
 
-// Obtener venta por ID
 router.get("/:id", async (req, res) => {
   try {
     const sale = await Sale.findByPk(req.params.id, {
@@ -192,7 +193,6 @@ router.get("/:id", async (req, res) => {
   }
 })
 
-// Cancelar venta
 router.put("/:id/cancel", async (req, res) => {
   const transaction = await sequelize.transaction()
 
@@ -270,7 +270,6 @@ router.put("/:id/cancel", async (req, res) => {
   }
 })
 
-// Generar factura/recibo
 router.get("/:id/invoice", async (req, res) => {
   try {
     const { format = "json" } = req.query
@@ -310,7 +309,6 @@ router.get("/:id/invoice", async (req, res) => {
   }
 })
 
-// Reporte de ventas
 router.get("/report", async (req, res) => {
   try {
     const { startDate, endDate, groupBy = "day" } = req.query

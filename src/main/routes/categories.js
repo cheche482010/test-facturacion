@@ -1,9 +1,12 @@
 const express = require("express")
 const { Category } = require("../database/models")
+const { authenticateToken } = require("../middleware/auth")
 
 const router = express.Router()
 
-// Obtener todas las categorías
+// Todas las rutas de categorías requieren autenticación
+router.use(authenticateToken)
+
 router.get("/", async (req, res) => {
   try {
     const categories = await Category.findAll({
@@ -19,7 +22,6 @@ router.get("/", async (req, res) => {
   }
 })
 
-// Crear categoría
 router.post("/", async (req, res) => {
   try {
     const category = await Category.create(req.body)
@@ -29,7 +31,6 @@ router.post("/", async (req, res) => {
   }
 })
 
-// Actualizar categoría
 router.put("/:id", async (req, res) => {
   try {
     const category = await Category.findByPk(req.params.id)
@@ -45,7 +46,6 @@ router.put("/:id", async (req, res) => {
   }
 })
 
-// Eliminar categoría
 router.delete("/:id", async (req, res) => {
   try {
     const category = await Category.findByPk(req.params.id)

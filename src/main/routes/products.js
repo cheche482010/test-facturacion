@@ -1,10 +1,13 @@
 const express = require("express")
 const { Product, Category, InventoryMovement } = require("../database/models")
 const { Op } = require("sequelize")
+const { authenticateToken } = require("../middleware/auth")
 
 const router = express.Router()
 
-// Obtener todos los productos
+// Todas las rutas de productos requieren autenticación
+router.use(authenticateToken)
+
 router.get("/", async (req, res) => {
   try {
     const { search, category, status, stockFilter } = req.query
@@ -39,7 +42,6 @@ router.get("/", async (req, res) => {
   }
 })
 
-// Obtener producto por ID
 router.get("/:id", async (req, res) => {
   try {
     const product = await Product.findByPk(req.params.id, {
@@ -56,7 +58,6 @@ router.get("/:id", async (req, res) => {
   }
 })
 
-// Crear producto
 router.post("/", async (req, res) => {
   try {
     const product = await Product.create(req.body)
@@ -87,7 +88,6 @@ router.post("/", async (req, res) => {
   }
 })
 
-// Actualizar producto
 router.put("/:id", async (req, res) => {
   try {
     const product = await Product.findByPk(req.params.id)
@@ -108,7 +108,6 @@ router.put("/:id", async (req, res) => {
   }
 })
 
-// Eliminar producto
 router.delete("/:id", async (req, res) => {
   try {
     const product = await Product.findByPk(req.params.id)
@@ -124,7 +123,6 @@ router.delete("/:id", async (req, res) => {
   }
 })
 
-// Actualizar stock
 router.put("/:id/stock", async (req, res) => {
   try {
     const { newStock, movementType, reason, notes } = req.body
