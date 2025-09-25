@@ -1,28 +1,21 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import path from 'path'
+import { fileURLToPath, URL } from 'node:url'
 
 // https://vitejs.dev/config/
-export default defineConfig(({ command }) => ({
-  root: process.cwd(),
-  // Usa rutas relativas para el build y absolutas para el desarrollo
-  base: command === 'build' ? './' : '/',
-  plugins: [vue()],
+export default defineConfig({
+  plugins: [
+    vue(),
+  ],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src/renderer'),
-    },
+      '@': fileURLToPath(new URL('./src/renderer', import.meta.url))
+    }
   },
   server: {
     proxy: {
-      '/api': {
-        target: 'http://localhost:3001',
-        changeOrigin: true,
-      },
-    },
-    fs: {
-      // Permite servir archivos desde fuera del espacio de trabajo, soluciona problemas de rutas en Windows.
-      strict: false,
-    },
-  },
-}))
+      // Redirigir las peticiones de /api al servidor backend en el puerto 3001
+      '/api': 'http://localhost:3001'
+    }
+  }
+})

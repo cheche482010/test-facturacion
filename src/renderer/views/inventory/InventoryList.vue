@@ -280,12 +280,12 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import StockAdjustmentDialog from '../../components/inventory/StockAdjustmentDialog.vue'
-import InventoryMovementDialog from '../../components/inventory/InventoryMovementDialog.vue'
-import MovementHistoryDialog from '../../components/inventory/MovementHistoryDialog.vue'
-import { useInventoryStore } from '../../stores/inventory'
-import { useProductStore } from '../../stores/products'
-import { useCategoryStore } from '../../stores/categories'
+import StockAdjustmentDialog from '@/components/inventory/StockAdjustmentDialog.vue'
+import InventoryMovementDialog from '@/components/inventory/InventoryMovementDialog.vue'
+import MovementHistoryDialog from '@/components/inventory/MovementHistoryDialog.vue'
+import { useInventoryStore } from '@/stores/inventory'
+import { useProductStore } from '@/stores/products'
+import { useCategoryStore } from '@/stores/categories'
 
 const inventoryStore = useInventoryStore()
 const productStore = useProductStore()
