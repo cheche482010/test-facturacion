@@ -350,6 +350,33 @@ const dialog = computed({
 
 const isEditing = computed(() => !!props.product)
 
+const resetForm = () => {
+  formData.value = {
+    internalCode: '',
+    barcode: '',
+    name: '',
+    description: '',
+    brand: '',
+    unit: 'unidad',
+    categoryId: null,
+    costPrice: 0,
+    costCurrency: 'VES',
+    profitPercentage: 30,
+    retailPrice: 0,
+    wholesalePrice: 0,
+    dollarPrice: 0,
+    taxRate: 16,
+    currentStock: 0,
+    minStock: 5,
+    maxStock: 100,
+    location: '',
+    status: 'activo',
+    expirationDate: null
+  }
+  autoPricing.value = true
+  form.value?.resetValidation()
+}
+
 // Watchers
 watch(() => props.product, (newProduct) => {
   if (newProduct) {
@@ -425,29 +452,4 @@ const closeDialog = () => {
   dialog.value = false
 }
 
-const resetForm = () => {
-  formData.value = {
-    internalCode: '',
-    barcode: '',
-    name: '',
-    description: '',
-    brand: '',
-    unit: 'unidad',
-    categoryId: null,
-    costPrice: 0,
-    costCurrency: 'VES',
-    profitPercentage: 30,
-    retailPrice: 0,
-    wholesalePrice: 0,
-    dollarPrice: 0,
-    taxRate: 16,
-    currentStock: 0,
-    minStock: 5,
-    maxStock: 100,
-    location: '',
-    status: 'activo',
-    expirationDate: null
-  }
-  autoPricing.value = true
-}
 </script>
