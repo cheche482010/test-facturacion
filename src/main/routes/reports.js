@@ -4,8 +4,11 @@ const { authenticateToken, requirePermission } = require("../middleware/auth")
 
 const router = express.Router()
 
+// Todas las rutas de reportes requieren autenticación
+router.use(authenticateToken)
+
 // Dashboard summary
-router.get("/dashboard", authenticateToken, requirePermission("reports"), async (req, res) => {
+router.get("/dashboard", requirePermission("reports"), async (req, res) => {
   try {
     const today = new Date()
     const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate())
@@ -86,7 +89,7 @@ router.get("/dashboard", authenticateToken, requirePermission("reports"), async 
 })
 
 // Sales reports
-router.get("/sales", authenticateToken, requirePermission("reports"), async (req, res) => {
+router.get("/sales", requirePermission("reports"), async (req, res) => {
   try {
     const { startDate, endDate, groupBy = "day" } = req.query
 
@@ -132,7 +135,7 @@ router.get("/sales", authenticateToken, requirePermission("reports"), async (req
 })
 
 // Product performance report
-router.get("/products", authenticateToken, requirePermission("reports"), async (req, res) => {
+router.get("/products", requirePermission("reports"), async (req, res) => {
   try {
     const { startDate, endDate, limit = 20 } = req.query
 
@@ -174,7 +177,7 @@ router.get("/products", authenticateToken, requirePermission("reports"), async (
 })
 
 // Inventory report
-router.get("/inventory", authenticateToken, requirePermission("reports"), async (req, res) => {
+router.get("/inventory", requirePermission("reports"), async (req, res) => {
   try {
     const { category, status = "all" } = req.query
 
@@ -223,7 +226,7 @@ router.get("/inventory", authenticateToken, requirePermission("reports"), async 
 })
 
 // Financial report
-router.get("/financial", authenticateToken, requirePermission("reports"), async (req, res) => {
+router.get("/financial", requirePermission("reports"), async (req, res) => {
   try {
     const { startDate, endDate } = req.query
 
@@ -298,7 +301,7 @@ router.get("/financial", authenticateToken, requirePermission("reports"), async 
 })
 
 // User activity report
-router.get("/users", authenticateToken, requirePermission("reports"), async (req, res) => {
+router.get("/users", requirePermission("reports"), async (req, res) => {
   try {
     const { startDate, endDate } = req.query
 

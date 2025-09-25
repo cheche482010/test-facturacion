@@ -60,7 +60,7 @@ router.get("/me", authenticateToken, async (req, res) => {
 // Logout
 // La lógica de invalidar el token se maneja en el cliente.
 // El endpoint solo necesita confirmar que la llamada fue recibida.
-router.post("/logout", authenticateToken, (req, res) => {
+router.post("/logout", (req, res) => {
   res.json({ message: "Sesión cerrada exitosamente" })
 })
 
