@@ -18,7 +18,7 @@ router.get("/dashboard", requirePermission("reports"), async (req, res) => {
     const totalProducts = await Product.count()
     const totalCustomers = await Customer.count()
     const totalSales = await Sale.sum("total")
-    const inventoryValue = await Product.sum(sequelize.literal("current_stock * cost_price"))
+    const inventoryValue = await Product.sum(sequelize.literal('"currentStock" * "costPrice"'))
 
     // Sales today
     const todaySales = await Sale.sum("total", {
