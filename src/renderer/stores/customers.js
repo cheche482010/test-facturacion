@@ -28,8 +28,8 @@ export const useCustomerStore = defineStore('customers', {
             search: options.search,
           },
         })
-        this.customers = response.data.customers
-        this.pagination.totalItems = response.data.totalItems
+        this.customers = response.customers
+        this.pagination.totalItems = response.totalItems
       } catch (error) {
         this.error = 'Error al cargar los clientes'
         console.error(error)
@@ -43,8 +43,8 @@ export const useCustomerStore = defineStore('customers', {
       this.error = null
       try {
         const response = await api.get(`/customers/${id}`)
-        this.customer = response.data
-        return response.data
+        this.customer = response
+        return response
       } catch (error) {
         this.error = 'Error al cargar el cliente'
         console.error(error)
@@ -59,7 +59,7 @@ export const useCustomerStore = defineStore('customers', {
       this.error = null
       try {
         const response = await api.post('/customers', customerData)
-        this.customers.push(response.data)
+        this.customers.push(response)
         await this.fetchCustomers() // Refresh list
         return true
       } catch (error) {
@@ -78,7 +78,7 @@ export const useCustomerStore = defineStore('customers', {
         const response = await api.put(`/customers/${id}`, customerData)
         const index = this.customers.findIndex(c => c.id === id)
         if (index !== -1) {
-          this.customers[index] = response.data
+          this.customers[index] = response
         }
         await this.fetchCustomers() // Refresh list
         return true
@@ -111,8 +111,9 @@ export const useCustomerStore = defineStore('customers', {
     async searchCustomers(query) {
       if (!query) return []
       try {
-        const response = await api.get('/customers/search', { params: { q: query } })
-        return response.data
+        // Re-route search to the main endpoint with search parameter
+        const response = await api.get('/customers', { params: { search: query, limit: 10 } })
+        return response.customers
       } catch (error) {
         console.error('Error buscando clientes:', error)
         return []
