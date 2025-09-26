@@ -57,20 +57,26 @@ router.post("/", async (req, res) => {
       items,
       customerId,
       saleType,
-      operationMode,
-      subtotal,
-      discountAmount,
-      discountPercentage,
-      taxAmount,
-      total,
+      operationMode = 'tienda', // Default value
       payment,
     } = req.body
+
+    if (!items || items.length === 0) {
+      return res.status(400).json({ error: "La venta debe tener al menos un producto." });
+    }
+
+    // --- INICIO: Lógica de cálculo segura en el backend ---
+    let calculatedSubtotal = 0;
+    let calculatedTaxAmount = 0;
+    let calculatedTotal = 0;
+    const saleItemsData = [];
+    // --- FIN: Lógica de cálculo segura en el backend ---
 
     // Generar número de venta
     const saleCount = await Sale.count({ transaction })
     const saleNumber = `${operationMode.toUpperCase()}-${String(saleCount + 1).padStart(6, "0")}`
 
-    // Crear la venta
+    // Crear la venta (primero con totales en 0, luego se actualizará)
     const sale = await Sale.create(
       {
         saleNumber,
@@ -78,14 +84,14 @@ router.post("/", async (req, res) => {
         userId: req.user?.id || 1, // TODO: Obtener del token JWT
         saleType,
         operationMode,
-        subtotal,
-        taxAmount,
-        discountAmount,
-        discountPercentage,
-        total,
+        subtotal: 0,
+        taxAmount: 0,
+        discountAmount: 0, // Asumimos descuentos por item, no globales por ahora
+        discountPercentage: 0,
+        total: 0,
         paymentMethod: payment.method,
         paymentStatus: payment.method === "credito" ? "pendiente" : "pagado",
-        paidAmount: payment.paidAmount || total,
+        paidAmount: payment.paidAmount || 0, // Se actualizará después con el total calculado
         changeAmount: payment.changeAmount || 0,
         documentType: payment.documentType || "ticket",
         status: "completada",
@@ -96,41 +102,51 @@ router.post("/", async (req, res) => {
 
     // Crear items de la venta y actualizar inventario
     for (const item of items) {
+      const product = await Product.findByPk(item.productId, { transaction, lock: true })
       // Verificar stock disponible
-      const product = await Product.findByPk(item.product.id, { transaction })
       if (!product) {
-        throw new Error(`Producto ${item.product.name} no encontrado`)
+        throw new Error(`Producto con ID ${item.productId} no encontrado`)
       }
 
       if (product.currentStock < item.quantity) {
         throw new Error(`Stock insuficiente para ${product.name}. Disponible: ${product.currentStock}`)
       }
 
+      // --- INICIO: Lógica de cálculo segura en el backend ---
+      const itemSubtotal = product.retailPrice * item.quantity;
+      const itemTaxAmount = (itemSubtotal * (product.taxRate || 0)) / 100;
+      const itemTotal = itemSubtotal; // Asumiendo que el precio ya incluye impuestos o se maneja por separado
+
+      calculatedSubtotal += itemSubtotal;
+      calculatedTaxAmount += itemTaxAmount;
+      calculatedTotal += itemTotal;
+      // --- FIN: Lógica de cálculo segura en el backend ---
+
       // Crear item de venta
       await SaleItem.create(
         {
           saleId: sale.id,
-          productId: item.product.id,
+          productId: product.id,
           quantity: item.quantity,
-          unitPrice: item.unitPrice,
-          discountPercentage: item.discountPercentage || 0,
-          discountAmount: item.discountAmount || 0,
+          unitPrice: product.retailPrice, // Usar precio del producto desde la BD
+          discountPercentage: 0, // Manejar descuentos si es necesario
+          discountAmount: 0,
           taxRate: product.taxRate || 0,
-          taxAmount: (item.unitPrice * item.quantity * (product.taxRate || 0)) / 100,
-          subtotal: item.unitPrice * item.quantity,
-          total: item.unitPrice * item.quantity - (item.discountAmount || 0),
+          taxAmount: itemTaxAmount,
+          subtotal: itemSubtotal,
+          total: itemTotal,
         },
         { transaction },
       )
 
       // Actualizar stock del producto
       const newStock = product.currentStock - item.quantity
-      await product.update({ currentStock: newStock }, { transaction })
+      await product.update({ currentStock: newStock }, { transaction });
 
       // Crear movimiento de inventario
       await InventoryMovement.create(
         {
-          productId: item.product.id,
+          productId: product.id,
           userId: req.user?.id || 1,
           movementType: "salida",
           reason: "venta",
@@ -146,6 +162,16 @@ router.post("/", async (req, res) => {
         { transaction },
       )
     }
+
+    // Actualizar la venta con los totales calculados
+    await sale.update({
+      subtotal: calculatedSubtotal,
+      taxAmount: calculatedTaxAmount,
+      total: calculatedTotal,
+      paidAmount: payment.paidAmount || calculatedTotal,
+      changeAmount: (payment.paidAmount || 0) - calculatedTotal,
+    }, { transaction });
+
 
     await transaction.commit()
 
@@ -304,53 +330,6 @@ router.get("/:id/invoice", async (req, res) => {
         generatedAt: new Date(),
       })
     }
-  } catch (error) {
-    res.status(500).json({ error: error.message })
-  }
-})
-
-router.get("/report", async (req, res) => {
-  try {
-    const { startDate, endDate, groupBy = "day" } = req.query
-
-    const whereClause = {}
-    if (startDate && endDate) {
-      whereClause.saleDate = {
-        [Op.between]: [new Date(startDate), new Date(endDate)],
-      }
-    }
-
-    let dateFormat
-    switch (groupBy) {
-      case "hour":
-        dateFormat = "%Y-%m-%d %H:00:00"
-        break
-      case "day":
-        dateFormat = "%Y-%m-%d"
-        break
-      case "month":
-        dateFormat = "%Y-%m"
-        break
-      case "year":
-        dateFormat = "%Y"
-        break
-      default:
-        dateFormat = "%Y-%m-%d"
-    }
-
-    const salesReport = await Sale.findAll({
-      where: whereClause,
-      attributes: [
-        [sequelize.fn("DATE_FORMAT", sequelize.col("sale_date"), dateFormat), "period"],
-        [sequelize.fn("COUNT", sequelize.col("id")), "totalSales"],
-        [sequelize.fn("SUM", sequelize.col("total")), "totalAmount"],
-        [sequelize.fn("AVG", sequelize.col("total")), "averageAmount"],
-      ],
-      group: [sequelize.fn("DATE_FORMAT", sequelize.col("sale_date"), dateFormat)],
-      order: [[sequelize.fn("DATE_FORMAT", sequelize.col("sale_date"), dateFormat), "DESC"]],
-    })
-
-    res.json(salesReport)
   } catch (error) {
     res.status(500).json({ error: error.message })
   }

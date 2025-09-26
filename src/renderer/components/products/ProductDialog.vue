@@ -165,7 +165,7 @@
 
             <v-col cols="12" md="4">
               <v-text-field
-                v-model.number="formData.dollarPrice"
+                v-model.number="formData.dollar_price"
                 label="Precio en USD"
                 variant="outlined"
                 density="compact"
@@ -332,7 +332,7 @@ const formData = ref({
   profitPercentage: 30,
   retailPrice: 0,
   wholesalePrice: 0,
-  dollarPrice: 0,
+  dollar_price: 0,
   taxRate: 16,
   currentStock: 0,
   minStock: 5,

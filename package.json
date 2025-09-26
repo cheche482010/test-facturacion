@@ -24,7 +24,7 @@
     "directories": {
       "output": "dist"
     },
-    "files": [ 
+    "files": [
       "src/main/",
       "dist/**/*",
       "node_modules/**/*"
@@ -68,7 +68,7 @@
     "path": "0.12.7",
     "pinia": "^2.1.7",
     "sequelize": "^6.35.0",
-    "sqlite3": "^5.1.6",
+    "sqlite3": "^5.1.7",
     "tailwind-merge": "3.3.1",
     "tailwindcss-animate": "1.0.7",
     "vue": "^3.3.8",

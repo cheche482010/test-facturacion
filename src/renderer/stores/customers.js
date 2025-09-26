@@ -1,37 +1,122 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import api from '../services/api'
 
-export const useCustomerStore = defineStore('customers', () => {
-  const customers = ref([])
+export const useCustomerStore = defineStore('customers', {
+  state: () => ({
+    customers: [],
+    customer: null,
+    loading: false,
+    error: null,
+    pagination: {
+      page: 1,
+      itemsPerPage: 15,
+      totalItems: 0,
+    },
+  }),
 
-  async function fetchCustomers() {
-    // This is a mock implementation. Replace with your actual API call.
-    console.log('Fetching customers...')
-    if (customers.value.length === 0) {
-      customers.value = [
-        { id: 1, name: 'Cliente General', idNumber: 'V-000000000', phone: 'N/A', address: 'N/A' },
-        { id: 2, name: 'Ana Pérez', idNumber: 'V-12345678', phone: '0412-1234567', address: 'Calle Falsa 123' },
-        { id: 3, name: 'Carlos Rodríguez', idNumber: 'V-87654321', phone: '0414-7654321', address: 'Avenida Siempre Viva 742' }
-      ]
-    }
-    // In a real app:
-    // const response = await window.api.getCustomers()
-    // customers.value = response.data
-  }
+  actions: {
+    async fetchCustomers(options = {}) {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await api.get('/customers', {
+          params: {
+            page: options.page || this.pagination.page,
+            limit: options.itemsPerPage || this.pagination.itemsPerPage,
+            sortBy: options.sortBy?.[0]?.key,
+            sortOrder: options.sortBy?.[0]?.order,
+            search: options.search,
+          },
+        })
+        this.customers = response.data.customers
+        this.pagination.totalItems = response.data.totalItems
+      } catch (error) {
+        this.error = 'Error al cargar los clientes'
+        console.error(error)
+      } finally {
+        this.loading = false
+      }
+    },
 
-  async function createCustomer(customerData) {
-    // Mock implementation
-    console.log('Creating customer:', customerData)
-    const newId = Math.max(0, ...customers.value.map(c => c.id)) + 1
-    const newCustomer = { id: newId, ...customerData }
-    customers.value.push(newCustomer)
-    return newCustomer
-  }
+    async fetchCustomerById(id) {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await api.get(`/customers/${id}`)
+        this.customer = response.data
+        return response.data
+      } catch (error) {
+        this.error = 'Error al cargar el cliente'
+        console.error(error)
+        return null
+      } finally {
+        this.loading = false
+      }
+    },
 
-  return {
-    customers,
-    fetchCustomers,
-    createCustomer
-    // Add updateCustomer, deleteCustomer etc. as needed
-  }
+    async createCustomer(customerData) {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await api.post('/customers', customerData)
+        this.customers.push(response.data)
+        await this.fetchCustomers() // Refresh list
+        return true
+      } catch (error) {
+        this.error = error.response?.data?.error || 'Error al crear el cliente'
+        console.error(error)
+        return false
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async updateCustomer(id, customerData) {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await api.put(`/customers/${id}`, customerData)
+        const index = this.customers.findIndex(c => c.id === id)
+        if (index !== -1) {
+          this.customers[index] = response.data
+        }
+        await this.fetchCustomers() // Refresh list
+        return true
+      } catch (error) {
+        this.error = error.response?.data?.error || 'Error al actualizar el cliente'
+        console.error(error)
+        return false
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async deleteCustomer(id) {
+      this.loading = true
+      this.error = null
+      try {
+        await api.delete(`/customers/${id}`)
+        this.customers = this.customers.filter(c => c.id !== id)
+        await this.fetchCustomers() // Refresh list
+        return true
+      } catch (error) {
+        this.error = 'Error al eliminar el cliente'
+        console.error(error)
+        return false
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async searchCustomers(query) {
+      if (!query) return []
+      try {
+        const response = await api.get('/customers/search', { params: { q: query } })
+        return response.data
+      } catch (error) {
+        console.error('Error buscando clientes:', error)
+        return []
+      }
+    },
+  },
 })

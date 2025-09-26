@@ -34,7 +34,19 @@
           <v-card-text>
             <!-- Chart placeholder -->
             <div style="height: 300px;" class="d-flex align-center justify-center text-medium-emphasis bg-grey-lighten-4 rounded">
-              [Gráfico de Ventas Aquí]
+              <v-sparkline
+                :value="salesChartData.values"
+                :labels="salesChartData.labels"
+                :gradient="['#1976D2', '#42A5F5', '#64B5F6']"
+                height="100"
+                padding="24"
+                stroke-linecap="round"
+                smooth
+              >
+                <template v-slot:label="item">
+                  {{ item.value }}
+                </template>
+              </v-sparkline>
             </div>
           </v-card-text>
         </v-card>
@@ -153,6 +165,12 @@ const summaryCards = computed(() => [
   { title: 'Ventas Hoy', value: formatCurrency(dashboardData.value.summary?.todaySales), icon: 'mdi-cash-register', color: 'orange' },
   { title: 'Valor Inventario', value: formatCurrency(dashboardData.value.summary?.inventoryValue), icon: 'mdi-warehouse', color: 'deep-purple' },
 ])
+
+const salesChartData = computed(() => {
+  const labels = dashboardData.value.salesLast7Days?.map(d => new Date(d.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })) || []
+  const values = dashboardData.value.salesLast7Days?.map(d => d.total) || []
+  return { labels, values }
+})
 
 const recentSalesHeaders = [
   { title: 'Factura', key: 'invoiceNumber' },
