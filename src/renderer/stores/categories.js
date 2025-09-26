@@ -1,4 +1,5 @@
 import { defineStore } from "pinia"
+import api from "@/services/api"
 
 export const useCategoryStore = defineStore("categories", {
   state: () => ({
@@ -25,9 +26,7 @@ export const useCategoryStore = defineStore("categories", {
     async fetchCategories() {
       this.loading = true
       try {
-        const response = await fetch("/api/categories")
-        if (!response.ok) throw new Error("Error fetching categories")
-        this.categories = await response.json()
+        this.categories = await api.get("/categories")
       } catch (error) {
         this.error = error.message
         console.error("Error fetching categories:", error)
@@ -38,17 +37,7 @@ export const useCategoryStore = defineStore("categories", {
 
     async createCategory(categoryData) {
       try {
-        const response = await fetch("/api/categories", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(categoryData),
-        })
-
-        if (!response.ok) throw new Error("Error creating category")
-
-        const newCategory = await response.json()
+        const newCategory = await api.post("/categories", categoryData)
         this.categories.push(newCategory)
         return newCategory
       } catch (error) {
@@ -59,17 +48,7 @@ export const useCategoryStore = defineStore("categories", {
 
     async updateCategory(id, categoryData) {
       try {
-        const response = await fetch(`/api/categories/${id}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(categoryData),
-        })
-
-        if (!response.ok) throw new Error("Error updating category")
-
-        const updatedCategory = await response.json()
+        const updatedCategory = await api.put(`/categories/${id}`, categoryData)
         const index = this.categories.findIndex((c) => c.id === id)
         if (index !== -1) {
           this.categories[index] = updatedCategory
@@ -83,12 +62,7 @@ export const useCategoryStore = defineStore("categories", {
 
     async deleteCategory(id) {
       try {
-        const response = await fetch(`/api/categories/${id}`, {
-          method: "DELETE",
-        })
-
-        if (!response.ok) throw new Error("Error deleting category")
-
+        await api.delete(`/categories/${id}`)
         this.categories = this.categories.filter((c) => c.id !== id)
       } catch (error) {
         this.error = error.message
