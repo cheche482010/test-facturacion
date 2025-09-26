@@ -12,6 +12,7 @@
                             <v-tab>General</v-tab>
                             <v-tab>Empresa</v-tab>
                             <v-tab>Facturación</v-tab>
+                            <v-tab>Modo de Operación</v-tab>
                             <v-tab>Sistema</v-tab>
                         </v-tabs>
 
@@ -91,6 +92,18 @@
                                 </v-container>
                             </v-tab-item>
 
+                            <!-- Modo de Operación -->
+                            <v-tab-item>
+                                <v-container>
+                                    <v-row>
+                                        <v-col cols="12" md="6">
+                                            <v-select v-model="settings.operationMode" :items="operationModeOptions"
+                                                label="Modo de Operación"></v-select>
+                                        </v-col>
+                                    </v-row>
+                                </v-container>
+                            </v-tab-item>
+
                             <!-- Configuración del Sistema -->
                             <v-tab-item>
                                 <v-container>
@@ -152,6 +165,7 @@ export default {
             nextInvoiceNumber: 1,
             taxRate: 16,
             autoCalculateTax: true,
+            operationMode: 'bodega',
             autoBackup: false,
             backupInterval: 24
         })
@@ -159,6 +173,11 @@ export default {
         const themeOptions = [
             { text: 'Claro', value: 'light' },
             { text: 'Oscuro', value: 'dark' }
+        ]
+
+        const operationModeOptions = [
+            { text: 'Modo Bodega', value: 'bodega' },
+            { text: 'Modo Tienda', value: 'tienda' }
         ]
 
         const loadSettings = async () => {
@@ -211,6 +230,7 @@ export default {
             saving,
             settings,
             themeOptions,
+            operationModeOptions,
             saveSettings,
             createBackup
         }

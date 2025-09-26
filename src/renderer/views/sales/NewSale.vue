@@ -27,7 +27,7 @@
               <template v-slot:item.quantity="{ item }">
                 <v-text-field
                   v-model.number="item.quantity"
-                  type="number"
+                  type="number" 
                   min="1"
                   :max="item.stock"
                   style="width: 100px"
@@ -44,7 +44,7 @@
 
               <template v-slot:item.subtotal="{ item }">
                 <span class="font-weight-bold">
-                  {{ formatCurrency(item.quantity * item.price) }}
+                  {{ formatCurrency(item.subtotal) }}
                 </span>
               </template>
 
@@ -63,6 +63,7 @@
           <v-card-text>
             <!-- Selección de cliente -->
             <v-autocomplete
+              v-if="appStore.operationMode === 'tienda'"
               v-model="selectedCustomerId"
               :items="customers"
               item-title="name"
@@ -117,12 +118,14 @@ import { ref, computed, onMounted } from 'vue'
 import { useProductStore } from '../../stores/products'
 import { useCustomerStore } from '../../stores/customers'
 import { useSaleStore } from '../../stores/sales'
+import { useAppStore } from '../../stores/app'
 import BarcodeScanner from '../../components/sales/BarcodeScanner.vue'
 
 // Stores
 const productStore = useProductStore()
 const customerStore = useCustomerStore()
 const saleStore = useSaleStore()
+const appStore = useAppStore()
 
 // State
 const cartItems = ref([])
@@ -143,11 +146,15 @@ const products = computed(() => productStore.products)
 const customers = computed(() => customerStore.customers)
 
 const totals = computed(() => {
-  const subtotal = cartItems.value.reduce((acc, item) => acc + item.quantity * item.price, 0)
+  const subtotal = cartItems.value.reduce((acc, item) => acc + (item.quantity * item.price), 0)
   const tax = subtotal * 0.16 // Assuming 16% tax
   const total = subtotal + tax
   return { subtotal, tax, total }
 })
+
+const updateItemSubtotal = (item) => {
+  item.subtotal = item.quantity * item.price
+}
 
 // Methods
 const addProductByBarcode = (barcode) => {
@@ -156,26 +163,30 @@ const addProductByBarcode = (barcode) => {
     // Check if product is already in cart
     const existingItem = cartItems.value.find(item => item.id === product.id)
     if (existingItem) {
-      if (existingItem.quantity < product.currentStock) {
+      if (existingItem.quantity < existingItem.stock) {
         existingItem.quantity++
+        updateItemSubtotal(existingItem)
       } else {
         // Handle stock limit reached
         console.warn(`Stock limit reached for ${product.name}`)
+        // TODO: Show user notification (e.g., snackbar)
       }
     } else {
-      if (product.currentStock > 0) {
+      if (product.retailPrice == null || product.currentStock <= 0) {
+        console.warn(`${product.name} is out of stock or has no price.`)
+        // TODO: Show user notification
+        return
+      }
         cartItems.value.unshift({
           id: product.id,
           name: product.name,
           internalCode: product.internalCode,
           price: product.retailPrice,
           quantity: 1,
-          stock: product.currentStock
+          stock: product.currentStock,
+          subtotal: product.retailPrice // Initial subtotal
         })
-      } else {
-        // Handle out of stock
-        console.warn(`${product.name} is out of stock.`)
-      }
+        // No es necesario llamar a updateItemSubtotal aquí porque ya se calcula al crear
     }
   } else {
     // Handle product not found
@@ -184,12 +195,17 @@ const addProductByBarcode = (barcode) => {
 }
 
 const updateQuantity = (item) => {
-  if (item.quantity <= 0) {
+  // Si la cantidad no es un número válido o es menor o igual a 0, elimina el ítem.
+  if (!item.quantity || item.quantity <= 0) {
     removeItem(item)
+    return
   }
   if (item.quantity > item.stock) {
     item.quantity = item.stock
+    // TODO: Mostrar notificación al usuario (ej. "Cantidad ajustada al stock máximo")
+    // TODO: Show user notification that quantity was adjusted to max stock
   }
+  updateItemSubtotal(item)
 }
 
 const removeItem = (itemToRemove) => {
@@ -208,15 +224,11 @@ const processSale = async () => {
         quantity: item.quantity,
         unitPrice: item.price
       })),
-      subtotal: totals.value.subtotal,
-      tax: totals.value.tax,
-      total: totals.value.total
+      // Los totales (subtotal, tax, total) deben ser calculados y validados en el backend
+      // para mayor seguridad. Solo enviamos los datos crudos.
     }
 
     await saleStore.createSale(saleData)
-
-    // Here you would also update the stock of the products
-    // For each item in saleData.items, call productStore.updateProductStock(...)
 
     // Reset for next sale
     resetSale()
@@ -238,10 +250,11 @@ const resetSale = () => {
 }
 
 const formatCurrency = (amount) => {
+  const value = typeof amount === 'number' ? amount : 0;
   return new Intl.NumberFormat('es-VE', {
     style: 'currency',
     currency: 'VES'
-  }).format(amount || 0)
+  }).format(value)
 }
 
 // Lifecycle Hooks
