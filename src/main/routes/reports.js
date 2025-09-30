@@ -159,6 +159,7 @@ router.get("/products", requirePermission("reports"), async (req, res) => {
       include: [
         {
           model: Sale,
+          as: 'sale',
           where:
             startDate && endDate
               ? {
@@ -171,17 +172,18 @@ router.get("/products", requirePermission("reports"), async (req, res) => {
         },
         {
           model: Product,
-          attributes: ["name", "categoryId", "cost_price", "retail_price"],
+          as: "product",
+          attributes: [], // Attributes are accessed via the alias below
         },
       ],
       attributes: [
         "product_id",
+        [sequelize.col("product.name"), "productName"],
         [sequelize.fn("SUM", sequelize.col("quantity")), "totalSold"],
         [sequelize.fn("SUM", sequelize.col("SaleItem.total")), "totalRevenue"],
-        [sequelize.fn("AVG", sequelize.col("SaleItem.unit_price")), "averagePrice"],
-        [sequelize.fn("COUNT", sequelize.col("Sale.id")), "transactionCount"],
+        [sequelize.literal("SUM(SaleItem.quantity * product.cost_price)"), "totalCost"],
       ],
-      group: ["product_id", "Product.id"],
+      group: ["product_id", "product.id"],
       order: [[sequelize.fn("SUM", sequelize.col("SaleItem.total")), "DESC"]],
       limit: Number.parseInt(limit),
     })
@@ -280,10 +282,12 @@ router.get("/financial", requirePermission("reports"), async (req, res) => {
               [Op.between]: [startDate, endDate],
             },
           },
+          as: "sale",
           attributes: [],
         },
         {
           model: Product,
+          as: "product",
           attributes: [],
         },
       ],

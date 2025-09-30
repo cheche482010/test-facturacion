@@ -166,7 +166,7 @@ export default {
         const lowStockProducts = computed(() => dashboardData.value.quickSummary?.lowStockCount || 0)
         const topProducts = computed(() => {
             return (productReports.value || []).map(p => ({
-                name: p.Product.name,
+                name: p.productName,
                 quantity: p.totalSold,
                 total: p.totalRevenue
             }))
