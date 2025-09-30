@@ -100,7 +100,8 @@
                                     <v-card-title>Productos Más Vendidos</v-card-title>
                                     <v-card-text>
                                         <v-data-table :headers="topProductsHeaders" :items="topProducts"
-                                            :items-per-page="5" hide-default-footer></v-data-table>
+                                            :items-per-page="5" hide-default-footer>
+                                        </v-data-table>
                                     </v-card-text>
                                 </v-card>
                             </v-col>
@@ -144,74 +145,69 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import { useReportsStore } from '@/stores/reports'
+import { storeToRefs } from 'pinia'
 
 export default {
     name: 'ReportsDashboard',
     setup() {
+        const reportsStore = useReportsStore()
+        const { dashboardData, productReports } = storeToRefs(reportsStore)
+
         const startDate = ref(new Date().toISOString().substr(0, 10))
         const endDate = ref(new Date().toISOString().substr(0, 10))
         const startDateMenu = ref(false)
         const endDateMenu = ref(false)
 
-        const totalSales = ref(0)
-        const totalInvoices = ref(0)
-        const totalCustomers = ref(0)
-        const lowStockProducts = ref(0)
-        const topProducts = ref([])
+        const totalSales = computed(() => dashboardData.value.summary?.totalSales || 0)
+        const totalInvoices = computed(() => dashboardData.value.summary?.pendingInvoices || 0) // Asumiendo que es lo que se quiere mostrar
+        const totalCustomers = computed(() => dashboardData.value.summary?.totalCustomers || 0)
+        const lowStockProducts = computed(() => dashboardData.value.quickSummary?.lowStockCount || 0)
+        const topProducts = computed(() => {
+            return (productReports.value || []).map(p => ({
+                name: p.Product.name,
+                quantity: p.totalSold,
+                total: p.totalRevenue
+            }))
+        })
+
 
         const topProductsHeaders = [
-            { text: 'Producto', value: 'name' },
-            { text: 'Cantidad Vendida', value: 'quantity' },
-            { text: 'Total', value: 'total' }
+            { title: 'Producto', key: 'name' },
+            { title: 'Cantidad Vendida', key: 'quantity' },
+            { title: 'Total', key: 'total' }
         ]
 
         const loadReports = async () => {
             try {
-                const reports = await window.electronAPI.invoke('get-reports', {
+                await reportsStore.fetchDashboardData()
+                await reportsStore.fetchProductReport({
                     startDate: startDate.value,
-                    endDate: endDate.value
+                    endDate: endDate.value,
+                    limit: 5
                 })
-
-                totalSales.value = reports.totalSales || 0
-                totalInvoices.value = reports.totalInvoices || 0
-                totalCustomers.value = reports.totalCustomers || 0
-                lowStockProducts.value = reports.lowStockProducts || 0
-                topProducts.value = reports.topProducts || []
             } catch (error) {
                 console.error('Error loading reports:', error)
             }
         }
 
         const exportSalesReport = async () => {
-            try {
-                await window.electronAPI.invoke('export-sales-report', {
-                    startDate: startDate.value,
-                    endDate: endDate.value
-                })
-            } catch (error) {
-                console.error('Error exporting sales report:', error)
-            }
+            // Lógica de exportación a implementar con el store
+            console.log('Exporting sales report...')
         }
 
         const exportInventoryReport = async () => {
-            try {
-                await window.electronAPI.invoke('export-inventory-report')
-            } catch (error) {
-                console.error('Error exporting inventory report:', error)
-            }
+            // Lógica de exportación a implementar con el store
+            console.log('Exporting inventory report...')
         }
 
         const exportCustomerReport = async () => {
-            try {
-                await window.electronAPI.invoke('export-customer-report')
-            } catch (error) {
-                console.error('Error exporting customer report:', error)
-            }
+            // Lógica de exportación a implementar con el store
+            console.log('Exporting customer report...')
         }
 
         onMounted(() => {
-            // Set default date range to last 30 days
             const thirtyDaysAgo = new Date()
             thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
             startDate.value = thirtyDaysAgo.toISOString().substr(0, 10)
