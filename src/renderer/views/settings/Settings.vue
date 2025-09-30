@@ -143,97 +143,55 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from "vue";
+import { useSettingsStore } from "../../stores/settingsStore";
 
 export default {
-    name: 'Settings',
+    name: "Settings",
     setup() {
-        const tab = ref(0)
-        const saving = ref(false)
+        const tab = ref(0);
+        const settingsStore = useSettingsStore();
 
-        const settings = ref({
-            currency: 'USD',
-            language: 'es',
-            timezone: 'America/Caracas',
-            theme: 'light',
-            companyName: '',
-            companyRif: '',
-            companyAddress: '',
-            companyPhone: '',
-            companyEmail: '',
-            invoicePrefix: 'FAC-',
-            nextInvoiceNumber: 1,
-            taxRate: 16,
-            autoCalculateTax: true,
-            operationMode: 'bodega',
-            autoBackup: false,
-            backupInterval: 24
-        })
+        const settings = computed(() => settingsStore.settings);
+        const saving = computed(() => settingsStore.loading);
 
         const themeOptions = [
-            { text: 'Claro', value: 'light' },
-            { text: 'Oscuro', value: 'dark' }
-        ]
+            { text: "Claro", value: "light" },
+            { text: "Oscuro", value: "dark" },
+        ];
 
         const operationModeOptions = [
-            { text: 'Modo Bodega', value: 'bodega' },
-            { text: 'Modo Tienda', value: 'tienda' }
-        ]
-
-        const loadSettings = async () => {
-            try {
-                const response = await window.electronAPI.invoke('get-settings')
-                if (response && response.length > 0) {
-                    response.forEach(setting => {
-                        if (settings.value.hasOwnProperty(setting.key)) {
-                            settings.value[setting.key] = setting.value
-                        }
-                    })
-                }
-            } catch (error) {
-                console.error('Error loading settings:', error)
-            }
-        }
+            { text: "Modo Bodega", value: "bodega" },
+            { text: "Modo Tienda", value: "tienda" },
+        ];
 
         const saveSettings = async () => {
-            saving.value = true
-            try {
-                const settingsArray = Object.entries(settings.value).map(([key, value]) => ({
-                    key,
-                    value: value.toString()
-                }))
-
-                await window.electronAPI.invoke('save-settings', settingsArray)
-                // Mostrar mensaje de éxito
-            } catch (error) {
-                console.error('Error saving settings:', error)
-            } finally {
-                saving.value = false
-            }
-        }
+            await settingsStore.saveSettings();
+            // You might want to add a success message here
+        };
 
         const createBackup = async () => {
             try {
-                await window.electronAPI.invoke('create-backup')
-                // Mostrar mensaje de éxito
+                await window.electronAPI.invoke("create-backup");
+                // Show success message
             } catch (error) {
-                console.error('Error creating backup:', error)
+                console.error("Error creating backup:", error);
             }
-        }
+        };
 
         onMounted(() => {
-            loadSettings()
-        })
+            settingsStore.fetchSettings();
+        });
 
         return {
             tab,
-            saving,
             settings,
+            saving,
             themeOptions,
             operationModeOptions,
             saveSettings,
-            createBackup
-        }
-    }
-}
+            createBackup,
+        };
+    },
+};
 </script>

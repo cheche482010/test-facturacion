@@ -138,3 +138,6 @@ ipcMain.handle("get-app-version", () => {
 ipcMain.handle("get-app-path", () => {
   return app.getAppPath()
 })
+
+// Import other IPC handlers
+require("./routes/settings")
