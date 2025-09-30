@@ -1,0 +1,44 @@
+// ProductList specific styles
+.product-list {
+  &__filters {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  &__table {
+    .v-data-table__wrapper {
+      border-radius: 8px;
+      overflow: hidden;
+    }
+  }
+
+  &__product-image {
+    border-radius: 4px;
+    object-fit: cover;
+  }
+
+  &__stock-chip {
+    &--low {
+      background-color: #fff3cd;
+      color: #856404;
+    }
+
+    &--empty {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+
+    &--normal {
+      background-color: #d1edff;
+      color: #0c5460;
+    }
+  }
+
+  &__actions {
+    .v-btn {
+      margin: 0 2px;
+    }
+  }
+}

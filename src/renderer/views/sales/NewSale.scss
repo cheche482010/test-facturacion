@@ -1,0 +1,46 @@
+// NewSale (POS) specific styles
+.pos {
+  &__header {
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  &__scanner {
+    background-color: #f5f5f5;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  &__cart {
+    .v-data-table {
+      border-radius: 8px;
+    }
+
+    &-item {
+      &:hover {
+        background-color: #f8f9fa;
+      }
+    }
+  }
+
+  &__summary {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+
+    &-totals {
+      border-top: 2px solid #1976d2;
+      padding-top: 1rem;
+      margin-top: 1rem;
+    }
+  }
+
+  &__process-button {
+    font-size: 1.1rem;
+    font-weight: 600;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+  }
+}
