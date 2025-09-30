@@ -143,55 +143,7 @@
 </template>
 
 <script>
-import { ref, onMounted, computed } from "vue";
-import { useSettingsStore } from "../../stores/settingsStore";
+import settingsLogic from './Settings.js'
 
-export default {
-    name: "Settings",
-    setup() {
-        const tab = ref(0);
-        const settingsStore = useSettingsStore();
-
-        const settings = computed(() => settingsStore.settings);
-        const saving = computed(() => settingsStore.loading);
-
-        const themeOptions = [
-            { text: "Claro", value: "light" },
-            { text: "Oscuro", value: "dark" },
-        ];
-
-        const operationModeOptions = [
-            { text: "Modo Bodega", value: "bodega" },
-            { text: "Modo Tienda", value: "tienda" },
-        ];
-
-        const saveSettings = async () => {
-            await settingsStore.saveSettings();
-            // You might want to add a success message here
-        };
-
-        const createBackup = async () => {
-            try {
-                await window.electronAPI.invoke("create-backup");
-                // Show success message
-            } catch (error) {
-                console.error("Error creating backup:", error);
-            }
-        };
-
-        onMounted(() => {
-            settingsStore.fetchSettings();
-        });
-
-        return {
-            tab,
-            settings,
-            saving,
-            themeOptions,
-            operationModeOptions,
-            saveSettings,
-            createBackup,
-        };
-    },
-};
+export default settingsLogic
 </script>
