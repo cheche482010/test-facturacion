@@ -13,10 +13,9 @@
                             <v-col cols="12" md="3">
                                 <v-menu v-model="startDateMenu" :close-on-content-click="false" :nudge-right="40"
                                     transition="scale-transition" offset-y min-width="auto">
-                                    <template v-slot:activator="{ on, attrs }">
+                                    <template v-slot:activator="{ props }">
                                         <v-text-field v-model="startDate" label="Fecha Inicio"
-                                            prepend-icon="mdi-calendar" readonly v-bind="attrs"
-                                            v-on="on"></v-text-field>
+                                            prepend-icon="mdi-calendar" readonly v-bind="props"></v-text-field>
                                     </template>
                                     <v-date-picker v-model="startDate" @input="startDateMenu = false"></v-date-picker>
                                 </v-menu>
@@ -25,9 +24,9 @@
                             <v-col cols="12" md="3">
                                 <v-menu v-model="endDateMenu" :close-on-content-click="false" :nudge-right="40"
                                     transition="scale-transition" offset-y min-width="auto">
-                                    <template v-slot:activator="{ on, attrs }">
+                                    <template v-slot:activator="{ props }">
                                         <v-text-field v-model="endDate" label="Fecha Fin" prepend-icon="mdi-calendar"
-                                            readonly v-bind="attrs" v-on="on"></v-text-field>
+                                            readonly v-bind="props"></v-text-field>
                                     </template>
                                     <v-date-picker v-model="endDate" @input="endDateMenu = false"></v-date-picker>
                                 </v-menu>

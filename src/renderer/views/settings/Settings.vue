@@ -16,9 +16,9 @@
                             <v-tab>Sistema</v-tab>
                         </v-tabs>
 
-                        <v-tabs-items v-model="tab">
+                        <v-window v-model="tab">
                             <!-- Configuración General -->
-                            <v-tab-item>
+                            <v-window-item>
                                 <v-container>
                                     <v-row>
                                         <v-col cols="12" md="6">
@@ -39,10 +39,10 @@
                                         </v-col>
                                     </v-row>
                                 </v-container>
-                            </v-tab-item>
+                            </v-window-item>
 
                             <!-- Configuración de Empresa -->
-                            <v-tab-item>
+                            <v-window-item>
                                 <v-container>
                                     <v-row>
                                         <v-col cols="12" md="6">
@@ -66,10 +66,10 @@
                                         </v-col>
                                     </v-row>
                                 </v-container>
-                            </v-tab-item>
+                            </v-window-item>
 
                             <!-- Configuración de Facturación -->
-                            <v-tab-item>
+                            <v-window-item>
                                 <v-container>
                                     <v-row>
                                         <v-col cols="12" md="6">
@@ -90,10 +90,10 @@
                                         </v-col>
                                     </v-row>
                                 </v-container>
-                            </v-tab-item>
+                            </v-window-item>
 
                             <!-- Modo de Operación -->
-                            <v-tab-item>
+                            <v-window-item>
                                 <v-container>
                                     <v-row>
                                         <v-col cols="12" md="6">
@@ -102,10 +102,10 @@
                                         </v-col>
                                     </v-row>
                                 </v-container>
-                            </v-tab-item>
+                            </v-window-item>
 
                             <!-- Configuración del Sistema -->
-                            <v-tab-item>
+                            <v-window-item>
                                 <v-container>
                                     <v-row>
                                         <v-col cols="12" md="6">
@@ -125,8 +125,8 @@
                                         </v-col>
                                     </v-row>
                                 </v-container>
-                            </v-tab-item>
-                        </v-tabs-items>
+                            </v-window-item>
+                        </v-window>
                     </v-card-text>
 
                     <v-card-actions>
