@@ -5,7 +5,9 @@ export const useAppStore = defineStore("app", {
     mode: "bodega", // 'bodega' o 'tienda'
     user: null,
     settings: {
-      companyName: "",
+      companyName: "FacturaPro",
+      companySlogan: "Sistema de Facturación",
+      companyLogo: null,
       rif: "",
       address: "",
       phone: "",
@@ -13,6 +15,9 @@ export const useAppStore = defineStore("app", {
       currency: "VES",
       exchangeRate: 1,
       darkMode: false,
+      primaryColor: "#1976D2",
+      secondaryColor: "#424242",
+      accentColor: "#82B1FF",
     },
   }),
 
