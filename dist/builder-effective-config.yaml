@@ -1,0 +1,20 @@
+directories:
+  output: dist
+  buildResources: build
+appId: com.facturacion.app
+productName: Sistema de Facturación
+files:
+  - filter:
+      - src/main/**/*
+      - dist/**/*
+      - node_modules/**/*
+win:
+  target: nsis
+  icon: assets/icon.ico
+linux:
+  target: AppImage
+  icon: assets/icon.png
+mac:
+  target: dmg
+  icon: assets/icon.icns
+electronVersion: 27.3.11

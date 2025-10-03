@@ -7,6 +7,7 @@ import "vuetify/styles"
 
 import App from "./App.vue"
 import router from "./router"
+import { useAuthStore } from "./stores/auth"
 
 // Configuración de Vuetify
 const vuetify = createVuetify({
@@ -48,4 +49,17 @@ app.use(pinia)
 app.use(router)
 app.use(vuetify)
 
-app.mount("#app")
+// Inicialización de la autenticación
+async function initializeAuth() {
+  const authStore = useAuthStore()
+  if (authStore.token) {
+    await authStore.checkAuth()
+  }
+  // Montar la aplicación solo después de que la autenticación inicial (si existe) se haya verificado.
+  app.mount("#app")
+}
+
+// Esperar a que el router esté listo antes de inicializar la autenticación y montar la app.
+router.isReady().then(() => {
+  initializeAuth()
+})
