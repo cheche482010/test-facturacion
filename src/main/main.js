@@ -110,9 +110,9 @@ function createMenu() {
   Menu.setApplicationMenu(menu)
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   // Iniciar servidor Express
-  startServer()
+  await startServer()
 
   createWindow()
   createMenu()
