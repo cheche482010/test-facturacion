@@ -71,6 +71,4 @@ import loginLogic from './Login.js'
 export default loginLogic
 </script>
 
-<style lang="scss" scoped>
-@import './Login.scss';
-</style>
+<style scoped src="./Login.scss"></style>

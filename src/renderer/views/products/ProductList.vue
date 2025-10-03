@@ -213,7 +213,4 @@ import productListLogic from './ProductList.js'
 
 export default productListLogic
 </script>
-
-<style lang="scss" scoped>
-@import './ProductList.scss';
-</style>
+<style scoped src="./ProductList.scss"></style>

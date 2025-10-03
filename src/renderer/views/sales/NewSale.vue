@@ -119,6 +119,4 @@ import newSaleLogic from './NewSale.js'
 export default newSaleLogic
 </script>
 
-<style lang="scss" scoped>
-@import './NewSale.scss';
-</style>
+<style scoped src="./NewSale.scss"></style>
