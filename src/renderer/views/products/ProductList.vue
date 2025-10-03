@@ -1,43 +1,31 @@
 <template>
   <div>
-    <!-- Header -->
-    <div class="d-flex justify-space-between align-center mb-4">
-      <div>
-        <h1 class="text-h5 font-weight-bold">Gestión de Productos</h1>
-        <p class="text-medium-emphasis">Administra tu catálogo de productos y controla el inventario</p>
-      </div>
-      <v-btn color="primary" prepend-icon="mdi-plus" @click="openProductDialog()">
-        Nuevo Producto
-      </v-btn>
-    </div>
-
-    <!-- Summary Cards -->
-    <v-row>
-      <v-col v-for="card in summaryCards" :key="card.title" cols="12" sm="6" md="3">
-        <v-card class="d-flex align-center">
-          <div :class="`bg-${card.color}`" class="pa-4 rounded-s-lg">
-            <v-icon :icon="card.icon" size="32" color="white" />
-          </div>
-          <div class="pa-4">
-            <p class="text-h6 font-weight-bold">{{ card.value }}</p>
-            <p class="text-medium-emphasis">{{ card.title }}</p>
-          </div>
-        </v-card>
+    <v-row class="mb-4">
+      <v-col cols="12" md="6">
+        <h1 class="text-h4">Gestión de Productos</h1>
+      </v-col>
+      <v-col cols="12" md="6" class="text-right">
+        <v-btn
+          color="primary"
+          @click="openProductDialog()"
+          prepend-icon="mdi-plus"
+        >
+          Nuevo Producto
+        </v-btn>
       </v-col>
     </v-row>
 
     <!-- Filtros y búsqueda -->
-    <v-card class="mt-4">
+    <v-card class="mb-4">
       <v-card-text>
-        <v-row class="d-flex align-center">
-          <v-col cols="12" md="5">
+        <v-row>
+          <v-col cols="12" md="4">
             <v-text-field
               v-model="search"
-              label="Buscar por nombre, código o código de barras..."
+              label="Buscar productos"
               prepend-inner-icon="mdi-magnify"
-              variant="solo-filled"
+              variant="outlined"
               density="compact"
-              flat
               clearable
             />
           </v-col>
@@ -48,9 +36,8 @@
               item-title="name"
               item-value="id"
               label="Categoría"
-              variant="solo-filled"
+              variant="outlined"
               density="compact"
-              flat
               clearable
             />
           </v-col>
@@ -58,71 +45,124 @@
             <v-select
               v-model="selectedStatus"
               :items="statusOptions"
-              item-title="title"
-              item-value="value"
               label="Estado"
-              variant="solo-filled"
+              variant="outlined"
               density="compact"
-              flat
               clearable
             />
           </v-col>
           <v-col cols="12" md="2">
-            <v-checkbox
+            <v-select
               v-model="stockFilter"
-              label="Solo stock bajo"
+              :items="stockFilterOptions"
+              label="Stock"
+              variant="outlined"
               density="compact"
-            ></v-checkbox>
+              clearable
+            />
+          </v-col>
+          <v-col cols="12" md="1">
+            <v-btn
+              icon="mdi-refresh"
+              @click="loadProducts"
+              variant="outlined"
+            />
           </v-col>
         </v-row>
       </v-card-text>
     </v-card>
 
     <!-- Tabla de productos -->
-    <v-card class="mt-4">
-       <v-card-item>
-        <v-card-title>
-          Lista de Productos ({{ filteredProducts.length }})
-        </v-card-title>
-      </v-card-item>
+    <v-card>
       <v-data-table
         :headers="headers"
         :items="filteredProducts"
         :loading="loading"
-        item-value="id"
-        hover
+        :search="search"
+        class="elevation-1"
       >
+        <template v-slot:item.image="{ item }">
+          <v-avatar size="40" class="my-2">
+            <v-img
+              v-if="item.image"
+              :src="item.image"
+              alt="Producto"
+            />
+            <v-icon v-else>mdi-package-variant</v-icon>
+          </v-avatar>
+        </template>
+
         <template v-slot:item.name="{ item }">
           <div>
-            <div class="font-weight-bold">{{ item.name }}</div>
-            <div class="text-caption text-medium-emphasis">{{ item.brand || '' }}</div>
+            <div class="font-weight-medium">{{ item.name }}</div>
+            <div class="text-caption text-medium-emphasis">
+              Código: {{ item.internalCode }}
+            </div>
           </div>
         </template>
 
-        <template v-slot:item.categoryName="{ item }">
-          <v-chip size="small" variant="tonal" :text="item.categoryName" />
+        <template v-slot:item.category="{ item }">
+          <v-chip
+            v-if="item.category"
+            size="small"
+            color="primary"
+            variant="tonal"
+          >
+            {{ item.category.name }}
+          </v-chip>
         </template>
 
         <template v-slot:item.currentStock="{ item }">
-          <div class="d-flex align-center" :class="getStockColor(item)">
-            <v-icon v-if="item.currentStock > 0 && item.currentStock <= item.minStock" size="small" class="mr-1">mdi-alert</v-icon>
-            <span>{{ item.currentStock }}</span>
-          </div>
+          <v-chip
+            :color="getStockColor(item)"
+            size="small"
+            variant="tonal"
+          >
+            {{ item.currentStock }} {{ item.unit }}
+          </v-chip>
         </template>
 
         <template v-slot:item.retailPrice="{ item }">
-          <div class="font-weight-bold">{{ formatCurrency(item.retailPrice) }}</div>
+          <div class="text-right">
+            <div class="font-weight-medium">
+              {{ formatCurrency(item.retailPrice) }}
+            </div>
+            <div class="text-caption text-medium-emphasis">
+              Costo: {{ formatCurrency(item.costPrice) }}
+            </div>
+          </div>
         </template>
 
         <template v-slot:item.status="{ item }">
-          <v-chip :color="getStatusColor(item.status)" size="small" variant="flat" label>
+          <v-chip
+            :color="getStatusColor(item.status)"
+            size="small"
+            variant="tonal"
+          >
             {{ getStatusText(item.status) }}
           </v-chip>
         </template>
 
         <template v-slot:item.actions="{ item }">
-          <v-btn icon="mdi-pencil" size="x-small" variant="text" @click="openProductDialog(item)"></v-btn>
-          <v-btn icon="mdi-delete" size="x-small" variant="text" color="error" @click="confirmDelete(item)"></v-btn>
+          <v-btn
+            icon="mdi-pencil"
+            size="small"
+            variant="text"
+            @click="openProductDialog(item)"
+          />
+          <v-btn
+            icon="mdi-barcode"
+            size="small"
+            variant="text"
+            @click="generateBarcode(item)"
+          />
+          <v-btn
+            icon="mdi-delete"
+            size="small"
+            variant="text"
+            color="error"
+            @click="confirmDelete(item)"
+          />
         </template>
       </v-data-table>
     </v-card>

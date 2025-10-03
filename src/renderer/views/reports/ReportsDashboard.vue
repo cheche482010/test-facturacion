@@ -1,126 +1,146 @@
 <template>
-  <div>
-    <!-- Header -->
-    <div class="d-flex justify-space-between align-center mb-4">
-      <div>
-        <h1 class="text-h5 font-weight-bold">Reportes y Análisis</h1>
-        <p class="text-medium-emphasis">Genera reportes detallados sobre ventas, inventario y finanzas</p>
-      </div>
-      <div class="d-flex align-center">
-        <div class="mr-4" style="width: 200px;">
-          <v-text-field
-            v-model="startDate"
-            label="Fecha Desde"
-            type="date"
-            density="compact"
-            variant="outlined"
-          ></v-text-field>
-        </div>
-        <div class="mr-4" style="width: 200px;">
-          <v-text-field
-            v-model="endDate"
-            label="Fecha Hasta"
-            type="date"
-            density="compact"
-            variant="outlined"
-          ></v-text-field>
-        </div>
-        <v-btn class="mr-2" @click="loadReports">Actualizar</v-btn>
-        <v-btn color="success" prepend-icon="mdi-file-excel-outline">
-          Exportar Reporte
-        </v-btn>
-      </div>
-    </div>
-
-    <!-- Tabs for different report categories -->
-    <v-card class="mt-4">
-      <v-tabs v-model="tab" bg-color="transparent">
-        <v-tab value="sales">
-          <v-icon start>mdi-chart-bar</v-icon>
-          Ventas
-        </v-tab>
-        <v-tab value="inventory">
-          <v-icon start>mdi-package-variant-closed</v-icon>
-          Inventario
-        </v-tab>
-        <v-tab value="customers">
-          <v-icon start>mdi-account-group</v-icon>
-          Clientes
-        </v-tab>
-        <v-tab value="finance">
-          <v-icon start>mdi-finance</v-icon>
-          Financiero
-        </v-tab>
-      </v-tabs>
-      <v-divider></v-divider>
-
-      <v-window v-model="tab">
-        <!-- Sales Tab -->
-        <v-window-item value="sales">
-          <v-card-text>
-            <!-- Sales Summary Cards -->
-            <v-row>
-              <v-col v-for="card in salesSummaryCards" :key="card.title" cols="12" sm="6" md="3">
-                <v-card variant="tonal" :color="card.color">
-                  <v-card-text class="d-flex align-center">
-                    <v-icon :icon="card.icon" size="32" class="mr-4" />
-                    <div>
-                      <p class="text-h6 font-weight-bold">{{ card.value }}</p>
-                      <p>{{ card.title }}</p>
-                    </div>
-                  </v-card-text>
-                </v-card>
-              </v-col>
-            </v-row>
-
-            <!-- Charts -->
-            <v-row class="mt-4">
-              <v-col cols="12" md="6">
+    <v-container fluid>
+        <v-row>
+            <v-col cols="12">
                 <v-card>
-                  <v-card-item><v-card-title>Ventas por Día</v-card-title></v-card-item>
-                  <div style="height: 300px;" class="d-flex align-center justify-center text-medium-emphasis bg-grey-lighten-4 rounded ma-4">
-                    <!-- Placeholder for daily sales chart -->
-                    <p>Gráfico de ventas por día</p>
-                  </div>
-                </v-card>
-              </v-col>
-              <v-col cols="12" md="6">
-                <v-card>
-                  <v-card-item><v-card-title>Ventas por Método de Pago</v-card-title></v-card-item>
-                   <div style="height: 300px;" class="d-flex align-center justify-center text-medium-emphasis bg-grey-lighten-4 rounded ma-4">
-                    <!-- Placeholder for payment method chart -->
-                    <p>Gráfico de ventas por método de pago</p>
-                  </div>
-                </v-card>
-              </v-col>
-            </v-row>
+                    <v-card-title>
+                        <span class="text-h5">Dashboard de Reportes</span>
+                    </v-card-title>
 
-            <!-- Top Selling Products Table -->
-            <v-card class="mt-4">
-              <v-card-item><v-card-title>Productos Más Vendidos</v-card-title></v-card-item>
-              <v-data-table
-                :headers="topProductsHeaders"
-                :items="topProducts"
-                :loading="loading"
-                item-value="id"
-              ></v-data-table>
-            </v-card>
-          </v-card-text>
-        </v-window-item>
+                    <v-card-text>
+                        <v-row>
+                            <!-- Filtros de fecha -->
+                            <v-col cols="12" md="3">
+                                <v-menu v-model="startDateMenu" :close-on-content-click="false" :nudge-right="40"
+                                    transition="scale-transition" offset-y min-width="auto">
+                                    <template v-slot:activator="{ props }">
+                                        <v-text-field v-model="startDate" label="Fecha Inicio"
+                                            prepend-icon="mdi-calendar" readonly v-bind="props"></v-text-field>
+                                    </template>
+                                    <v-date-picker v-model="startDate" @input="startDateMenu = false"></v-date-picker>
+                                </v-menu>
+                            </v-col>
 
-        <!-- Other Tabs Placeholders -->
-        <v-window-item value="inventory">
-          <p class="text-center py-8 text-medium-emphasis">Reportes de inventario.</p>
-        </v-window-item>
-        <v-window-item value="customers">
-          <p class="text-center py-8 text-medium-emphasis">Reportes de clientes.</p>
-        </v-window-item>
-        <v-window-item value="finance">
-          <p class="text-center py-8 text-medium-emphasis">Reportes financieros.</p>
-        </v-window-item>
-      </v-window>
-    </v-card>
-  </div>
+                            <v-col cols="12" md="3">
+                                <v-menu v-model="endDateMenu" :close-on-content-click="false" :nudge-right="40"
+                                    transition="scale-transition" offset-y min-width="auto">
+                                    <template v-slot:activator="{ props }">
+                                        <v-text-field v-model="endDate" label="Fecha Fin" prepend-icon="mdi-calendar"
+                                            readonly v-bind="props"></v-text-field>
+                                    </template>
+                                    <v-date-picker v-model="endDate" @input="endDateMenu = false"></v-date-picker>
+                                </v-menu>
+                            </v-col>
+
+                            <v-col cols="12" md="3">
+                                <v-btn color="primary" @click="loadReports">
+                                    <v-icon left>mdi-refresh</v-icon>
+                                    Actualizar
+                                </v-btn>
+                            </v-col>
+                        </v-row>
+
+                        <!-- Tarjetas de resumen -->
+                        <v-row class="mt-4">
+                            <v-col cols="12" sm="6" md="3">
+                                <v-card color="primary" dark>
+                                    <v-card-text>
+                                        <div class="text-h4">${{ totalSales.toLocaleString() }}</div>
+                                        <div>Ventas Totales</div>
+                                    </v-card-text>
+                                </v-card>
+                            </v-col>
+
+                            <v-col cols="12" sm="6" md="3">
+                                <v-card color="success" dark>
+                                    <v-card-text>
+                                        <div class="text-h4">{{ totalInvoices }}</div>
+                                        <div>Facturas Emitidas</div>
+                                    </v-card-text>
+                                </v-card>
+                            </v-col>
+
+                            <v-col cols="12" sm="6" md="3">
+                                <v-card color="info" dark>
+                                    <v-card-text>
+                                        <div class="text-h4">{{ totalCustomers }}</div>
+                                        <div>Clientes Activos</div>
+                                    </v-card-text>
+                                </v-card>
+                            </v-col>
+
+                            <v-col cols="12" sm="6" md="3">
+                                <v-card color="warning" dark>
+                                    <v-card-text>
+                                        <div class="text-h4">{{ lowStockProducts }}</div>
+                                        <div>Productos Bajo Stock</div>
+                                    </v-card-text>
+                                </v-card>
+                            </v-col>
+                        </v-row>
+
+                        <!-- Gráficos y tablas -->
+                        <v-row class="mt-4">
+                            <v-col cols="12" md="6">
+                                <v-card>
+                                    <v-card-title>Ventas por Mes</v-card-title>
+                                    <v-card-text>
+                                        <!-- Aquí iría un gráfico de ventas -->
+                                        <div class="text-center pa-4">
+                                            <v-icon size="64" color="grey">mdi-chart-line</v-icon>
+                                            <div class="mt-2">Gráfico de ventas mensuales</div>
+                                        </div>
+                                    </v-card-text>
+                                </v-card>
+                            </v-col>
+
+                            <v-col cols="12" md="6">
+                                <v-card>
+                                    <v-card-title>Productos Más Vendidos</v-card-title>
+                                    <v-card-text>
+                                        <v-data-table :headers="topProductsHeaders" :items="topProducts"
+                                            :items-per-page="5" hide-default-footer>
+                                        </v-data-table>
+                                    </v-card-text>
+                                </v-card>
+                            </v-col>
+                        </v-row>
+
+                        <!-- Reportes adicionales -->
+                        <v-row class="mt-4">
+                            <v-col cols="12">
+                                <v-card>
+                                    <v-card-title>Acciones de Reportes</v-card-title>
+                                    <v-card-text>
+                                        <v-row>
+                                            <v-col cols="12" md="4">
+                                                <v-btn block color="primary" @click="exportSalesReport">
+                                                    <v-icon left>mdi-file-excel</v-icon>
+                                                    Exportar Reporte de Ventas
+                                                </v-btn>
+                                            </v-col>
+                                            <v-col cols="12" md="4">
+                                                <v-btn block color="secondary" @click="exportInventoryReport">
+                                                    <v-icon left>mdi-file-pdf-box</v-icon>
+                                                    Reporte de Inventario
+                                                </v-btn>
+                                            </v-col>
+                                            <v-col cols="12" md="4">
+                                                <v-btn block color="accent" @click="exportCustomerReport">
+                                                    <v-icon left>mdi-account-group</v-icon>
+                                                    Reporte de Clientes
+                                                </v-btn>
+                                            </v-col>
+                                        </v-row>
+                                    </v-card-text>
+                                </v-card>
+                            </v-col>
+                        </v-row>
+                    </v-card-text>
+                </v-card>
+            </v-col>
+        </v-row>
+    </v-container>
 </template>
 
 <script>

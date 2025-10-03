@@ -1,123 +1,146 @@
 <template>
-  <div>
-    <!-- Header -->
-    <div class="d-flex justify-space-between align-center mb-4">
-      <div>
-        <h1 class="text-h5 font-weight-bold">Configuración del Sistema</h1>
-        <p class="text-medium-emphasis">Personaliza la apariencia y configuración del sistema</p>
-      </div>
-      <v-btn color="primary" prepend-icon="mdi-content-save" @click="saveSettings" :loading="saving">
-        Guardar Cambios
-      </v-btn>
-    </div>
+    <v-container fluid>
+        <v-row>
+            <v-col cols="12">
+                <v-card>
+                    <v-card-title>
+                        <span class="text-h5">Configuración del Sistema</span>
+                    </v-card-title>
 
-    <v-row>
-      <!-- Left Column -->
-      <v-col cols="12" md="7">
-        <!-- Company Information -->
-        <v-card class="mb-4">
-          <v-card-item>
-            <v-card-title>
-              <v-icon start icon="mdi-domain"></v-icon>
-              Información de la Empresa
-            </v-card-title>
-          </v-card-item>
-          <v-card-text>
-            <v-row>
-              <v-col cols="12" sm="6">
-                <v-text-field v-model="settings.companyName" label="Nombre del Sistema"></v-text-field>
-              </v-col>
-               <v-col cols="12" sm="6">
-                <v-text-field v-model="settings.companySlogan" label="Nombre de la Empresa"></v-text-field>
-              </v-col>
-              <v-col cols="12">
-                 <v-file-input
-                  label="Logo de la Empresa"
-                  accept="image/*"
-                  prepend-icon="mdi-camera"
-                  @change="onLogoChange"
-                ></v-file-input>
-              </v-col>
-            </v-row>
-          </v-card-text>
-        </v-card>
+                    <v-card-text>
+                        <v-tabs v-model="tab">
+                            <v-tab>General</v-tab>
+                            <v-tab>Empresa</v-tab>
+                            <v-tab>Facturación</v-tab>
+                            <v-tab>Modo de Operación</v-tab>
+                            <v-tab>Sistema</v-tab>
+                        </v-tabs>
 
-        <!-- Billing Configuration -->
-        <v-card>
-          <v-card-item>
-            <v-card-title>
-              <v-icon start icon="mdi-file-document-outline"></v-icon>
-              Configuración de Facturación
-            </v-card-title>
-          </v-card-item>
-          <v-card-text>
-            <v-row>
-              <v-col cols="12" sm="6">
-                <v-text-field v-model="settings.currencySymbol" label="Símbolo de Moneda"></v-text-field>
-              </v-col>
-              <v-col cols="12" sm="6">
-                <v-text-field v-model.number="settings.taxRate" label="Tasa de IVA por Defecto (%)" type="number"></v-text-field>
-              </v-col>
-              <v-col cols="12" sm="6">
-                <v-text-field v-model="settings.invoicePrefix" label="Prefijo de Facturas"></v-text-field>
-              </v-col>
-              <v-col cols="12" sm="6">
-                <v-select v-model="settings.defaultSaleMode" :items="['Venta por Tienda (Con clientes)', 'Venta Rápida (Bodega)']" label="Modo de Venta por Defecto"></v-select>
-              </v-col>
-            </v-row>
-          </v-card-text>
-        </v-card>
-      </v-col>
+                        <v-window v-model="tab">
+                            <!-- Configuración General -->
+                            <v-window-item>
+                                <v-container>
+                                    <v-row>
+                                        <v-col cols="12" md="6">
+                                            <v-text-field v-model="settings.currency" label="Moneda"
+                                                hint="Ej: USD, EUR, VES"></v-text-field>
+                                        </v-col>
+                                        <v-col cols="12" md="6">
+                                            <v-text-field v-model="settings.language" label="Idioma"
+                                                hint="Ej: es, en"></v-text-field>
+                                        </v-col>
+                                        <v-col cols="12" md="6">
+                                            <v-text-field v-model="settings.timezone" label="Zona Horaria"
+                                                hint="Ej: America/Caracas"></v-text-field>
+                                        </v-col>
+                                        <v-col cols="12" md="6">
+                                            <v-switch v-model="settings.darkMode"
+                                                      label="Modo Oscuro"
+                                                      color="primary"></v-switch>
+                                        </v-col>
+                                    </v-row>
+                                </v-container>
+                            </v-window-item>
 
-      <!-- Right Column -->
-      <v-col cols="12" md="5">
-        <!-- Theme and Colors -->
-        <v-card class="mb-4">
-          <v-card-item>
-            <v-card-title>
-              <v-icon start icon="mdi-palette-outline"></v-icon>
-              Tema y Colores
-            </v-card-title>
-          </v-card-item>
-          <v-card-text>
-            <p class="font-weight-medium">Color Primario</p>
-            <v-color-picker v-model="settings.primaryColor" :swatches="colorSwatches" show-swatches hide-inputs></v-color-picker>
+                            <!-- Configuración de Empresa -->
+                            <v-window-item>
+                                <v-container>
+                                    <v-row>
+                                        <v-col cols="12" md="6">
+                                            <v-text-field v-model="settings.companyName" label="Nombre de la Empresa*"
+                                                required></v-text-field>
+                                        </v-col>
+                                        <v-col cols="12" md="6">
+                                            <v-text-field v-model="settings.companyRif" label="RIF/NIT"></v-text-field>
+                                        </v-col>
+                                        <v-col cols="12">
+                                            <v-text-field v-model="settings.companyAddress"
+                                                label="Dirección"></v-text-field>
+                                        </v-col>
+                                        <v-col cols="12" md="6">
+                                            <v-text-field v-model="settings.companyPhone"
+                                                label="Teléfono"></v-text-field>
+                                        </v-col>
+                                        <v-col cols="12" md="6">
+                                            <v-text-field v-model="settings.companyEmail" label="Email"
+                                                type="email"></v-text-field>
+                                        </v-col>
+                                    </v-row>
+                                </v-container>
+                            </v-window-item>
 
-            <p class="mt-4 font-weight-medium">Color Secundario</p>
-            <v-text-field v-model="settings.secondaryColor" label="Color Secundario"></v-text-field>
+                            <!-- Configuración de Facturación -->
+                            <v-window-item>
+                                <v-container>
+                                    <v-row>
+                                        <v-col cols="12" md="6">
+                                            <v-text-field v-model="settings.invoicePrefix" label="Prefijo de Factura"
+                                                hint="Ej: FAC-"></v-text-field>
+                                        </v-col>
+                                        <v-col cols="12" md="6">
+                                            <v-text-field v-model="settings.nextInvoiceNumber"
+                                                label="Próximo Número de Factura" type="number"></v-text-field>
+                                        </v-col>
+                                        <v-col cols="12" md="6">
+                                            <v-text-field v-model="settings.taxRate" label="Tasa de IVA (%)"
+                                                type="number" step="0.01"></v-text-field>
+                                        </v-col>
+                                        <v-col cols="12" md="6">
+                                            <v-switch v-model="settings.autoCalculateTax"
+                                                label="Calcular IVA automáticamente"></v-switch>
+                                        </v-col>
+                                    </v-row>
+                                </v-container>
+                            </v-window-item>
 
-            <p class="mt-4 font-weight-medium">Color de Acento</p>
-            <v-text-field v-model="settings.accentColor" label="Color de Acento"></v-text-field>
+                            <!-- Modo de Operación -->
+                            <v-window-item>
+                                <v-container>
+                                    <v-row>
+                                        <v-col cols="12" md="6">
+                                            <v-select v-model="settings.operationMode" :items="operationModeOptions"
+                                                label="Modo de Operación"></v-select>
+                                        </v-col>
+                                    </v-row>
+                                </v-container>
+                            </v-window-item>
 
-            <v-switch v-model="settings.darkMode" label="Modo Oscuro por Defecto" color="primary" inset></v-switch>
-          </v-card-text>
-        </v-card>
+                            <!-- Configuración del Sistema -->
+                            <v-window-item>
+                                <v-container>
+                                    <v-row>
+                                        <v-col cols="12" md="6">
+                                            <v-switch v-model="settings.autoBackup"
+                                                label="Respaldo automático"></v-switch>
+                                        </v-col>
+                                        <v-col cols="12" md="6">
+                                            <v-text-field v-model="settings.backupInterval"
+                                                label="Intervalo de respaldo (horas)" type="number"
+                                                :disabled="!settings.autoBackup"></v-text-field>
+                                        </v-col>
+                                        <v-col cols="12">
+                                            <v-btn color="primary" @click="createBackup">
+                                                <v-icon left>mdi-backup-restore</v-icon>
+                                                Crear Respaldo Manual
+                                            </v-btn>
+                                        </v-col>
+                                    </v-row>
+                                </v-container>
+                            </v-window-item>
+                        </v-window>
+                    </v-card-text>
 
-        <!-- System Preview -->
-        <v-card>
-           <v-card-item>
-            <v-card-title>
-              <v-icon start icon="mdi-monitor-eye"></v-icon>
-              Vista Previa del Sistema
-            </v-card-title>
-          </v-card-item>
-          <v-card-text>
-            <v-card :color="settings.primaryColor" class="d-flex align-center pa-2">
-                <v-avatar color="white" size="32" class="mr-3">
-                  <v-icon :color="settings.primaryColor">mdi-store</v-icon>
-                </v-avatar>
-                <div>
-                  <p class="font-weight-bold text-white">{{ settings.companyName }}</p>
-                  <p class="text-caption text-white">{{ settings.companySlogan }}</p>
-                </div>
-            </v-card>
-            <v-btn :color="settings.primaryColor" class="mt-4" block>Botón Primario</v-btn>
-            <p class="text-center mt-2 text-caption">Moneda: {{ settings.currencySymbol }} | IVA: {{ settings.taxRate }}%</p>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
-  </div>
+                    <v-card-actions>
+                        <v-spacer></v-spacer>
+                        <v-btn color="primary" @click="saveSettings" :loading="saving">
+                            <v-icon left>mdi-content-save</v-icon>
+                            Guardar Configuración
+                        </v-btn>
+                    </v-card-actions>
+                </v-card>
+            </v-col>
+        </v-row>
+    </v-container>
 </template>
 
 <script>
