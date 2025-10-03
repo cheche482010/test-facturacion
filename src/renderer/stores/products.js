@@ -1,4 +1,5 @@
 import { defineStore } from "pinia"
+import api from "@/services/api.js"
 
 export const useProductStore = defineStore("products", {
   state: () => ({
@@ -29,9 +30,8 @@ export const useProductStore = defineStore("products", {
     async fetchProducts() {
       this.loading = true
       try {
-        const response = await fetch("/api/products")
-        if (!response.ok) throw new Error("Error fetching products")
-        this.products = await response.json()
+        const data = await api.get("/products")
+        this.products = data
       } catch (error) {
         this.error = error.message
         console.error("Error fetching products:", error)
@@ -42,17 +42,7 @@ export const useProductStore = defineStore("products", {
 
     async createProduct(productData) {
       try {
-        const response = await fetch("/api/products", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(productData),
-        })
-
-        if (!response.ok) throw new Error("Error creating product")
-
-        const newProduct = await response.json()
+        const newProduct = await api.post("/products", productData)
         this.products.push(newProduct)
         return newProduct
       } catch (error) {
@@ -63,17 +53,7 @@ export const useProductStore = defineStore("products", {
 
     async updateProduct(id, productData) {
       try {
-        const response = await fetch(`/api/products/${id}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(productData),
-        })
-
-        if (!response.ok) throw new Error("Error updating product")
-
-        const updatedProduct = await response.json()
+        const updatedProduct = await api.put(`/products/${id}`, productData)
         const index = this.products.findIndex((p) => p.id === id)
         if (index !== -1) {
           this.products[index] = updatedProduct
@@ -87,12 +67,7 @@ export const useProductStore = defineStore("products", {
 
     async deleteProduct(id) {
       try {
-        const response = await fetch(`/api/products/${id}`, {
-          method: "DELETE",
-        })
-
-        if (!response.ok) throw new Error("Error deleting product")
-
+        await api.delete(`/products/${id}`)
         this.products = this.products.filter((p) => p.id !== id)
       } catch (error) {
         this.error = error.message
@@ -102,19 +77,7 @@ export const useProductStore = defineStore("products", {
 
     async updateStock(productId, newStock, movementType = "ajuste") {
       try {
-        const response = await fetch(`/api/products/${productId}/stock`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            newStock,
-            movementType,
-          }),
-        })
-
-        if (!response.ok) throw new Error("Error updating stock")
-
+        await api.put(`/products/${productId}/stock`, { newStock, movementType })
         const product = this.products.find((p) => p.id === productId)
         if (product) {
           product.currentStock = newStock

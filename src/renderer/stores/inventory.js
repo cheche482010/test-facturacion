@@ -1,4 +1,5 @@
 import { defineStore } from "pinia"
+import api from "@/services/api"
 
 export const useInventoryStore = defineStore("inventory", {
   state: () => ({
@@ -29,9 +30,7 @@ export const useInventoryStore = defineStore("inventory", {
     async fetchMovements() {
       this.loading = true
       try {
-        const response = await fetch("/api/inventory/movements")
-        if (!response.ok) throw new Error("Error fetching movements")
-        this.movements = await response.json()
+        this.movements = await api.get("/inventory/movements")
       } catch (error) {
         this.error = error.message
         console.error("Error fetching movements:", error)
@@ -42,9 +41,7 @@ export const useInventoryStore = defineStore("inventory", {
 
     async fetchMovementsByProduct(productId) {
       try {
-        const response = await fetch(`/api/inventory/movements/product/${productId}`)
-        if (!response.ok) throw new Error("Error fetching product movements")
-        const productMovements = await response.json()
+        const productMovements = await api.get(`/inventory/movements/product/${productId}`)
 
         // Actualizar movimientos del producto en el estado
         this.movements = this.movements.filter((m) => m.productId !== productId)
@@ -57,22 +54,12 @@ export const useInventoryStore = defineStore("inventory", {
 
     async adjustStock(productId, newStock, reason, notes = "") {
       try {
-        const response = await fetch(`/api/inventory/adjust-stock`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            productId,
-            newStock,
-            reason,
-            notes,
-          }),
+        const result = await api.post(`/inventory/adjust-stock`, {
+          productId,
+          newStock,
+          reason,
+          notes,
         })
-
-        if (!response.ok) throw new Error("Error adjusting stock")
-
-        const result = await response.json()
 
         // Actualizar movimientos
         this.movements.push(result.movement)
@@ -86,17 +73,7 @@ export const useInventoryStore = defineStore("inventory", {
 
     async massAdjustment(adjustmentData) {
       try {
-        const response = await fetch(`/api/inventory/mass-adjustment`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(adjustmentData),
-        })
-
-        if (!response.ok) throw new Error("Error in mass adjustment")
-
-        const result = await response.json()
+        const result = await api.post(`/inventory/mass-adjustment`, adjustmentData)
 
         // Actualizar movimientos
         this.movements.push(...result.movements)
@@ -110,17 +87,7 @@ export const useInventoryStore = defineStore("inventory", {
 
     async createMovement(movementData) {
       try {
-        const response = await fetch("/api/inventory/movements", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(movementData),
-        })
-
-        if (!response.ok) throw new Error("Error creating movement")
-
-        const newMovement = await response.json()
+        const newMovement = await api.post("/inventory/movements", movementData)
         this.movements.push(newMovement)
         return newMovement
       } catch (error) {
@@ -132,11 +99,7 @@ export const useInventoryStore = defineStore("inventory", {
     async getInventoryReport(filters = {}) {
       try {
         const queryParams = new URLSearchParams(filters).toString()
-        const response = await fetch(`/api/inventory/report?${queryParams}`)
-
-        if (!response.ok) throw new Error("Error generating inventory report")
-
-        return await response.json()
+        return await api.get(`/inventory/report?${queryParams}`)
       } catch (error) {
         this.error = error.message
         throw error
@@ -145,10 +108,7 @@ export const useInventoryStore = defineStore("inventory", {
 
     async getStockAlerts() {
       try {
-        const response = await fetch("/api/inventory/alerts")
-        if (!response.ok) throw new Error("Error fetching stock alerts")
-
-        this.alerts = await response.json()
+        this.alerts = await api.get("/inventory/alerts")
         return this.alerts
       } catch (error) {
         this.error = error.message

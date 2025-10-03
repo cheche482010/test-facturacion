@@ -110,9 +110,9 @@ function createMenu() {
   Menu.setApplicationMenu(menu)
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   // Iniciar servidor Express
-  startServer()
+  await startServer()
 
   createWindow()
   createMenu()
@@ -138,3 +138,6 @@ ipcMain.handle("get-app-version", () => {
 ipcMain.handle("get-app-path", () => {
   return app.getAppPath()
 })
+
+// Import other IPC handlers
+require("./routes/settings")

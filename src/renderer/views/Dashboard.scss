@@ -1,0 +1,26 @@
+// Dashboard specific styles
+.dashboard {
+  &__header {
+    margin-bottom: 1rem;
+  }
+
+  &__summary-cards {
+    .v-card {
+      transition: transform 0.2s ease-in-out;
+      
+      &:hover {
+        transform: translateY(-2px);
+      }
+    }
+  }
+
+  &__chart-container {
+    min-height: 300px;
+  }
+
+  &__alerts {
+    .v-chip {
+      margin: 0.25rem;
+    }
+  }
+}

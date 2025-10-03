@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken")
-const { User } = require("../database/models")
+const { User } = require("../database/models/index.js")
 
 // JWT Authentication Middleware
 const authenticateToken = async (req, res, next) => {
@@ -50,7 +50,7 @@ const requirePermission = (permission) => {
 
     const rolePermissions = {
       admin: ["all"],
-      supervisor: ["sales", "inventory", "reports", "customers", "users"],
+      supervisor: ["sales", "inventory", "reports", "customers"],
       cashier: ["sales"],
     }
 

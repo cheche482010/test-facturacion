@@ -1,24 +1,21 @@
-import { defineConfig } from "vite"
-import vue from "@vitejs/plugin-vue"
-import { resolve } from "path"
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import { fileURLToPath, URL } from 'node:url'
 
+// https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [vue()],
-  root: ".",
-  build: {
-    outDir: "dist",
-    rollupOptions: {
-      input: {
-        main: resolve(__dirname, "index.html"),
-      },
-    },
-  },
-  server: {
-    port: 5173,
-  },
+  plugins: [
+    vue(),
+  ],
   resolve: {
     alias: {
-      "@": resolve(__dirname, "src/renderer"),
-    },
+      '@': fileURLToPath(new URL('./src/renderer', import.meta.url))
+    }
   },
+  server: {
+    proxy: {
+      // Redirigir las peticiones de /api al servidor backend en el puerto 3001
+      '/api': 'http://localhost:3001'
+    }
+  }
 })

@@ -34,7 +34,19 @@
           <v-card-text>
             <!-- Chart placeholder -->
             <div style="height: 300px;" class="d-flex align-center justify-center text-medium-emphasis bg-grey-lighten-4 rounded">
-              [Gráfico de Ventas Aquí]
+              <v-sparkline
+                :value="salesChartData.values"
+                :labels="salesChartData.labels"
+                :gradient="['#1976D2', '#42A5F5', '#64B5F6']"
+                height="100"
+                padding="24"
+                stroke-linecap="round"
+                smooth
+              >
+                <template v-slot:label="item">
+                  {{ item.value }}
+                </template>
+              </v-sparkline>
             </div>
           </v-card-text>
         </v-card>
@@ -128,60 +140,9 @@
   </div>
 </template>
 
-<script setup>
-import { ref, onMounted, computed } from 'vue'
-import { useReportsStore } from '../../stores/reports'
-import { formatCurrency, formatDate } from '../utils/formatters'
+<script>
+import dashboardLogic from './Dashboard.js'
 
-const reportsStore = useReportsStore()
-const loading = ref(true)
-const dashboardData = ref({})
-
-const formattedDate = computed(() => {
-  return new Date().toLocaleDateString('es-ES', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
-})
-
-const summaryCards = computed(() => [
-  { title: 'Total Productos', value: dashboardData.value.summary?.totalProducts || 0, icon: 'mdi-package-variant-closed', color: 'blue' },
-  { title: 'Total Clientes', value: dashboardData.value.summary?.totalCustomers || 0, icon: 'mdi-account-group', color: 'green' },
-  { title: 'Ventas Totales', value: formatCurrency(dashboardData.value.summary?.totalSales), icon: 'mdi-cash-multiple', color: 'purple' },
-  { title: 'Ventas Hoy', value: formatCurrency(dashboardData.value.summary?.todaySales), icon: 'mdi-cash-register', color: 'orange' },
-  { title: 'Valor Inventario', value: formatCurrency(dashboardData.value.summary?.inventoryValue), icon: 'mdi-warehouse', color: 'deep-purple' },
-])
-
-const recentSalesHeaders = [
-  { title: 'Factura', key: 'invoiceNumber' },
-  { title: 'Cliente', key: 'Customer.name' },
-  { title: 'Fecha', key: 'saleDate' },
-  { title: 'Pago', key: 'paymentMethod' },
-  { title: 'Estado', key: 'status' },
-  { title: 'Total', key: 'total', align: 'end' },
-]
-
-const getStatusColor = (status) => {
-  const colors = { paid: 'success', pending: 'warning', cancelled: 'error' }
-  return colors[status] || 'grey'
-}
-
-const getStatusText = (status) => {
-  const texts = { paid: 'Pagado', pending: 'Pendiente', cancelled: 'Cancelado' }
-  return texts[status] || status
-}
-
-onMounted(async () => {
-  try {
-    loading.value = true
-    const data = await reportsStore.fetchDashboardData()
-    dashboardData.value = data
-  } catch (error) {
-    console.error('Error loading dashboard:', error)
-  } finally {
-    loading.value = false
-  }
-})
+export default dashboardLogic
 </script>
+<style scoped src="./Dashboard.scss"></style>
