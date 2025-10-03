@@ -1,4 +1,4 @@
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useAppStore } from '../../stores/app'
 
 export default {
