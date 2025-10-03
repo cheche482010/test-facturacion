@@ -2,6 +2,7 @@ import { ref, computed, onMounted } from 'vue'
 import ProductDialog from '../../components/products/ProductDialog/ProductDialog.vue'
 import { useProductStore } from '../../stores/products'
 import { useCategoryStore } from '../../stores/categories'
+import { formatCurrency } from '@/utils/formatters'
 
 export default {
   components: {
@@ -15,7 +16,7 @@ export default {
     const search = ref('')
     const selectedCategory = ref(null)
     const selectedStatus = ref(null)
-    const stockFilter = ref(null)
+    const stockFilter = ref(false)
     const productDialog = ref(false)
     const deleteDialog = ref(false)
     const barcodeDialog = ref(false)
@@ -23,32 +24,54 @@ export default {
     const productToDelete = ref(null)
 
     const statusOptions = [
+      { title: 'Todos', value: null },
       { title: 'Activo', value: 'activo' },
       { title: 'Descontinuado', value: 'descontinuado' },
       { title: 'Agotado', value: 'agotado' }
     ]
 
-    const stockFilterOptions = [
-      { title: 'Stock bajo', value: 'low' },
-      { title: 'Stock normal', value: 'normal' },
-      { title: 'Sin stock', value: 'empty' }
-    ]
-
     const headers = [
-      { title: '', key: 'image', sortable: false, width: '60px' },
       { title: 'Producto', key: 'name', sortable: true },
-      { title: 'Categoría', key: 'category', sortable: false },
+      { title: 'Código', key: 'internalCode', sortable: true },
+      { title: 'Categoría', key: 'categoryName', sortable: true },
       { title: 'Stock', key: 'currentStock', sortable: true },
-      { title: 'Precios', key: 'retailPrice', sortable: true },
+      { title: 'Precio Venta', key: 'retailPrice', sortable: true, align: 'end' },
       { title: 'Estado', key: 'status', sortable: true },
-      { title: 'Acciones', key: 'actions', sortable: false, width: '120px' }
+      { title: 'Acciones', key: 'actions', sortable: false, align: 'center' }
     ]
 
-    const products = computed(() => productStore.products)
+    const products = computed(() => productStore.products.map(p => ({
+      ...p,
+      categoryName: p.Category?.name || 'N/A'
+    })))
     const categories = computed(() => categoryStore.categories)
+
+    const summaryCards = computed(() => {
+      const allProducts = products.value || []
+      const totalProducts = allProducts.length
+      const activeProducts = allProducts.filter(p => p.status === 'activo').length
+      const lowStockProducts = allProducts.filter(p => p.currentStock > 0 && p.currentStock <= p.minStock).length
+      const inventoryValue = allProducts.reduce((sum, p) => sum + (p.costPrice * p.currentStock), 0)
+
+      return [
+        { title: 'Total Productos', value: totalProducts, icon: 'mdi-package-variant-closed', color: 'blue-grey' },
+        { title: 'Productos Activos', value: activeProducts, icon: 'mdi-check-circle-outline', color: 'light-green' },
+        { title: 'Stock Bajo', value: lowStockProducts, icon: 'mdi-alert-outline', color: 'orange' },
+        { title: 'Valor Total', value: formatCurrency(inventoryValue), icon: 'mdi-cash-multiple', color: 'deep-purple' }
+      ]
+    })
 
     const filteredProducts = computed(() => {
       let filtered = products.value
+      const searchTerm = search.value?.toLowerCase() || ''
+
+      if (searchTerm) {
+        filtered = filtered.filter(p =>
+          p.name.toLowerCase().includes(searchTerm) ||
+          (p.internalCode && p.internalCode.toLowerCase().includes(searchTerm)) ||
+          (p.barcode && p.barcode.toLowerCase().includes(searchTerm))
+        )
+      }
 
       if (selectedCategory.value) {
         filtered = filtered.filter(p => p.categoryId === selectedCategory.value)
@@ -59,17 +82,7 @@ export default {
       }
 
       if (stockFilter.value) {
-        switch (stockFilter.value) {
-          case 'low':
-            filtered = filtered.filter(p => p.currentStock <= p.minStock && p.currentStock > 0)
-            break
-          case 'empty':
-            filtered = filtered.filter(p => p.currentStock === 0)
-            break
-          case 'normal':
-            filtered = filtered.filter(p => p.currentStock > p.minStock)
-            break
-        }
+        filtered = filtered.filter(p => p.currentStock > 0 && p.currentStock <= p.minStock)
       }
 
       return filtered
@@ -171,13 +184,6 @@ export default {
       }
     }
 
-    const formatCurrency = (amount) => {
-      return new Intl.NumberFormat('es-VE', {
-        style: 'currency',
-        currency: 'VES'
-      }).format(amount)
-    }
-
     onMounted(() => {
       loadProducts()
     })
@@ -194,10 +200,10 @@ export default {
       selectedProduct,
       productToDelete,
       statusOptions,
-      stockFilterOptions,
       headers,
       products,
       categories,
+      summaryCards,
       filteredProducts,
       loadProducts,
       openProductDialog,

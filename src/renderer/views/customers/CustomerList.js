@@ -1,38 +1,70 @@
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useCustomerStore } from '../../stores/customers'
+import { formatCurrency } from '@/utils/formatters'
+// We will create/use this component later
+// import CustomerDialog from '../../components/customers/CustomerDialog.vue'
 
 export default {
-  name: 'CustomerList',
+  // components: { CustomerDialog },
   setup() {
-    const customers = ref([])
+    const customerStore = useCustomerStore()
+
+    // State
     const loading = ref(false)
     const search = ref('')
-    const dialog = ref(false)
-    const editingCustomer = ref(null)
+    const customerDialog = ref(false)
+    const selectedCustomer = ref(null)
+    const customerToDelete = ref(null)
+    const deleteDialog = ref(false)
 
-    const customerForm = ref({
-      firstName: '',
-      lastName: '',
-      email: '',
-      phone: '',
-      address: '',
-      city: '',
-      country: ''
+    // Computed Properties
+    const customers = computed(() => customerStore.customers)
+
+    const summaryCards = computed(() => {
+      const allCustomers = customers.value || []
+      const totalCustomers = allCustomers.length
+      const activeCustomers = allCustomers.filter(c => c.status === 'activo').length
+      const premiumCustomers = allCustomers.filter(c => c.category === 'Mayorista').length // Assuming 'Mayorista' is the premium category
+      const pendingBalance = allCustomers.reduce((sum, c) => sum + (c.pendingBalance || 0), 0)
+
+      return [
+        { title: 'Total Clientes', value: totalCustomers, icon: 'mdi-account-group', color: 'blue-grey' },
+        { title: 'Clientes Activos', value: activeCustomers, icon: 'mdi-account-check', color: 'light-green' },
+        { title: 'Clientes Premium', value: premiumCustomers, icon: 'mdi-star-circle', color: 'purple' },
+        { title: 'Saldo Pendiente', value: formatCurrency(pendingBalance), icon: 'mdi-cash-clock', color: 'orange' }
+      ]
+    })
+
+    const filteredCustomers = computed(() => {
+      let filtered = customers.value
+      const searchTerm = search.value?.toLowerCase() || ''
+
+      if (searchTerm) {
+        filtered = filtered.filter(c =>
+          c.name.toLowerCase().includes(searchTerm) ||
+          c.idNumber.toLowerCase().includes(searchTerm) ||
+          c.email.toLowerCase().includes(searchTerm)
+        )
+      }
+      // Add other filters for category, status, type if needed
+      return filtered
     })
 
     const headers = [
-      { text: 'Nombre', value: 'firstName' },
-      { text: 'Apellido', value: 'lastName' },
-      { text: 'Email', value: 'email' },
-      { text: 'Teléfono', value: 'phone' },
-      { text: 'Ciudad', value: 'city' },
-      { text: 'Acciones', value: 'actions', sortable: false }
+      { title: 'Cliente', key: 'name', sortable: true },
+      { title: 'Documento', key: 'idNumber', sortable: true },
+      { title: 'Contacto', key: 'contact', sortable: false },
+      { title: 'Categoría', key: 'category', sortable: true },
+      { title: 'Límite de Crédito', key: 'creditLimit', sortable: true, align: 'end' },
+      { title: 'Estado', key: 'status', sortable: true },
+      { title: 'Acciones', key: 'actions', sortable: false, align: 'center' }
     ]
 
+    // Methods
     const loadCustomers = async () => {
       loading.value = true
       try {
-        const response = await window.electronAPI.invoke('get-customers')
-        customers.value = response
+        await customerStore.fetchCustomers()
       } catch (error) {
         console.error('Error loading customers:', error)
       } finally {
@@ -40,76 +72,79 @@ export default {
       }
     }
 
-    const openDialog = () => {
-      editingCustomer.value = null
-      customerForm.value = {
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        address: '',
-        city: '',
-        country: ''
-      }
-      dialog.value = true
+    const openCustomerDialog = (customer = null) => {
+      selectedCustomer.value = customer
+      customerDialog.value = true
+       console.log("Dialog should open for customer:", customer)
     }
 
-    const editCustomer = (customer) => {
-      editingCustomer.value = customer
-      customerForm.value = { ...customer }
-      dialog.value = true
-    }
-
-    const closeDialog = () => {
-      dialog.value = false
-      editingCustomer.value = null
-    }
-
-    const saveCustomer = async () => {
+    const onCustomerSaved = async (customerData) => {
       try {
-        if (editingCustomer.value) {
-          await window.electronAPI.invoke('update-customer', {
-            id: editingCustomer.value.id,
-            ...customerForm.value
-          })
+        if (selectedCustomer.value) {
+          await customerStore.updateCustomer({ ...selectedCustomer.value, ...customerData })
         } else {
-          await window.electronAPI.invoke('create-customer', customerForm.value)
+          await customerStore.createCustomer(customerData)
         }
+        customerDialog.value = false
+        selectedCustomer.value = null
         await loadCustomers()
-        closeDialog()
       } catch (error) {
         console.error('Error saving customer:', error)
       }
     }
 
-    const deleteCustomer = async (customer) => {
-      if (confirm('¿Está seguro de que desea eliminar este cliente?')) {
-        try {
-          await window.electronAPI.invoke('delete-customer', customer.id)
-          await loadCustomers()
-        } catch (error) {
-          console.error('Error deleting customer:', error)
-        }
+    const confirmDelete = (customer) => {
+      customerToDelete.value = customer
+      deleteDialog.value = true
+    }
+
+    const deleteCustomer = async () => {
+      if (!customerToDelete.value) return
+      try {
+        await customerStore.deleteCustomer(customerToDelete.value.id)
+        deleteDialog.value = false
+        customerToDelete.value = null
+        loadCustomers()
+      } catch (error) {
+        console.error('Error deleting customer:', error)
       }
     }
 
-    onMounted(() => {
-      loadCustomers()
-    })
+    const getCategoryColor = (category) => {
+      const colors = { 'Normal': 'primary', 'Mayorista': 'accent', 'Preferencial': 'secondary' }
+      return colors[category] || 'grey'
+    }
+
+    const getStatusColor = (status) => {
+      return status === 'activo' ? 'success' : 'error'
+    }
+
+    const getStatusText = (status) => {
+      return status === 'activo' ? 'Activo' : 'Inactivo'
+    }
+
+    // Lifecycle
+    onMounted(loadCustomers)
 
     return {
-      customers,
       loading,
       search,
-      dialog,
-      editingCustomer,
-      customerForm,
+      customerDialog,
+      selectedCustomer,
+      customerToDelete,
+      deleteDialog,
+      customers,
+      summaryCards,
+      filteredCustomers,
       headers,
-      openDialog,
-      editCustomer,
-      closeDialog,
-      saveCustomer,
-      deleteCustomer
+      openCustomerDialog,
+      onCustomerSaved,
+      confirmDelete,
+      deleteCustomer,
+      getCategoryColor,
+      getStatusColor,
+      getStatusText,
+      formatCurrency
     }
   }
 }

@@ -1,49 +1,64 @@
-import { ref, onMounted, computed } from "vue"
-import { useSettingsStore } from "../../stores/settingsStore"
+import { ref, onMounted, watch } from 'vue'
+import { useAppStore } from '../../stores/app'
 
 export default {
-  name: "Settings",
   setup() {
-    const tab = ref(0)
-    const settingsStore = useSettingsStore()
+    const appStore = useAppStore()
+    const saving = ref(false)
 
-    const settings = computed(() => settingsStore.settings)
-    const saving = computed(() => settingsStore.loading)
+    // Use a local ref for settings to allow editing, and sync it with the store
+    const settings = ref({})
 
-    const themeOptions = [
-      { text: "Claro", value: "light" },
-      { text: "Oscuro", value: "dark" },
+    const colorSwatches = [
+      ['#2196F3', '#4CAF50', '#E91E63', '#9C27B0'],
+      ['#FF9800', '#F44336', '#795548', '#607D8B']
     ]
 
-    const operationModeOptions = [
-      { text: "Modo Bodega", value: "bodega" },
-      { text: "Modo Tienda", value: "tienda" },
-    ]
-
-    const saveSettings = async () => {
-      await settingsStore.saveSettings()
+    const loadSettings = () => {
+      // Create a deep copy to prevent direct mutation of the store's state
+      settings.value = JSON.parse(JSON.stringify(appStore.settings))
     }
 
-    const createBackup = async () => {
-      try {
-        await window.electronAPI.invoke("create-backup")
-      } catch (error) {
-        console.error("Error creating backup:", error)
+    const onLogoChange = (event) => {
+      const file = event.target.files[0]
+      if (file) {
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          settings.value.companyLogo = e.target.result
+        }
+        reader.readAsDataURL(file)
       }
     }
 
+    const saveSettings = async () => {
+      saving.value = true
+      try {
+        await appStore.saveSettings(settings.value)
+        // Optionally show a success message
+      } catch (error) {
+        console.error("Error saving settings:", error)
+        // Optionally show an error message
+      } finally {
+        saving.value = false
+      }
+    }
+
+    // Watch for changes in the store settings and update the local copy
+    watch(() => appStore.settings, (newSettings) => {
+      settings.value = JSON.parse(JSON.stringify(newSettings))
+    }, { deep: true })
+
+    // Initial load
     onMounted(() => {
-      settingsStore.fetchSettings()
+      loadSettings()
     })
 
     return {
-      tab,
       settings,
       saving,
-      themeOptions,
-      operationModeOptions,
-      saveSettings,
-      createBackup,
+      colorSwatches,
+      onLogoChange,
+      saveSettings
     }
-  },
+  }
 }
