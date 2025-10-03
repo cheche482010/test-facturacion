@@ -145,7 +145,4 @@ import dashboardLogic from './Dashboard.js'
 
 export default dashboardLogic
 </script>
-
-<style lang="scss" scoped>
-@import './Dashboard.scss';
-</style>
+<style scoped src="./Dashboard.scss"></style>
