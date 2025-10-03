@@ -12,6 +12,7 @@ export const useAppStore = defineStore("app", {
       email: "",
       currency: "VES",
       exchangeRate: 1,
+      darkMode: false,
     },
   }),
 
@@ -32,6 +33,17 @@ export const useAppStore = defineStore("app", {
 
     updateSettings(settings) {
       this.settings = { ...this.settings, ...settings }
+    },
+
+    async saveSettings(newSettings) {
+      // In a real app, this would save to a file via IPC
+      this.settings = { ...this.settings, ...newSettings };
+      console.log("Settings saved:", this.settings);
+    },
+
+    async loadSettings() {
+      // In a real app, this would load from a file via IPC
+      console.log("Loading settings...");
     },
 
     logout() {

@@ -13,15 +13,15 @@
 
     <!-- Summary Cards -->
     <v-row>
-      <v-col v-for="card in summaryCards" :key="card.title" cols="12" sm="6" md="4" lg="2.4">
-        <v-card class="d-flex align-center">
-          <div :class="`bg-${card.color}`" class="pa-4 rounded-s-lg">
-            <v-icon :icon="card.icon" size="32" color="white" />
-          </div>
-          <div class="pa-4">
-            <p class="text-h6 font-weight-bold">{{ card.value }}</p>
-            <p class="text-medium-emphasis">{{ card.title }}</p>
-          </div>
+      <v-col v-for="card in summaryCards" :key="card.title" cols="12" md>
+        <v-card :color="card.color" class="text-white">
+          <v-card-text class="d-flex justify-space-between align-center">
+            <div>
+              <div class="text-h4 font-weight-bold">{{ card.value }}</div>
+              <div class="text-body-1">{{ card.title }}</div>
+            </div>
+            <v-icon size="48">{{ card.icon }}</v-icon>
+          </v-card-text>
         </v-card>
       </v-col>
     </v-row>
@@ -33,14 +33,20 @@
           <v-card-title>Ventas de los Últimos 7 Días</v-card-title>
           <v-card-text>
             <!-- Chart placeholder -->
-            <div style="height: 300px;" class="d-flex align-end justify-center text-medium-emphasis bg-grey-lighten-4 rounded pa-4">
-              <!-- This is a simplified static representation of the bar chart -->
-              <div class="d-flex align-end" style="width: 100%; height: 100%;">
-                <div v-for="(sale, index) in salesChartData.values" :key="index" class="d-flex flex-column align-center flex-grow-1">
-                   <div class="bg-primary rounded-t" :style="{ height: (sale / Math.max(...salesChartData.values) * 100) + '%' }"></div>
-                   <p class="text-caption text-medium-emphasis mt-2">{{ salesChartData.labels[index] }}</p>
-                </div>
-              </div>
+            <div style="height: 300px;" class="d-flex align-center justify-center text-medium-emphasis bg-grey-lighten-4 rounded">
+              <v-sparkline
+                :value="salesChartData.values"
+                :labels="salesChartData.labels"
+                :gradient="['#1976D2', '#42A5F5', '#64B5F6']"
+                height="100"
+                padding="24"
+                stroke-linecap="round"
+                smooth
+              >
+                <template v-slot:label="item">
+                  {{ item.value }}
+                </template>
+              </v-sparkline>
             </div>
           </v-card-text>
         </v-card>
@@ -49,66 +55,53 @@
       <!-- Stock Alerts & Quick Summary -->
       <v-col cols="12" md="4">
         <v-card class="mb-4">
-          <v-card-item>
-            <v-card-title>
-              <v-badge
-                color="error"
-                :content="dashboardData.lowStockProducts?.length || 0"
-                inline
-              >
-                <v-icon icon="mdi-bell-ring-outline" class="mr-2"></v-icon>
-                Alertas de Stock
-              </v-badge>
-            </v-card-title>
-          </v-card-item>
-
-          <v-list-item
-            v-for="item in dashboardData.lowStockProducts"
-            :key="item.id"
-            class="bg-red-lighten-5 rounded mx-4 mb-2"
-          >
-            <v-list-item-title class="font-weight-bold">{{ item.name }}</v-list-item-title>
-            <v-list-item-subtitle>{{ `Código: ${item.internalCode || 'N/A'}` }}</v-list-item-subtitle>
-            <template v-slot:append>
-              <div class="text-right">
-                <p class="font-weight-bold text-error">{{ item.currentStock }} / {{ item.minStock }}</p>
-                <p class="text-caption">Stock</p>
-              </div>
-            </template>
-          </v-list-item>
-          <v-card-text v-if="!dashboardData.lowStockProducts?.length" class="text-center text-medium-emphasis">
-            No hay alertas de stock
-          </v-card-text>
+          <v-card-title class="d-flex align-center">
+            Alertas de Stock
+            <v-chip color="error" size="small" class="ml-2">{{ dashboardData.lowStockProducts?.length || 0 }}</v-chip>
+          </v-card-title>
+          <v-list>
+            <v-list-item
+              v-for="item in dashboardData.lowStockProducts"
+              :key="item.id"
+              :title="item.name"
+              :subtitle="`Código: ${item.internalCode || 'N/A'}`"
+            >
+              <template v-slot:append>
+                <v-chip color="error" variant="tonal" size="small">
+                  {{ item.currentStock }} / {{ item.minStock }}
+                </v-chip>
+              </template>
+            </v-list-item>
+             <v-list-item v-if="!dashboardData.lowStockProducts?.length">
+              <v-list-item-title class="text-center text-medium-emphasis">No hay alertas de stock</v-list-item-title>
+            </v-list-item>
+          </v-list>
         </v-card>
 
         <v-card>
-          <v-card-item>
-            <v-card-title>
-              <v-icon icon="mdi-chart-line" class="mr-2"></v-icon>
-              Resumen Rápido
-            </v-card-title>
-          </v-card-item>
-          <v-list-item>
-            <div class="d-flex justify-space-between">
-              <p>Productos Activos</p>
-              <p class="font-weight-bold">{{ dashboardData.quickSummary?.activeProducts || 0 }}</p>
-            </div>
-            <v-divider class="my-2"></v-divider>
-             <div class="d-flex justify-space-between">
-              <p>Clientes Activos</p>
-              <p class="font-weight-bold">{{ dashboardData.quickSummary?.activeCustomers || 0 }}</p>
-            </div>
-            <v-divider class="my-2"></v-divider>
-             <div class="d-flex justify-space-between">
-              <p>Alertas de Stock</p>
-               <v-badge color="error" :content="dashboardData.quickSummary?.lowStockCount || 0" inline></v-badge>
-            </div>
-            <v-divider class="my-2"></v-divider>
-             <div class="d-flex justify-space-between">
-              <p>Facturas Pendientes</p>
-               <p class="font-weight-bold">{{ dashboardData.quickSummary?.pendingInvoices || 0 }}</p>
-            </div>
-          </v-list-item>
+          <v-card-title>Resumen Rápido</v-card-title>
+           <v-list density="compact">
+            <v-list-item title="Productos Activos">
+              <template v-slot:append>
+                <v-chip color="success" size="small">{{ dashboardData.quickSummary?.activeProducts || 0 }}</v-chip>
+              </template>
+            </v-list-item>
+            <v-list-item title="Clientes Activos">
+               <template v-slot:append>
+                <v-chip color="primary" size="small">{{ dashboardData.quickSummary?.activeCustomers || 0 }}</v-chip>
+              </template>
+            </v-list-item>
+            <v-list-item title="Alertas de Stock">
+               <template v-slot:append>
+                <v-chip color="warning" size="small">{{ dashboardData.quickSummary?.lowStockCount || 0 }}</v-chip>
+              </template>
+            </v-list-item>
+            <v-list-item title="Facturas Pendientes">
+               <template v-slot:append>
+                <v-chip color="info" size="small">{{ dashboardData.quickSummary?.pendingInvoices || 0 }}</v-chip>
+              </template>
+            </v-list-item>
+          </v-list>
         </v-card>
       </v-col>
     </v-row>
@@ -131,13 +124,13 @@
               {{ formatDate(item.saleDate) }}
             </template>
              <template v-slot:item.status="{ item }">
-              <v-chip :color="getStatusColor(item.status)" size="small" variant="flat" label>
+              <v-chip :color="getStatusColor(item.status)" size="small" variant="tonal">
                 {{ getStatusText(item.status) }}
               </v-chip>
             </template>
-            <template v-slot:item.paymentMethod="{ item }">
-              <v-chip :color="getPaymentMethodColor(item.paymentMethod)" size="small" variant="tonal" label>
-                 {{ item.paymentMethod }}
+             <template v-slot:item.paymentMethod="{ item }">
+              <v-chip size="small" variant="outlined">
+                {{ item.paymentMethod }}
               </v-chip>
             </template>
           </v-data-table>
