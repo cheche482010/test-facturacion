@@ -18,11 +18,11 @@ export default {
     })
 
     const summaryCards = computed(() => [
-      { title: 'Total Productos', value: dashboardData.value.summary?.totalProducts || 0, icon: 'mdi-package-variant-closed', color: 'blue' },
-      { title: 'Total Clientes', value: dashboardData.value.summary?.totalCustomers || 0, icon: 'mdi-account-group', color: 'green' },
-      { title: 'Ventas Totales', value: formatCurrency(dashboardData.value.summary?.totalSales), icon: 'mdi-cash-multiple', color: 'purple' },
+      { title: 'Total Productos', value: dashboardData.value.summary?.totalProducts || 0, icon: 'mdi-package-variant-closed', color: 'blue-grey' },
+      { title: 'Total Clientes', value: dashboardData.value.summary?.totalCustomers || 0, icon: 'mdi-account-group', color: 'light-green' },
+      { title: 'Ventas Totales', value: formatCurrency(dashboardData.value.summary?.totalSales), icon: 'mdi-cash-multiple', color: 'deep-purple' },
       { title: 'Ventas Hoy', value: formatCurrency(dashboardData.value.summary?.todaySales), icon: 'mdi-cash-register', color: 'orange' },
-      { title: 'Valor Inventario', value: formatCurrency(dashboardData.value.summary?.inventoryValue), icon: 'mdi-warehouse', color: 'deep-purple' },
+      { title: 'Valor Inventario', value: formatCurrency(dashboardData.value.summary?.inventoryValue), icon: 'mdi-warehouse', color: 'indigo' },
     ])
 
     const salesChartData = computed(() => {
@@ -50,6 +50,18 @@ export default {
       return texts[status] || status
     }
 
+    const getPaymentMethodColor = (method) => {
+      if (!method) return 'grey'
+      const lowerMethod = method.toLowerCase()
+      if (lowerMethod.includes('efectivo')) {
+        return 'success'
+      }
+      if (lowerMethod.includes('credito')) {
+        return 'warning'
+      }
+      return 'grey'
+    }
+
     onMounted(async () => {
       try {
         loading.value = true
@@ -71,6 +83,7 @@ export default {
       recentSalesHeaders,
       getStatusColor,
       getStatusText,
+      getPaymentMethodColor,
       formatCurrency,
       formatDate
     }

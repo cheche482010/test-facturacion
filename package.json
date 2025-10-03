@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "concurrently \"npm run dev:vue\" \"npm run dev:electron\"",
     "dev:vue": "vite",
-    "dev:electron": "cross-env NODE_ENV=development wait-on http://localhost:5173/index.html -v && electron .",
+    "dev:electron": "cross-env NODE_ENV=development electron .",
     "build": "npm run build:vue && electron-builder",
     "build:vue": "vite build",
     "build:electron": "electron-builder",
