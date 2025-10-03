@@ -35,6 +35,17 @@ export default {
       }
     }
 
+    const onLogoChange = (event) => {
+      const file = event.target.files[0]
+      if (file) {
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          settings.value.companyLogo = e.target.result
+        }
+        reader.readAsDataURL(file)
+      }
+    }
+
     const createBackup = async () => {
       try {
         await window.electronAPI.invoke('create-backup')
@@ -54,6 +65,7 @@ export default {
       operationModeOptions,
       saveSettings,
       createBackup,
+      onLogoChange,
     }
   },
 }

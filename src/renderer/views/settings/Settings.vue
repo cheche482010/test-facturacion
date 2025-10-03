@@ -10,6 +10,7 @@
                     <v-card-text>
                         <v-tabs v-model="tab">
                             <v-tab>General</v-tab>
+                            <v-tab>Interfaz</v-tab>
                             <v-tab>Empresa</v-tab>
                             <v-tab>Facturación</v-tab>
                             <v-tab>Modo de Operación</v-tab>
@@ -33,10 +34,36 @@
                                             <v-text-field v-model="settings.timezone" label="Zona Horaria"
                                                 hint="Ej: America/Caracas"></v-text-field>
                                         </v-col>
+                                    </v-row>
+                                </v-container>
+                            </v-window-item>
+
+                            <!-- Interfaz Tab -->
+                            <v-window-item>
+                               <v-container>
+                                    <v-row>
                                         <v-col cols="12" md="6">
-                                            <v-switch v-model="settings.darkMode"
-                                                      label="Modo Oscuro"
-                                                      color="primary"></v-switch>
+                                            <v-text-field v-model="settings.companyName" label="Título del Sistema"></v-text-field>
+                                        </v-col>
+                                        <v-col cols="12" md="6">
+                                            <v-text-field v-model="settings.companySlogan" label="Slogan de la Empresa"></v-text-field>
+                                        </v-col>
+                                        <v-col cols="12">
+                                            <v-file-input label="Logo de la Empresa" accept="image/*" @change="onLogoChange"></v-file-input>
+                                        </v-col>
+                                        <v-col cols="12"><v-divider class="my-2"></v-divider></v-col>
+                                        <v-col cols="12" md="4">
+                                            <v-switch v-model="settings.darkMode" label="Modo Oscuro" color="primary" inset></v-switch>
+                                        </v-col>
+                                        <v-col cols="12" md="8">
+                                            <v-text-field v-model="settings.primaryColor" label="Color Primario" readonly>
+                                                <template v-slot:append-inner>
+                                                    <v-menu activator="parent" :close-on-content-click="false">
+                                                      <v-color-picker v-model="settings.primaryColor"></v-color-picker>
+                                                    </v-menu>
+                                                    <v-avatar :color="settings.primaryColor" size="24"></v-avatar>
+                                                </template>
+                                            </v-text-field>
                                         </v-col>
                                     </v-row>
                                 </v-container>
