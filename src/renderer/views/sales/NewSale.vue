@@ -115,6 +115,10 @@
               <p class="font-weight-bold">Total</p>
               <p class="font-weight-bold">{{ formatCurrency(totals.total) }}</p>
             </div>
+            <div v-if="exchangeRate" class="d-flex justify-space-between text-body-1 mt-2 text-medium-emphasis">
+              <p>Total en USD (aprox.)</p>
+              <p>{{ formatCurrency(totals.total / exchangeRate, 'USD') }}</p>
+            </div>
 
             <v-divider class="my-4"></v-divider>
 

@@ -1,12 +1,17 @@
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { useAppStore } from '../../stores/app'
+import { useCurrencyStore } from '../../stores/currencyStore'
 
 export default {
   name: 'Settings',
   setup() {
     const tab = ref(0)
     const appStore = useAppStore()
+    const currencyStore = useCurrencyStore()
     const saving = ref(false)
+    const isUpdatingRate = ref(false)
+
+    const exchangeRate = computed(() => currencyStore.exchangeRate)
 
     // Create a local ref for settings to avoid direct mutation of the store.
     const settings = ref({})
@@ -54,8 +59,20 @@ export default {
       }
     }
 
+    const updateExchangeRate = async () => {
+      isUpdatingRate.value = true
+      try {
+        await currencyStore.updateExchangeRate()
+      } catch (error) {
+        console.error('Error updating exchange rate:', error)
+      } finally {
+        isUpdatingRate.value = false
+      }
+    }
+
     onMounted(() => {
       appStore.loadSettings()
+      currencyStore.fetchExchangeRate()
     })
 
     return {
@@ -66,6 +83,9 @@ export default {
       saveSettings,
       createBackup,
       onLogoChange,
+      exchangeRate,
+      isUpdatingRate,
+      updateExchangeRate,
     }
   },
 }

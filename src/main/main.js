@@ -6,6 +6,7 @@ const isDev = process.env.NODE_ENV === "development"
 
 // Importar el servidor Express
 const { startServer } = require("./server")
+const currencyController = require("./controllers/currencyController")
 
 let mainWindow
 
@@ -114,6 +115,10 @@ function createMenu() {
 app.whenReady().then(async () => {
   // Iniciar servidor Express
   await startServer()
+
+  // Actualizar la tasa de cambio al inicio y luego periódicamente
+  await currencyController.updateExchangeRate()
+  setInterval(currencyController.updateExchangeRate, 6 * 60 * 60 * 1000) // Cada 6 horas
 
   createWindow()
   createMenu()

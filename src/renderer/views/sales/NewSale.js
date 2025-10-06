@@ -4,6 +4,7 @@ import { useProductStore } from '../../stores/products'
 import { useCustomerStore } from '../../stores/customers'
 import { useSaleStore } from '../../stores/sales'
 import { useAppStore } from '../../stores/app'
+import { useCurrencyStore } from '../../stores/currencyStore'
 import { formatCurrency } from '@/utils/formatters'
 
 export default {
@@ -13,6 +14,7 @@ export default {
     const customerStore = useCustomerStore()
     const saleStore = useSaleStore()
     const appStore = useAppStore()
+    const currencyStore = useCurrencyStore()
 
     // State
     const cartItems = ref([])
@@ -41,6 +43,7 @@ export default {
     const selectedCustomer = computed(() => {
       return customers.value.find(c => c.id === selectedCustomerId.value)
     })
+    const exchangeRate = computed(() => currencyStore.exchangeRate)
 
     const totals = computed(() => {
       const subtotal = cartItems.value.reduce((acc, item) => acc + (item.quantity * item.price), 0)
@@ -171,7 +174,8 @@ export default {
     onMounted(async () => {
       await Promise.all([
         productStore.fetchProducts(),
-        customerStore.fetchCustomers()
+        customerStore.fetchCustomers(),
+        currencyStore.fetchExchangeRate()
       ])
       // Set default customer if in fast sale mode
       if (appStore.settings.defaultCustomerForFastSale) {
@@ -210,7 +214,8 @@ export default {
       removeItem,
       processSale,
       cancelSale,
-      formatCurrency
+      formatCurrency,
+      exchangeRate
     }
   }
 }
