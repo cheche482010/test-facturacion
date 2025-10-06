@@ -56,7 +56,7 @@ const seedDefaultData = async () => {
         },
         {
           key: "operation_mode",
-          value: "bodega",
+          value: "tienda",
           category: "system",
           description: "Modo de operación: bodega o tienda",
         },
