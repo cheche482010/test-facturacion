@@ -47,20 +47,11 @@ const app = createApp(App)
 const pinia = createPinia()
 
 app.use(pinia)
-app.use(router)
 app.use(vuetify)
 
-// Inicialización de la autenticación
-async function initializeAuth() {
-  const authStore = useAuthStore()
-  if (authStore.token) {
-    await authStore.checkAuth()
-  }
-  // Montar la aplicación solo después de que la autenticación inicial (si existe) se haya verificado.
-  app.mount("#app")
-}
+const authStore = useAuthStore()
 
-// Esperar a que el router esté listo antes de inicializar la autenticación y montar la app.
-router.isReady().then(() => {
-  initializeAuth()
+authStore.checkAuth().finally(() => {
+  app.use(router)
+  app.mount("#app")
 })
