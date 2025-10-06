@@ -1,0 +1,10 @@
+// main.scss
+
+// Importar variables y mixins para que estén disponibles globalmente
+@use 'variables';
+@use 'mixins';
+
+// Aquí se pueden añadir estilos globales si es necesario
+body {
+  font-family: variables.$font-family-sans-serif;
+}
