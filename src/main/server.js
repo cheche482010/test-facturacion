@@ -1,7 +1,8 @@
 const express = require("express")
 const cors = require("cors")
 const path = require("path")
-require("dotenv").config()
+// Explicitly specify the path to the .env file for robustness
+require("dotenv").config({ path: path.resolve(__dirname, "../../.env") })
 
 // Importar rutas
 const authRoutes = require("./routes/auth")
