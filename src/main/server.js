@@ -1,7 +1,8 @@
 const express = require("express")
 const cors = require("cors")
 const path = require("path")
-require("dotenv").config()
+// Explicitly specify the path to the .env file for robustness
+require("dotenv").config({ path: path.resolve(__dirname, "../../.env") })
 
 // Importar rutas
 const authRoutes = require("./routes/auth")
@@ -12,6 +13,7 @@ const salesRoutes = require("./routes/sales")
 const inventoryRoutes = require("./routes/inventory")
 const reportRoutes = require("./routes/reports")
 const usersRoutes = require("./routes/users")
+const currencyRoutes = require("./routes/currency")
 
 // Importar base de datos
 const { initializeDatabase } = require("./database/connection")
@@ -33,6 +35,7 @@ app.use("/api/sales", salesRoutes)
 app.use("/api/inventory", inventoryRoutes)
 app.use("/api/reports", reportRoutes)
 app.use("/api/users", usersRoutes)
+app.use("/api/currency", currencyRoutes)
 
 // Ruta de salud
 app.get("/api/health", (req, res) => {
