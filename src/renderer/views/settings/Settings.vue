@@ -34,6 +34,16 @@
                                             <v-text-field v-model="settings.timezone" label="Zona Horaria"
                                                 hint="Ej: America/Caracas"></v-text-field>
                                         </v-col>
+                                        <v-col cols="12" md="6">
+                                            <v-text-field v-model="exchangeRate" label="Tasa de Cambio (BCV)"
+                                                readonly></v-text-field>
+                                        </v-col>
+                                        <v-col cols="12" md="6">
+                                            <v-btn color="secondary" @click="updateExchangeRate" :loading="isUpdatingRate">
+                                                <v-icon left>mdi-update</v-icon>
+                                                Actualizar Tasa
+                                            </v-btn>
+                                        </v-col>
                                     </v-row>
                                 </v-container>
                             </v-window-item>
@@ -175,3 +185,8 @@ import settingsLogic from './Settings.js'
 
 export default settingsLogic
 </script>
+<style scoped>
+.v-btn {
+    margin-top: 10px;
+}
+</style>
