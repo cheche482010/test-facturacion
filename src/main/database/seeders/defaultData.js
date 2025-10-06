@@ -107,7 +107,7 @@ const seedDefaultData = async () => {
           {
             id: 1,
             customerCode: "C-000001",
-            firstName: "Cliente",
+            first_name: "Cliente",
             lastName: "General",
             document_type: "RIF",
             document_number: "V000000000",
@@ -118,8 +118,8 @@ const seedDefaultData = async () => {
           },
           {
             customerCode: "C-000002",
-            firstName: "Maria",
-            lastName: "Rodriguez",
+            first_name: "Maria",
+            last_name: "Rodriguez",
             document_type: "CI",
             document_number: "V12345678",
             email: "maria.r@example.com",
@@ -129,8 +129,8 @@ const seedDefaultData = async () => {
           },
           {
             customerCode: "C-000003",
-            firstName: "Carlos",
-            lastName: "Gomez",
+            first_name: "Carlos",
+            last_name: "Gomez",
             document_type: "CI",
             document_number: "V87654321",
             email: "carlos.g@example.com",

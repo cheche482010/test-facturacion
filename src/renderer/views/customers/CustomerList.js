@@ -1,94 +1,141 @@
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import { useCustomerStore } from '@/stores/customers'
 
 export default {
   name: 'CustomerList',
   setup() {
-    const customers = ref([])
-    const loading = ref(false)
+    const customerStore = useCustomerStore()
+
     const search = ref('')
     const dialog = ref(false)
     const editingCustomer = ref(null)
 
+    // Filters
+    const categoryFilter = ref('Todos')
+    const statusFilter = ref('Todos')
+    const typeFilter = ref('Todos')
+
     const customerForm = ref({
-      firstName: '',
-      lastName: '',
+      id: null,
+      first_name: '',
+      last_name: '',
+      company_name: '',
+      document_type: 'CI',
+      document_number: '',
       email: '',
       phone: '',
       address: '',
       city: '',
-      country: ''
+      state: '',
+      category: 'normal',
+      credit_limit: 0,
+      is_active: true,
     })
 
     const headers = [
-      { text: 'Nombre', value: 'firstName' },
-      { text: 'Apellido', value: 'lastName' },
-      { text: 'Email', value: 'email' },
-      { text: 'Teléfono', value: 'phone' },
-      { text: 'Ciudad', value: 'city' },
-      { text: 'Acciones', value: 'actions', sortable: false }
+      { title: 'Cliente', key: 'client', sortable: false },
+      { title: 'Documento', key: 'document', sortable: true },
+      { title: 'Contacto', key: 'contact', sortable: false },
+      { title: 'Categoría', key: 'category', sortable: true },
+      { title: 'Límite Crédito', key: 'credit_limit', sortable: true },
+      { title: 'Estado', key: 'is_active', sortable: true },
+      { title: 'Acciones', key: 'actions', sortable: false }
     ]
 
     const loadCustomers = async () => {
-      loading.value = true
-      try {
-        const response = await window.electronAPI.invoke('get-customers')
-        customers.value = response
-      } catch (error) {
-        console.error('Error loading customers:', error)
-      } finally {
-        loading.value = false
-      }
+      await customerStore.fetchCustomers()
     }
 
-    const openDialog = () => {
-      editingCustomer.value = null
-      customerForm.value = {
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        address: '',
-        city: '',
-        country: ''
+    const openDialog = (customer = null) => {
+      if (customer) {
+        editingCustomer.value = customer
+        // Map backend data to form
+        customerForm.value = {
+          id: customer.id,
+          first_name: customer.first_name || '',
+          last_name: customer.last_name || '',
+          company_name: customer.company_name || '',
+          document_type: customer.document_type,
+          document_number: customer.document_number,
+          email: customer.email || '',
+          phone: customer.phone || '',
+          address: customer.address || '',
+          city: customer.city || '',
+          state: customer.state || '',
+          category: customer.category,
+          credit_limit: customer.credit_limit,
+          is_active: customer.is_active,
+        }
+      } else {
+        editingCustomer.value = null
+        customerForm.value = {
+          id: null,
+          first_name: '',
+          last_name: '',
+          company_name: '',
+          document_type: 'CI',
+          document_number: '',
+          email: '',
+          phone: '',
+          address: '',
+          city: '',
+          state: '',
+          category: 'normal',
+          credit_limit: 0,
+          is_active: true,
+        }
       }
       dialog.value = true
     }
 
     const editCustomer = (customer) => {
-      editingCustomer.value = customer
-      customerForm.value = { ...customer }
-      dialog.value = true
+      openDialog(customer)
     }
 
     const closeDialog = () => {
       dialog.value = false
-      editingCustomer.value = null
     }
 
     const saveCustomer = async () => {
-      try {
-        if (editingCustomer.value) {
-          await window.electronAPI.invoke('update-customer', {
-            id: editingCustomer.value.id,
-            ...customerForm.value
-          })
-        } else {
-          await window.electronAPI.invoke('create-customer', customerForm.value)
-        }
-        await loadCustomers()
+      // Basic validation
+      if (!customerForm.value.document_number || (!customerForm.value.first_name && !customerForm.value.company_name)) {
+        alert('Por favor, complete los campos obligatorios.')
+        return
+      }
+
+      // Determine name for natural or juridical person
+      const customerData = { ...customerForm.value }
+      if (customerData.company_name) {
+          customerData.customer_type = 'juridico'
+          customerData.name = customerData.company_name
+      } else {
+          customerData.customer_type = 'natural'
+          customerData.name = `${customerData.first_name} ${customerData.last_name}`.trim()
+      }
+
+
+      let success = false
+      if (editingCustomer.value) {
+        success = await customerStore.updateCustomer(editingCustomer.value.id, customerData)
+      } else {
+        success = await customerStore.createCustomer(customerData)
+      }
+
+      if (success) {
         closeDialog()
-      } catch (error) {
-        console.error('Error saving customer:', error)
+        await loadCustomers()
+      } else {
+        alert(customerStore.error || 'Ocurrió un error al guardar el cliente.')
       }
     }
 
     const deleteCustomer = async (customer) => {
-      if (confirm('¿Está seguro de que desea eliminar este cliente?')) {
-        try {
-          await window.electronAPI.invoke('delete-customer', customer.id)
+      if (confirm(`¿Está seguro de que desea eliminar a ${customer.first_name || customer.company_name}?`)) {
+        const success = await customerStore.deleteCustomer(customer.id)
+        if (success) {
           await loadCustomers()
-        } catch (error) {
-          console.error('Error deleting customer:', error)
+        } else {
+          alert('Ocurrió un error al eliminar el cliente.')
         }
       }
     }
@@ -96,10 +143,36 @@ export default {
     onMounted(() => {
       loadCustomers()
     })
+    
+    // Computed properties for summary cards
+    const totalClients = computed(() => customerStore.pagination.totalItems)
+    const activeClients = computed(() => customerStore.customers.filter(c => c.is_active).length)
+    const premiumClients = computed(() => customerStore.customers.filter(c => c.category === 'mayorista' || c.category === 'preferencial').length)
+    const pendingBalance = computed(() => 0) // Placeholder
+
+    const filteredCustomers = computed(() => {
+      let filtered = customerStore.customers
+
+      // Filter by category
+      if (categoryFilter.value && categoryFilter.value !== 'Todos') {
+        filtered = filtered.filter(c => c.category === categoryFilter.value)
+      }
+
+      // Filter by status
+      if (statusFilter.value && statusFilter.value !== 'Todos') {
+        const isActive = statusFilter.value === 'Activo'
+        filtered = filtered.filter(c => c.is_active === isActive)
+      }
+
+      // The 'search' prop of v-data-table will handle the text search
+
+      return filtered
+    })
 
     return {
-      customers,
-      loading,
+      customers: computed(() => customerStore.customers),
+      filteredCustomers,
+      loading: computed(() => customerStore.loading),
       search,
       dialog,
       editingCustomer,
@@ -109,7 +182,14 @@ export default {
       editCustomer,
       closeDialog,
       saveCustomer,
-      deleteCustomer
+      deleteCustomer,
+      categoryFilter,
+      statusFilter,
+      typeFilter,
+      totalClients,
+      activeClients,
+      premiumClients,
+      pendingBalance,
     }
   }
 }
