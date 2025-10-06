@@ -1,6 +1,7 @@
 const { app, BrowserWindow, Menu, ipcMain } = require("electron")
 const path = require("path")
-require("dotenv").config() // Adding dotenv configuration to load environment variables
+// Explicitly specify the path to the .env file for robustness
+require("dotenv").config({ path: path.resolve(__dirname, "../../.env") })
 const isDev = process.env.NODE_ENV === "development"
 
 // Importar el servidor Express
