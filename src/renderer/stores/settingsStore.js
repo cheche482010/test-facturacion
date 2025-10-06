@@ -16,7 +16,7 @@ export const useSettingsStore = defineStore("settings", () => {
     nextInvoiceNumber: 1,
     taxRate: 16,
     autoCalculateTax: true,
-    operationMode: "bodega",
+    operationMode: "tienda",
     autoBackup: false,
     backupInterval: 24,
   });
