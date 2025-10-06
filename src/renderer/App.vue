@@ -15,7 +15,7 @@ const updateTheme = () => {
   const settings = appStore.settings
 
   // Set dark/light mode
-  theme.global.name.value = settings.darkMode ? "dark" : "light"
+  theme.change(settings.darkMode ? "dark" : "light")
 
   // Update theme colors from settings
   if (settings.primaryColor) {
