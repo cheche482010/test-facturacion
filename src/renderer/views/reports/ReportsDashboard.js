@@ -1,84 +1,77 @@
 import { ref, onMounted, computed } from 'vue'
 import { useReportsStore } from '@/stores/reports'
-import { storeToRefs } from 'pinia'
+import { formatCurrency } from '@/utils/formatters'
 
 export default {
-  name: 'ReportsDashboard',
   setup() {
     const reportsStore = useReportsStore()
-    const { dashboardData, productReports } = storeToRefs(reportsStore)
+    const loading = ref(false)
+    const tab = ref('sales')
 
-    const startDate = ref(new Date().toISOString().substr(0, 10))
-    const endDate = ref(new Date().toISOString().substr(0, 10))
-    const startDateMenu = ref(false)
-    const endDateMenu = ref(false)
+    // Date filters
+    const today = new Date()
+    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
+    const startDate = ref(firstDayOfMonth.toISOString().substr(0, 10))
+    const endDate = ref(today.toISOString().substr(0, 10))
 
-    const totalSales = computed(() => dashboardData.value.summary?.totalSales || 0)
-    const totalInvoices = computed(() => dashboardData.value.summary?.pendingInvoices || 0)
-    const totalCustomers = computed(() => dashboardData.value.summary?.totalCustomers || 0)
-    const lowStockProducts = computed(() => dashboardData.value.quickSummary?.lowStockCount || 0)
-    const topProducts = computed(() => {
-      return (productReports.value || []).map(p => ({
-        name: p.productName,
-        quantity: p.totalSold,
-        total: p.totalRevenue
-      }))
+    // Data from store
+    const salesReport = ref({})
+    const topProducts = ref([])
+
+    // Computed Properties
+    const salesSummaryCards = computed(() => {
+      const summary = salesReport.value?.summary || {}
+      return [
+        { title: 'Ventas Totales', value: formatCurrency(summary.totalSales), icon: 'mdi-currency-usd', color: 'success' },
+        { title: 'Total Facturas', value: summary.totalInvoices || 0, icon: 'mdi-file-document-outline', color: 'primary' },
+        { title: 'Ticket Promedio', value: formatCurrency(summary.averageTicket), icon: 'mdi-receipt-text-outline', color: 'info' },
+        { title: 'Clientes Únicos', value: summary.uniqueCustomers || 0, icon: 'mdi-account-outline', color: 'purple' }
+      ]
     })
 
     const topProductsHeaders = [
       { title: 'Producto', key: 'name' },
-      { title: 'Cantidad Vendida', key: 'quantity' },
-      { title: 'Total', key: 'total' }
+      { title: 'Cantidad Vendida', key: 'quantitySold', align: 'center' },
+      { title: 'Ingresos', key: 'revenue', align: 'end' }
     ]
 
+    // Methods
     const loadReports = async () => {
+      loading.value = true
       try {
-        await reportsStore.fetchDashboardData()
-        await reportsStore.fetchProductReport({
-          startDate: startDate.value,
-          endDate: endDate.value,
-          limit: 5
-        })
+        const dateRange = { startDate: startDate.value, endDate: endDate.value }
+        // Fetch sales summary
+        const summaryData = await reportsStore.fetchSalesReport(dateRange)
+        salesReport.value = summaryData
+
+        // Fetch top selling products
+        const topProductsData = await reportsStore.fetchProductReport({ ...dateRange, limit: 10 })
+        topProducts.value = topProductsData.map(p => ({
+          name: p.productName,
+          quantitySold: p.totalSold,
+          revenue: formatCurrency(p.totalRevenue)
+        }))
+
       } catch (error) {
         console.error('Error loading reports:', error)
+      } finally {
+        loading.value = false
       }
     }
 
-    const exportSalesReport = async () => {
-      console.log('Exporting sales report...')
-    }
-
-    const exportInventoryReport = async () => {
-      console.log('Exporting inventory report...')
-    }
-
-    const exportCustomerReport = async () => {
-      console.log('Exporting customer report...')
-    }
-
-    onMounted(() => {
-      const thirtyDaysAgo = new Date()
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-      startDate.value = thirtyDaysAgo.toISOString().substr(0, 10)
-
-      loadReports()
-    })
+    // Lifecycle
+    onMounted(loadReports)
 
     return {
+      loading,
+      tab,
       startDate,
       endDate,
-      startDateMenu,
-      endDateMenu,
-      totalSales,
-      totalInvoices,
-      totalCustomers,
-      lowStockProducts,
-      topProducts,
+      salesSummaryCards,
       topProductsHeaders,
+      topProducts,
       loadReports,
-      exportSalesReport,
-      exportInventoryReport,
-      exportCustomerReport
+      formatCurrency
     }
   }
 }
