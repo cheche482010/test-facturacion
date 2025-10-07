@@ -1,7 +1,6 @@
 const User = require("./User")
 const Category = require("./Category")
 const Product = require("./Product")
-const Customer = require("./Customer")
 const Sale = require("./Sale")
 const SaleItem = require("./SaleItem")
 const InventoryMovement = require("./InventoryMovement")
@@ -13,9 +12,7 @@ Product.belongsTo(Category, { foreignKey: "categoryId", as: "category" })
 Category.hasMany(Product, { foreignKey: "categoryId", as: "products" })
 
 // Sale relationships
-Sale.belongsTo(Customer, { foreignKey: "customerId", as: "customer" })
 Sale.belongsTo(User, { foreignKey: "userId", as: "user" })
-Customer.hasMany(Sale, { foreignKey: "customerId", as: "sales" })
 User.hasMany(Sale, { foreignKey: "userId", as: "sales" })
 
 // SaleItem relationships
@@ -34,7 +31,6 @@ module.exports = {
   User,
   Category,
   Product,
-  Customer,
   Sale,
   SaleItem,
   InventoryMovement,

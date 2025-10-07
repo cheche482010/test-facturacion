@@ -1,5 +1,5 @@
 const { Op } = require("sequelize")
-const { Sale, SaleItem, Product, Customer, User, InventoryMovement } = require("../database/models")
+const { Sale, SaleItem, Product, User } = require("../database/models")
 const { sequelize } = require("../database/connection")
 
 const reportsController = {
@@ -10,7 +10,6 @@ const reportsController = {
       const sevenDaysAgo = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7)
 
       const totalProducts = await Product.count()
-      const totalCustomers = await Customer.count()
       const totalSales = await Sale.sum("total")
       const inventoryValueResult = await Product.findOne({
         attributes: [[sequelize.literal("SUM(current_stock * cost_price)"), "value"]],
@@ -41,7 +40,6 @@ const reportsController = {
       })
 
       const activeProducts = await Product.count({ where: { status: "activo" } })
-      const activeCustomers = await Customer.count({ where: { is_active: true } })
       const lowStockCount = await Product.count({
         where: {
           [Op.and]: [sequelize.literal("current_stock <= min_stock"), { status: "activo" }],
@@ -52,24 +50,11 @@ const reportsController = {
       const recentSales = await Sale.findAll({
         limit: 5,
         order: [["sale_date", "DESC"]],
-        include: [
-          {
-            model: Customer,
-            as: "customer",
-            attributes: [
-              "first_name",
-              "last_name",
-              "company_name",
-              [sequelize.literal("COALESCE(CONCAT(first_name, ' ', last_name), company_name)"), "name"],
-            ],
-          },
-        ],
       })
 
       res.json({
         summary: {
           totalProducts,
-          totalCustomers,
           totalSales: totalSales || 0,
           todaySales: todaySales || 0,
           inventoryValue: inventoryValue || 0,
@@ -78,7 +63,6 @@ const reportsController = {
         lowStockProducts,
         quickSummary: {
           activeProducts,
-          activeCustomers,
           lowStockCount,
           pendingInvoices,
         },

@@ -24,8 +24,7 @@ export default {
       return [
         { title: 'Ventas Totales', value: formatCurrency(summary.totalSales), icon: 'mdi-currency-usd', color: 'success' },
         { title: 'Total Facturas', value: summary.totalInvoices || 0, icon: 'mdi-file-document-outline', color: 'primary' },
-        { title: 'Ticket Promedio', value: formatCurrency(summary.averageTicket), icon: 'mdi-receipt-text-outline', color: 'info' },
-        { title: 'Clientes Únicos', value: summary.uniqueCustomers || 0, icon: 'mdi-account-outline', color: 'purple' }
+        { title: 'Ticket Promedio', value: formatCurrency(summary.averageTicket), icon: 'mdi-receipt-text-outline', color: 'info' }
       ]
     })
 

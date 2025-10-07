@@ -1,6 +1,6 @@
 # Sistema de Facturación Electron
 
-Sistema completo de facturación y gestión de inventario desarrollado con Electron.js, Vue.js 3, y soporte para MySQL/SQLite. Diseñado para funcionar como aplicación de escritorio con dos modos de operación: **Modo Bodega** (ventas rápidas) y **Modo Tienda** (funcionalidad completa con clientes y reportes).
+Sistema completo de facturación y gestión de inventario desarrollado con Electron.js, Vue.js 3, y soporte para MySQL/SQLite. Diseñado para funcionar como aplicación de escritorio.
 
 ## 🚀 Características Principales
 
@@ -9,7 +9,6 @@ Sistema completo de facturación y gestión de inventario desarrollado con Elect
 - **Control de Inventario**: Seguimiento en tiempo real con alertas de stock bajo
 - **Reportes y Analytics**: Dashboard completo con gráficos y estadísticas
 - **Autenticación**: Sistema de usuarios con roles (Administrador, Cajero)
-- **Modo Dual**: Bodega (sin clientes) y Tienda (con clientes y facturación completa)
 - **Base de Datos Flexible**: Soporte para MySQL y SQLite
 
 ## 📋 Requisitos del Sistema
