@@ -13,7 +13,6 @@
                             <v-tab>Interfaz</v-tab>
                             <v-tab>Empresa</v-tab>
                             <v-tab>Facturación</v-tab>
-                            <v-tab>Modo de Operación</v-tab>
                             <v-tab>Sistema</v-tab>
                         </v-tabs>
 
@@ -125,18 +124,6 @@
                                         <v-col cols="12" md="6">
                                             <v-switch v-model="settings.autoCalculateTax"
                                                 label="Calcular IVA automáticamente"></v-switch>
-                                        </v-col>
-                                    </v-row>
-                                </v-container>
-                            </v-window-item>
-
-                            <!-- Modo de Operación -->
-                            <v-window-item>
-                                <v-container>
-                                    <v-row>
-                                        <v-col cols="12" md="6">
-                                            <v-select v-model="settings.operationMode" :items="operationModeOptions"
-                                                label="Modo de Operación"></v-select>
                                         </v-col>
                                     </v-row>
                                 </v-container>

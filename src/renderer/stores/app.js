@@ -24,8 +24,6 @@ export const useAppStore = defineStore("app", {
       nextInvoiceNumber: 1,
       taxRate: 16,
       autoCalculateTax: true,
-      // Operation Mode
-      operationMode: "tienda", // 'bodega' o 'tienda'
       // System
       autoBackup: false,
       backupInterval: 24,
