@@ -15,8 +15,7 @@ export default {
         { title: 'Dashboard', icon: 'mdi-view-dashboard', to: '/dashboard' },
         { title: 'Ventas', icon: 'mdi-point-of-sale', to: '/sales/new' },
         { title: 'Productos', icon: 'mdi-package-variant-closed', to: '/products' },
-        { title: 'Inventario', icon: 'mdi-warehouse', to: '/inventory' },
-        { title: 'Clientes', icon: 'mdi-account-group', to: '/customers' }
+        { title: 'Inventario', icon: 'mdi-warehouse', to: '/inventory' }
       ]
 
       items.push(

@@ -1,4 +1,4 @@
-const { User, Category, Settings, Product, Customer, Sale, SaleItem, InventoryMovement } = require("../models")
+const { User, Category, Settings, Product, Sale, SaleItem, InventoryMovement } = require("../models")
 const { sequelize } = require("../connection")
 
 const seedDefaultData = async () => {
@@ -55,12 +55,6 @@ const seedDefaultData = async () => {
           description: "Dirección fiscal",
         },
         {
-          key: "operation_mode",
-          value: "tienda",
-          category: "system",
-          description: "Modo de operación: bodega o tienda",
-        },
-        {
           key: "default_currency",
           value: "VES",
           category: "system",
@@ -100,49 +94,6 @@ const seedDefaultData = async () => {
       const adminUser = await User.findOne({ where: { username: "admin" }, transaction })
       const categories = await Category.findAll({ transaction })
 
-      // --- 1. Crear Clientes ---
-      const customerCount = await Customer.count({ transaction })
-      if (customerCount === 0) {
-        const customersData = [
-          {
-            id: 1,
-            customerCode: "C-000001",
-            first_name: "Cliente",
-            lastName: "General",
-            document_type: "RIF",
-            document_number: "V000000000",
-            email: "consumidor@final.com",
-            phone: "0000-0000000",
-            address: "N/A",
-            is_active: true,
-          },
-          {
-            customerCode: "C-000002",
-            first_name: "Maria",
-            last_name: "Rodriguez",
-            document_type: "CI",
-            document_number: "V12345678",
-            email: "maria.r@example.com",
-            phone: "0412-1234567",
-            address: "Caracas",
-            is_active: true,
-          },
-          {
-            customerCode: "C-000003",
-            first_name: "Carlos",
-            last_name: "Gomez",
-            document_type: "CI",
-            document_number: "V87654321",
-            email: "carlos.g@example.com",
-            phone: "0416-7654321",
-            address: "Valencia",
-            is_active: true,
-          },
-        ]
-        await Customer.bulkCreate(customersData, { transaction })
-        console.log(`   -> ${customersData.length} clientes creados.`)
-      }
-
       // --- 2. Crear Productos ---
       const productCount = await Product.count({ transaction })
       if (productCount === 0 && categories.length > 0) {
@@ -160,13 +111,12 @@ const seedDefaultData = async () => {
       // --- 3. Crear Ventas y Movimientos de Inventario ---
       const saleCount = await Sale.count({ transaction })
       if (saleCount === 0 && adminUser) {
-        const customers = await Customer.findAll({ transaction })
         const products = await Product.findAll({ transaction })
         const saleDate = new Date()
 
         // Venta 1
         const sale1 = await Sale.create({
-          saleNumber: `TIENDA-000001`, customerId: customers[1].id, userId: adminUser.id, saleType: "detal", operationMode: "tienda", subtotal: 1225, taxAmount: 196, total: 1225, paymentMethod: "pos", paymentStatus: "pagado", status: "completada", sale_date: new Date(new Date().setDate(new Date().getDate() - 5)),
+          saleNumber: `BODEGA-000001`, userId: adminUser.id, saleType: "detal", subtotal: 1225, taxAmount: 196, total: 1225, paymentMethod: "pos", paymentStatus: "pagado", status: "completada", sale_date: new Date(new Date().setDate(new Date().getDate() - 5)),
         }, { transaction })
         await SaleItem.bulkCreate([
           { saleId: sale1.id, productId: products[0].id, quantity: 1, unitPrice: 1200, subtotal: 1200, total: 1200, taxRate: 16, taxAmount: 192 },
@@ -175,13 +125,13 @@ const seedDefaultData = async () => {
 
         // Venta 2
         const sale2 = await Sale.create({
-          saleNumber: `TIENDA-000002`, customerId: customers[2].id, userId: adminUser.id, saleType: "detal", operationMode: "tienda", subtotal: 400, taxAmount: 64, total: 400, paymentMethod: "credito", paymentStatus: "pendiente", status: "completada", sale_date: new Date(new Date().setDate(new Date().getDate() - 2)),
+          saleNumber: `BODEGA-000002`, userId: adminUser.id, saleType: "detal", subtotal: 400, taxAmount: 64, total: 400, paymentMethod: "credito", paymentStatus: "pendiente", status: "completada", sale_date: new Date(new Date().setDate(new Date().getDate() - 2)),
         }, { transaction })
         await SaleItem.create({ saleId: sale2.id, productId: products[3].id, quantity: 1, unitPrice: 400, subtotal: 400, total: 400, taxRate: 16, taxAmount: 64 }, { transaction })
 
         // Venta 3 (Hoy)
         const sale3 = await Sale.create({
-          saleNumber: `TIENDA-000003`, customerId: customers[1].id, userId: adminUser.id, saleType: "detal", operationMode: "tienda", subtotal: 95, taxAmount: 15.2, total: 95, paymentMethod: "efectivo_usd", paymentStatus: "pagado", status: "completada", sale_date: new Date(),
+          saleNumber: `BODEGA-000003`, userId: adminUser.id, saleType: "detal", subtotal: 95, taxAmount: 15.2, total: 95, paymentMethod: "efectivo_usd", paymentStatus: "pagado", status: "completada", sale_date: new Date(),
         }, { transaction })
         await SaleItem.create({ saleId: sale3.id, productId: products[2].id, quantity: 1, unitPrice: 95, subtotal: 95, total: 95, taxRate: 16, taxAmount: 15.2 }, { transaction })
 
