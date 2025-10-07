@@ -10,7 +10,6 @@ export const useAppStore = defineStore("app", {
       timezone: "America/Caracas",
       // Interface
       companyName: "FacturaPro",
-      companySlogan: "Sistema de Facturación",
       companyLogo: null,
       darkMode: false,
       primaryColor: "#1976D2",
