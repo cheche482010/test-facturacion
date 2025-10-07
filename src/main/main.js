@@ -3,6 +3,7 @@ const path = require("path")
 // Explicitly specify the path to the .env file for robustness
 require("dotenv").config({ path: path.resolve(__dirname, "../../.env") })
 const isDev = process.env.NODE_ENV === "development"
+app.disableHardwareAcceleration()
 
 // Importar el servidor Express
 const { startServer } = require("./server")
