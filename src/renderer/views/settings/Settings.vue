@@ -51,11 +51,8 @@
                             <v-window-item>
                                <v-container>
                                     <v-row>
-                                        <v-col cols="12" md="6">
+                                        <v-col cols="12" md="12">
                                             <v-text-field v-model="settings.companyName" label="Título del Sistema"></v-text-field>
-                                        </v-col>
-                                        <v-col cols="12" md="6">
-                                            <v-text-field v-model="settings.companySlogan" label="Slogan de la Empresa"></v-text-field>
                                         </v-col>
                                         <v-col cols="12">
                                             <v-file-input label="Logo de la Empresa" accept="image/*" @change="onLogoChange"></v-file-input>

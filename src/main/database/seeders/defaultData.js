@@ -87,7 +87,7 @@ const seedDefaultData = async () => {
       console.log("   -> Configuraciones por defecto creadas.")
     }
 
-    console.log("🌱 Sembrando datos de prueba (Clientes, Productos, Ventas)...")
+    console.log("🌱 Sembrando datos de prueba (Productos, Ventas)...")
     const transaction = await sequelize.transaction()
     try {
       // --- Obtener datos base ---

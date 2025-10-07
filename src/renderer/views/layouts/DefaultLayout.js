@@ -15,14 +15,11 @@ export default {
         { title: 'Dashboard', icon: 'mdi-view-dashboard', to: '/dashboard' },
         { title: 'Ventas', icon: 'mdi-point-of-sale', to: '/sales/new' },
         { title: 'Productos', icon: 'mdi-package-variant-closed', to: '/products' },
-        { title: 'Inventario', icon: 'mdi-warehouse', to: '/inventory' }
-      ]
-
-      items.push(
+        { title: 'Inventario', icon: 'mdi-warehouse', to: '/inventory' },
         { title: 'Reportes', icon: 'mdi-chart-bar', to: '/reports' },
         { title: 'Configuración', icon: 'mdi-cog', to: '/settings' }
-      )
-      
+      ]
+
       return items
     })
 
