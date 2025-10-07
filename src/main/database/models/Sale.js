@@ -14,13 +14,6 @@ const Sale = sequelize.define(
       allowNull: false,
       unique: true,
     },
-    customerId: {
-      type: DataTypes.INTEGER,
-      references: {
-        model: "customers",
-        key: "id",
-      },
-    },
     userId: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -33,10 +26,6 @@ const Sale = sequelize.define(
     saleType: {
       type: DataTypes.ENUM("detal", "mayorista", "mixta"),
       defaultValue: "detal",
-    },
-    operationMode: {
-      type: DataTypes.ENUM("bodega", "tienda"),
-      allowNull: false,
     },
     // Montos
     subtotal: {

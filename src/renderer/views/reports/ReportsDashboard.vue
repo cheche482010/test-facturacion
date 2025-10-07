@@ -53,10 +53,6 @@
           <v-icon start>mdi-package-variant-closed</v-icon>
           Inventario
         </v-tab>
-        <v-tab value="customers">
-          <v-icon start>mdi-account-group</v-icon>
-          Clientes
-        </v-tab>
         <v-tab value="finance">
           <v-icon start>mdi-finance</v-icon>
           Financiero
@@ -121,9 +117,6 @@
         <!-- Other Tabs Placeholders -->
         <v-window-item value="inventory">
           <p class="text-center py-8 text-medium-emphasis">Reportes de inventario.</p>
-        </v-window-item>
-        <v-window-item value="customers">
-          <p class="text-center py-8 text-medium-emphasis">Reportes de clientes.</p>
         </v-window-item>
         <v-window-item value="finance">
           <p class="text-center py-8 text-medium-emphasis">Reportes financieros.</p>

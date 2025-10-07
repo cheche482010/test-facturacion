@@ -19,7 +19,6 @@ export default {
 
     const summaryCards = computed(() => [
       { title: 'Total Productos', value: dashboardData.value.summary?.totalProducts || 0, icon: 'mdi-package-variant-closed', color: 'blue-grey' },
-      { title: 'Total Clientes', value: dashboardData.value.summary?.totalCustomers || 0, icon: 'mdi-account-group', color: 'light-green' },
       { title: 'Ventas Totales', value: formatCurrency(dashboardData.value.summary?.totalSales), icon: 'mdi-cash-multiple', color: 'deep-purple' },
       { title: 'Ventas Hoy', value: formatCurrency(dashboardData.value.summary?.todaySales), icon: 'mdi-cash-register', color: 'orange' },
       { title: 'Valor Inventario', value: formatCurrency(dashboardData.value.summary?.inventoryValue), icon: 'mdi-warehouse', color: 'indigo' },
@@ -33,7 +32,6 @@ export default {
 
     const recentSalesHeaders = [
       { title: 'Factura', key: 'invoiceNumber' },
-      { title: 'Cliente', key: 'customer.name' },
       { title: 'Fecha', key: 'saleDate' },
       { title: 'Pago', key: 'paymentMethod' },
       { title: 'Estado', key: 'status' },

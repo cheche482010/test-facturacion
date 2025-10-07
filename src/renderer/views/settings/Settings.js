@@ -23,11 +23,6 @@ export default {
       }
     }, { immediate: true, deep: true })
 
-    const operationModeOptions = [
-      { text: 'Modo Bodega', value: 'bodega' },
-      { text: 'Modo Tienda', value: 'tienda' },
-    ]
-
     const saveSettings = async () => {
       saving.value = true
       try {
@@ -79,7 +74,6 @@ export default {
       tab,
       settings,
       saving,
-      operationModeOptions,
       saveSettings,
       createBackup,
       onLogoChange,
