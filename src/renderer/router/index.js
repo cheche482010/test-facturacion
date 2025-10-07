@@ -17,7 +17,7 @@ const routes = [
     children: [
       {
         path: "",
-        redirect: "/dashboard", // Redirigir la raíz al dashboard
+        redirect: "/login", // Redirigir la raíz al login
       },
       {
         path: "dashboard",
@@ -67,11 +67,6 @@ router.beforeEach((to, from, next) => {
   if (requiresAuth && !authStore.isAuthenticated) {
     // Redirigir al login
     next({ name: "Login" })
-  }
-  // Si el usuario intenta acceder al login pero ya está autenticado
-  else if (to.name === "Login" && authStore.isAuthenticated) {
-    // Redirigir al dashboard
-    next({ name: "Dashboard" })
   }
   // En cualquier otro caso, permitir la navegación
   else {
