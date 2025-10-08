@@ -1,5 +1,7 @@
 const { Product, Category, InventoryMovement } = require("../database/models")
 const { Op } = require("sequelize")
+const fs = require("fs")
+const path = require("path")
 
 const productsController = {
   async getAll(req, res) {
@@ -83,6 +85,20 @@ const productsController = {
         return res.status(404).json({ error: "Producto no encontrado" })
       }
 
+      // Si se envía image: null, significa que se quiere eliminar la imagen
+      if (req.body.image === null && product.image) {
+        const imagePath = path.resolve(
+          __dirname,
+          "../../../",
+          product.image.substring(1),
+        )
+        if (fs.existsSync(imagePath)) {
+          fs.unlinkSync(imagePath)
+        }
+        // Nos aseguramos de que el campo en la DB se actualice a null
+        req.body.image = null
+      }
+
       await product.update(req.body)
 
       const updatedProduct = await Product.findByPk(req.params.id, {
@@ -101,6 +117,18 @@ const productsController = {
 
       if (!product) {
         return res.status(404).json({ error: "Producto no encontrado" })
+      }
+
+      // Eliminar la imagen asociada si existe
+      if (product.image) {
+        const imagePath = path.resolve(
+          __dirname,
+          "../../../",
+          product.image.substring(1),
+        )
+        if (fs.existsSync(imagePath)) {
+          fs.unlinkSync(imagePath)
+        }
       }
 
       await product.destroy()
@@ -141,7 +169,41 @@ const productsController = {
     } catch (error) {
       res.status(500).json({ error: error.message })
     }
-  }
+  },
+
+  async uploadImage(req, res) {
+    try {
+      const product = await Product.findByPk(req.params.id)
+      if (!product) {
+        return res.status(404).json({ error: "Producto no encontrado" })
+      }
+
+      // Si hay una imagen anterior, eliminarla
+      if (product.image) {
+        const oldImagePath = path.resolve(
+          __dirname,
+          "../../../",
+          product.image.substring(1),
+        )
+        if (fs.existsSync(oldImagePath)) {
+          fs.unlinkSync(oldImagePath)
+        }
+      }
+
+      // La ruta del archivo se guarda relativa al servidor para el acceso del cliente
+      const imagePath = `/uploads/products/${req.file.filename}`
+      product.image = imagePath
+      await product.save()
+
+      const updatedProduct = await Product.findByPk(req.params.id, {
+        include: [{ model: Category, as: "category" }],
+      })
+
+      res.json(updatedProduct)
+    } catch (error) {
+      res.status(500).json({ error: error.message })
+    }
+  },
 }
 
 module.exports = productsController

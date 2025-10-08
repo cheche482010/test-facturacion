@@ -27,11 +27,11 @@ export default {
     // Options
     const paymentMethods = ['Efectivo (Bs)', 'Efectivo ($)', 'Transferencia', 'Tarjeta de Débito', 'Tarjeta de Crédito', 'Crédito']
     const cartHeaders = [
-      { title: 'Producto', key: 'name' },
+      { title: 'Producto', key: 'name', width: '40%', sortable: false },
       { title: 'Cantidad', key: 'quantity', sortable: false, width: '150px' },
       { title: 'Precio Unit.', key: 'price', align: 'end' },
       { title: 'Subtotal', key: 'subtotal', align: 'end' },
-      { title: 'Acciones', key: 'actions', sortable: false, align: 'center', width: '50px' }
+      { title: 'Acciones', key: 'actions', sortable: false, align: 'center', width: '50px' },
     ]
 
     // Computed Properties
@@ -75,7 +75,8 @@ export default {
           price: product.retailPrice,
           quantity: 1,
           stock: product.currentStock,
-          subtotal: product.retailPrice
+          subtotal: product.retailPrice,
+          image: product.image,
         })
       }
     }
