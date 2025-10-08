@@ -19,40 +19,6 @@
     <v-row>
       <!-- Main Content -->
       <v-col cols="12" md="8">
-        <!-- Customer Information -->
-        <v-card class="mb-4">
-          <v-card-item>
-            <v-card-title>Información del Cliente</v-card-title>
-          </v-card-item>
-          <v-card-text>
-            <v-row>
-              <v-col cols="12" md="8">
-                <v-autocomplete v-model="selectedCustomerId" :items="customers" item-title="name" item-value="id"
-                  label="Busque o seleccione un cliente" variant="solo-filled" flat
-                  prepend-inner-icon="mdi-account-search-outline">
-                  <template v-slot:item="{ props, item }">
-                    <v-list-item v-bind="props" :title="item.raw.name" :subtitle="item.raw.idNumber" />
-                  </template>
-                </v-autocomplete>
-              </v-col>
-              <v-col cols="12" md="4">
-                <v-btn block size="large" variant="tonal" @click="openCustomerDialog()">
-                  + Nuevo Cliente
-                </v-btn>
-              </v-col>
-            </v-row>
-            <div v-if="selectedCustomer" class="mt-4 pa-4 border rounded">
-              <p class="font-weight-bold">{{ selectedCustomer.name }}</p>
-              <p><strong>CI/RIF:</strong> {{ selectedCustomer.idNumber }}</p>
-              <p><strong>Email:</strong> {{ selectedCustomer.email }}</p>
-              <p><strong>Teléfono:</strong> {{ selectedCustomer.phone }}</p>
-            </div>
-            <div v-else class="mt-4 pa-4 border rounded text-center text-medium-emphasis">
-              Ningún cliente seleccionado
-            </div>
-          </v-card-text>
-        </v-card>
-
         <!-- Product Search & Cart -->
         <v-card>
           <v-card-text>
@@ -70,7 +36,23 @@
           </div>
           <v-data-table v-else :headers="cartHeaders" :items="cartItems" item-key="id">
             <template v-slot:item.name="{ item }">
-              <div class="font-weight-bold">{{ item.name }}</div>
+              <div class="d-flex align-center">
+                <v-avatar
+                  class="mr-3"
+                  size="40"
+                  rounded="sm"
+                  :color="item.image ? 'transparent' : 'grey-lighten-2'"
+                >
+                  <v-img
+                    v-if="item.image"
+                    :src="`http://localhost:3001${item.image}`"
+                    :alt="item.name"
+                    cover
+                  />
+                  <v-icon v-else icon="mdi-camera-off" />
+                </v-avatar>
+                <div class="font-weight-bold">{{ item.name }}</div>
+              </div>
             </template>
             <template v-slot:item.quantity="{ item }">
               <v-text-field v-model.number="item.quantity" type="number" min="1" :max="item.stock" style="width: 100px"

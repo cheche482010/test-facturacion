@@ -1,7 +1,6 @@
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useProductStore } from '../../stores/products'
-import { useCustomerStore } from '../../stores/customers'
 import { useSaleStore } from '../../stores/sales'
 import { useAppStore } from '../../stores/app'
 import { useCurrencyStore } from '../../stores/currencyStore'
@@ -11,14 +10,12 @@ export default {
   setup() {
     const router = useRouter()
     const productStore = useProductStore()
-    const customerStore = useCustomerStore()
     const saleStore = useSaleStore()
     const appStore = useAppStore()
     const currencyStore = useCurrencyStore()
 
     // State
     const cartItems = ref([])
-    const selectedCustomerId = ref(null)
     const processingSale = ref(false)
     const isFastSale = ref(false)
     const productSearch = ref('')
@@ -30,19 +27,15 @@ export default {
     // Options
     const paymentMethods = ['Efectivo (Bs)', 'Efectivo ($)', 'Transferencia', 'Tarjeta de Débito', 'Tarjeta de Crédito', 'Crédito']
     const cartHeaders = [
-      { title: 'Producto', key: 'name' },
+      { title: 'Producto', key: 'name', width: '40%', sortable: false },
       { title: 'Cantidad', key: 'quantity', sortable: false, width: '150px' },
       { title: 'Precio Unit.', key: 'price', align: 'end' },
       { title: 'Subtotal', key: 'subtotal', align: 'end' },
-      { title: 'Acciones', key: 'actions', sortable: false, align: 'center', width: '50px' }
+      { title: 'Acciones', key: 'actions', sortable: false, align: 'center', width: '50px' },
     ]
 
     // Computed Properties
     const products = computed(() => productStore.products)
-    const customers = computed(() => customerStore.customers)
-    const selectedCustomer = computed(() => {
-      return customers.value.find(c => c.id === selectedCustomerId.value)
-    })
     const exchangeRate = computed(() => currencyStore.exchangeRate)
 
     const totals = computed(() => {
@@ -82,7 +75,8 @@ export default {
           price: product.retailPrice,
           quantity: 1,
           stock: product.currentStock,
-          subtotal: product.retailPrice
+          subtotal: product.retailPrice,
+          image: product.image,
         })
       }
     }
@@ -120,16 +114,10 @@ export default {
 
     const processSale = async () => {
       if (cartItems.value.length === 0) return
-      if (!isFastSale.value && !selectedCustomerId.value) {
-          // TODO: show error to user
-          console.error('Please select a customer for a standard sale.')
-          return
-      }
 
       processingSale.value = true
       try {
         const saleData = {
-          customerId: isFastSale.value ? null : selectedCustomerId.value,
           items: cartItems.value.map(item => ({
             productId: item.id,
             quantity: item.quantity,
@@ -158,7 +146,6 @@ export default {
 
     const resetSale = () => {
       cartItems.value = []
-      selectedCustomerId.value = null
       productSearch.value = ''
       globalDiscount.value = 0
       paymentMethod.value = 'Efectivo (Bs)'
@@ -174,28 +161,14 @@ export default {
     onMounted(async () => {
       await Promise.all([
         productStore.fetchProducts(),
-        customerStore.fetchCustomers(),
         currencyStore.fetchExchangeRate()
       ])
-      // Set default customer if in fast sale mode
-      if (appStore.settings.defaultCustomerForFastSale) {
-          selectedCustomerId.value = appStore.settings.defaultCustomerForFastSale
-      }
     })
 
     // Watchers
-    watch(isFastSale, (isFast) => {
-        if(isFast && appStore.settings.defaultCustomerForFastSale) {
-            selectedCustomerId.value = appStore.settings.defaultCustomerForFastSale
-        } else if (!isFast) {
-            selectedCustomerId.value = null
-        }
-    })
 
     return {
       cartItems,
-      selectedCustomerId,
-      selectedCustomer,
       processingSale,
       isFastSale,
       productSearch,
@@ -206,7 +179,6 @@ export default {
       paymentMethods,
       cartHeaders,
       products,
-      customers,
       totals,
       appStore,
       addProductFromSearch,

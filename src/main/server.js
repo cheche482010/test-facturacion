@@ -8,7 +8,6 @@ require("dotenv").config({ path: path.resolve(__dirname, "../../.env") })
 const authRoutes = require("./routes/auth")
 const productRoutes = require("./routes/products")
 const categoryRoutes = require("./routes/categories")
-const customerRoutes = require("./routes/customers")
 const salesRoutes = require("./routes/sales")
 const inventoryRoutes = require("./routes/inventory")
 const reportRoutes = require("./routes/reports")
@@ -26,11 +25,14 @@ app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
+// Servir archivos estáticos desde la carpeta 'uploads' en la raíz del proyecto
+const uploadsDir = path.resolve(__dirname, "../../uploads")
+app.use("/uploads", express.static(uploadsDir))
+
 // Rutas API
 app.use("/api/auth", authRoutes)
 app.use("/api/products", productRoutes)
 app.use("/api/categories", categoryRoutes)
-app.use("/api/customers", customerRoutes)
 app.use("/api/sales", salesRoutes)
 app.use("/api/inventory", inventoryRoutes)
 app.use("/api/reports", reportRoutes)

@@ -6,7 +6,7 @@ export default {
   props: {
     modelValue: Boolean,
     product: Object,
-    categories: Array
+    categories: Array,
   },
   emits: ['update:modelValue', 'saved'],
   setup(props, { emit }) {
@@ -17,6 +17,9 @@ export default {
     const saving = ref(false)
     const autoPricing = ref(true)
     const form = ref(null)
+    const imageFile = ref(null)
+    const imagePreview = ref(null)
+    const imageRemoved = ref(false)
 
     const unitOptions = [
       { title: 'Unidad', value: 'unidad' },
@@ -55,19 +58,20 @@ export default {
       profitPercentage: 30,
       retailPrice: 0,
       wholesalePrice: 0,
-      dollar_price: 0,
+      dollarPrice: 0,
       taxRate: 16,
       currentStock: 0,
       minStock: 5,
       maxStock: 100,
       location: '',
       status: 'activo',
-      expirationDate: null
+      expirationDate: null,
+      image: null,
     })
 
     const dialog = computed({
       get: () => props.modelValue,
-      set: (value) => emit('update:modelValue', value)
+      set: (value) => emit('update:modelValue', value),
     })
 
     const isEditing = computed(() => !!props.product)
@@ -93,20 +97,51 @@ export default {
         maxStock: 100,
         location: '',
         status: 'activo',
-        expirationDate: null
+        expirationDate: null,
+        image: null,
       }
       autoPricing.value = true
+      imageFile.value = null
+      imagePreview.value = null
+      imageRemoved.value = false
       form.value?.resetValidation()
     }
 
-    watch(() => props.product, (newProduct) => {
-      if (newProduct) {
-        Object.assign(formData.value, newProduct)
-        autoPricing.value = false
-      } else {
-        resetForm()
+    watch(
+      () => props.product,
+      (newProduct) => {
+        if (newProduct) {
+          Object.assign(formData.value, newProduct)
+          autoPricing.value = false
+          if (newProduct.image) {
+            imagePreview.value = `http://localhost:3001${newProduct.image}`
+          } else {
+            imagePreview.value = null
+          }
+          imageFile.value = null
+          imageRemoved.value = false
+        } else {
+          resetForm()
+        }
+      },
+      { immediate: true },
+    )
+
+    const onFileChange = (event) => {
+      const file = event.target.files[0]
+      if (file) {
+        imageFile.value = file
+        imagePreview.value = URL.createObjectURL(file)
+        imageRemoved.value = false
       }
-    }, { immediate: true })
+    }
+
+    const removeImage = () => {
+      imageFile.value = null
+      imagePreview.value = null
+      formData.value.image = null
+      imageRemoved.value = true
+    }
 
     const calculatePrices = () => {
       if (!autoPricing.value) return
@@ -144,14 +179,28 @@ export default {
 
       saving.value = true
       try {
+        let savedProduct
         if (isEditing.value) {
-          await productStore.updateProduct(props.product.id, formData.value)
+          // Si se eliminó la imagen, formData.image ya es null
+          if (imageRemoved.value) {
+            formData.value.image = null
+          }
+          savedProduct = await productStore.updateProduct(
+            props.product.id,
+            formData.value,
+          )
         } else {
           if (!formData.value.barcode) {
             generateBarcode()
           }
-          await productStore.createProduct(formData.value)
+          savedProduct = await productStore.createProduct(formData.value)
         }
+
+        // Si hay un archivo de imagen, subirlo
+        if (imageFile.value) {
+          await productStore.uploadProductImage(savedProduct.id, imageFile.value)
+        }
+
         emit('saved')
       } catch (error) {
         console.error('Error guardando producto:', error)
@@ -176,12 +225,16 @@ export default {
       formData,
       dialog,
       isEditing,
+      imageFile,
+      imagePreview,
+      onFileChange,
+      removeImage,
       resetForm,
       calculatePrices,
       generateBarcode,
       scanBarcode,
       saveProduct,
-      closeDialog
+      closeDialog,
     }
-  }
+  },
 }

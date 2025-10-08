@@ -1,10 +1,10 @@
-const { Sale, SaleItem, Product, Customer, User, InventoryMovement, sequelize } = require("../database/models")
+const { Sale, SaleItem, Product, User, InventoryMovement, sequelize } = require("../database/models")
 const { Op } = require("sequelize")
 
 const salesController = {
   async getAll(req, res) {
     try {
-      const { startDate, endDate, customerId, status, limit = 50 } = req.query
+      const { startDate, endDate, status, limit = 50 } = req.query
       const whereClause = {}
 
       if (startDate && endDate) {
@@ -13,13 +13,11 @@ const salesController = {
         }
       }
 
-      if (customerId) whereClause.customerId = customerId
       if (status) whereClause.status = status
 
       const sales = await Sale.findAll({
         where: whereClause,
         include: [
-          { model: Customer, as: "customer" },
           { model: User, as: "user", attributes: ["id", "firstName", "lastName"] },
           {
             model: SaleItem,
@@ -43,9 +41,7 @@ const salesController = {
     try {
       const {
         items,
-        customerId,
         saleType,
-        operationMode = 'tienda',
         payment,
       } = req.body
 
@@ -58,15 +54,13 @@ const salesController = {
       let calculatedTotal = 0;
 
       const saleCount = await Sale.count({ transaction })
-      const saleNumber = `${operationMode.toUpperCase()}-${String(saleCount + 1).padStart(6, "0")}`
+      const saleNumber = `BODEGA-${String(saleCount + 1).padStart(6, "0")}`
 
       const sale = await Sale.create(
         {
           saleNumber,
-          customerId: customerId || null,
           userId: req.user?.id || 1,
           saleType,
-          operationMode,
           subtotal: 0,
           taxAmount: 0,
           discountAmount: 0,
@@ -152,7 +146,6 @@ const salesController = {
 
       const completeSale = await Sale.findByPk(sale.id, {
         include: [
-          { model: Customer, as: "customer" },
           { model: User, as: "user", attributes: ["id", "firstName", "lastName"] },
           {
             model: SaleItem,
@@ -173,7 +166,6 @@ const salesController = {
     try {
       const sale = await Sale.findByPk(req.params.id, {
         include: [
-          { model: Customer, as: "customer" },
           { model: User, as: "user", attributes: ["id", "firstName", "lastName"] },
           {
             model: SaleItem,
@@ -250,7 +242,6 @@ const salesController = {
 
       const updatedSale = await Sale.findByPk(sale.id, {
         include: [
-          { model: Customer, as: "customer" },
           { model: User, as: "user", attributes: ["id", "firstName", "lastName"] },
           {
             model: SaleItem,
@@ -272,7 +263,6 @@ const salesController = {
       const { format = "json" } = req.query
       const sale = await Sale.findByPk(req.params.id, {
         include: [
-          { model: Customer, as: "customer" },
           { model: User, as: "user", attributes: ["id", "firstName", "lastName"] },
           {
             model: SaleItem,

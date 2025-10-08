@@ -90,10 +90,6 @@
               <p class="font-weight-bold">{{ dashboardData.quickSummary?.activeProducts || 0 }}</p>
             </div>
             <v-divider class="my-2"></v-divider>
-            <div class="d-flex justify-space-between">
-              <p>Clientes Activos</p>
-              <p class="font-weight-bold">{{ dashboardData.quickSummary?.activeCustomers || 0 }}</p>
-            </div>
             <v-divider class="my-2"></v-divider>
             <div class="d-flex justify-space-between">
               <p>Alertas de Stock</p>
@@ -121,9 +117,6 @@
             </template>
             <template v-slot:item.saleDate="{ item }">
               {{ formatDate(item.saleDate) }}
-            </template>
-            <template v-slot:item.customer.name="{ item }">
-              {{ item.customer?.name || 'Consumidor Final' }}
             </template>
             <template v-slot:item.status="{ item }">
               <v-chip :color="getStatusColor(item.status)" size="small" variant="flat" label>
