@@ -7,9 +7,12 @@ async function request(url, options = {}) {
   const authStore = useAuthStore()
   const token = authStore.token
 
-  const headers = {
-    "Content-Type": "application/json",
-    ...options.headers,
+  const headers = { ...options.headers }
+
+  // No establecer Content-Type por defecto si el cuerpo es FormData
+  // El navegador lo hará automáticamente con el boundary correcto
+  if (!(options.body instanceof FormData)) {
+    headers["Content-Type"] = "application/json"
   }
 
   if (token) {
@@ -41,7 +44,21 @@ async function request(url, options = {}) {
 
 export default {
   get: (url, options) => request(url, { ...options, method: "GET" }),
-  post: (url, body, options) => request(url, { ...options, method: "POST", body: JSON.stringify(body) }),
-  put: (url, body, options) => request(url, { ...options, method: "PUT", body: JSON.stringify(body) }),
+  post: (url, body, options) => {
+    const isFormData = body instanceof FormData
+    return request(url, {
+      ...options,
+      method: "POST",
+      body: isFormData ? body : JSON.stringify(body),
+    })
+  },
+  put: (url, body, options) => {
+    const isFormData = body instanceof FormData
+    return request(url, {
+      ...options,
+      method: "PUT",
+      body: isFormData ? body : JSON.stringify(body),
+    })
+  },
   delete: (url, options) => request(url, { ...options, method: "DELETE" }),
 }

@@ -25,6 +25,10 @@ app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
+// Servir archivos estáticos desde la carpeta 'uploads' en la raíz del proyecto
+const uploadsDir = path.resolve(__dirname, "../../uploads")
+app.use("/uploads", express.static(uploadsDir))
+
 // Rutas API
 app.use("/api/auth", authRoutes)
 app.use("/api/products", productRoutes)
