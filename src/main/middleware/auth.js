@@ -50,7 +50,7 @@ const requirePermission = (permission) => {
 
     const rolePermissions = {
       admin: ["all"],
-      supervisor: ["sales", "inventory", "reports", "customers"],
+      supervisor: ["sales", "inventory", "reports", "products", "settings"],
       cashier: ["sales"],
     }
 

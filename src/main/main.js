@@ -1,8 +1,10 @@
 const { app, BrowserWindow, Menu, ipcMain } = require("electron")
 const path = require("path")
+const fs = require("fs")
 // Explicitly specify the path to the .env file for robustness
 require("dotenv").config({ path: path.resolve(__dirname, "../../.env") })
 const isDev = process.env.NODE_ENV === "development"
+app.disableHardwareAcceleration()
 
 // Importar el servidor Express
 const { startServer } = require("./server")
@@ -114,6 +116,14 @@ function createMenu() {
 
 app.whenReady().then(async () => {
   // Iniciar servidor Express
+  // --- INICIO: Crear directorio de subidas ---
+  const uploadsDir = path.join(app.getPath("userData"), "uploads", "products")
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true })
+    console.log(`Directorio de subidas creado en: ${uploadsDir}`)
+  }
+  // --- FIN: Crear directorio de subidas ---
+
   await startServer()
 
   // Actualizar la tasa de cambio al inicio y luego periódicamente

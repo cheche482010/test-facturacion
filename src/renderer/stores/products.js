@@ -87,5 +87,23 @@ export const useProductStore = defineStore("products", {
         throw error
       }
     },
+
+    async uploadProductImage(productId, imageFile) {
+      try {
+        const formData = new FormData()
+        formData.append("image", imageFile)
+        // Deja que el navegador establezca el Content-Type correcto con el boundary
+        const updatedProduct = await api.post(`/products/${productId}/upload-image`, formData)
+        const index = this.products.findIndex((p) => p.id === productId)
+        if (index !== -1) {
+          this.products[index] = updatedProduct
+        }
+        return updatedProduct
+      } catch (error) {
+        this.error = error.message
+        console.error("Error uploading product image:", error)
+        throw error
+      }
+    },
   },
 })

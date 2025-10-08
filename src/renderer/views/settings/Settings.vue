@@ -13,7 +13,6 @@
                             <v-tab>Interfaz</v-tab>
                             <v-tab>Empresa</v-tab>
                             <v-tab>Facturación</v-tab>
-                            <v-tab>Modo de Operación</v-tab>
                             <v-tab>Sistema</v-tab>
                         </v-tabs>
 
@@ -52,11 +51,8 @@
                             <v-window-item>
                                <v-container>
                                     <v-row>
-                                        <v-col cols="12" md="6">
+                                        <v-col cols="12" md="12">
                                             <v-text-field v-model="settings.companyName" label="Título del Sistema"></v-text-field>
-                                        </v-col>
-                                        <v-col cols="12" md="6">
-                                            <v-text-field v-model="settings.companySlogan" label="Slogan de la Empresa"></v-text-field>
                                         </v-col>
                                         <v-col cols="12">
                                             <v-file-input label="Logo de la Empresa" accept="image/*" @change="onLogoChange"></v-file-input>
@@ -125,18 +121,6 @@
                                         <v-col cols="12" md="6">
                                             <v-switch v-model="settings.autoCalculateTax"
                                                 label="Calcular IVA automáticamente"></v-switch>
-                                        </v-col>
-                                    </v-row>
-                                </v-container>
-                            </v-window-item>
-
-                            <!-- Modo de Operación -->
-                            <v-window-item>
-                                <v-container>
-                                    <v-row>
-                                        <v-col cols="12" md="6">
-                                            <v-select v-model="settings.operationMode" :items="operationModeOptions"
-                                                label="Modo de Operación"></v-select>
                                         </v-col>
                                     </v-row>
                                 </v-container>

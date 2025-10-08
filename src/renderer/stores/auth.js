@@ -17,7 +17,7 @@ export const useAuthStore = defineStore("auth", {
     hasPermission: (state) => (permission) => {
       const rolePermissions = {
         admin: ["all"],
-        supervisor: ["sales", "inventory", "reports", "customers"],
+        supervisor: ["sales", "inventory", "reports", "products", "settings"],
         cashier: ["sales"],
       }
 
