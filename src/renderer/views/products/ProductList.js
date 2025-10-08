@@ -20,24 +20,32 @@ export default {
     const productDialog = ref(false)
     const deleteDialog = ref(false)
     const barcodeDialog = ref(false)
+    const imageDialog = ref(false)
     const selectedProduct = ref(null)
     const productToDelete = ref(null)
+    const selectedProductImage = ref(null)
 
     const statusOptions = [
       { title: 'Todos', value: null },
       { title: 'Activo', value: 'activo' },
       { title: 'Descontinuado', value: 'descontinuado' },
-      { title: 'Agotado', value: 'agotado' }
+      { title: 'Agotado', value: 'agotado' },
     ]
 
     const headers = [
+      { title: 'Imagen', key: 'image', sortable: false, align: 'center' },
       { title: 'Producto', key: 'name', sortable: true },
       { title: 'Código', key: 'internalCode', sortable: true },
       { title: 'Categoría', key: 'categoryName', sortable: true },
       { title: 'Stock', key: 'currentStock', sortable: true },
-      { title: 'Precio Venta', key: 'retailPrice', sortable: true, align: 'end' },
+      {
+        title: 'Precio Venta',
+        key: 'retailPrice',
+        sortable: true,
+        align: 'end',
+      },
       { title: 'Estado', key: 'status', sortable: true },
-      { title: 'Acciones', key: 'actions', sortable: false, align: 'center' }
+      { title: 'Acciones', key: 'actions', sortable: false, align: 'center' },
     ]
 
     const products = computed(() => productStore.products.map(p => ({
@@ -188,6 +196,13 @@ export default {
       loadProducts()
     })
 
+    const showImage = (product) => {
+      if (product.image) {
+        selectedProductImage.value = product.image
+        imageDialog.value = true
+      }
+    }
+
     return {
       loading,
       search,
@@ -197,8 +212,10 @@ export default {
       productDialog,
       deleteDialog,
       barcodeDialog,
+      imageDialog,
       selectedProduct,
       productToDelete,
+      selectedProductImage,
       statusOptions,
       headers,
       products,
@@ -215,7 +232,8 @@ export default {
       getStockColor,
       getStatusColor,
       getStatusText,
-      formatCurrency
+      formatCurrency,
+      showImage,
     }
-  }
+  },
 }

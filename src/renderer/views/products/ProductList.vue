@@ -57,6 +57,24 @@
         </v-card-title>
       </v-card-item>
       <v-data-table :headers="headers" :items="filteredProducts" :loading="loading" item-value="id" hover>
+        <template v-slot:item.image="{ item }">
+          <v-avatar
+            class="ma-2"
+            size="40"
+            rounded="sm"
+            :color="item.image ? 'transparent' : 'grey-lighten-2'"
+            :style="{ cursor: item.image ? 'pointer' : 'default' }"
+            @click="item.image && showImage(item)"
+          >
+            <v-img
+              v-if="item.image"
+              :src="`http://localhost:3001${item.image}`"
+              :alt="item.name"
+              cover
+            />
+            <v-icon v-else icon="mdi-camera-off" />
+          </v-avatar>
+        </template>
         <template v-slot:item.name="{ item }">
           <div>
             <div class="font-weight-bold">{{ item.name }}</div>
@@ -124,6 +142,23 @@
           <v-spacer />
           <v-btn @click="barcodeDialog = false">Cerrar</v-btn>
           <v-btn color="primary" @click="printBarcode">Imprimir</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Dialog para mostrar imagen en grande -->
+    <v-dialog v-model="imageDialog" max-width="600">
+      <v-card>
+        <v-card-text>
+          <v-img
+            :src="`http://localhost:3001${selectedProductImage}`"
+            contain
+            max-height="500"
+          />
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn @click="imageDialog = false">Cerrar</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

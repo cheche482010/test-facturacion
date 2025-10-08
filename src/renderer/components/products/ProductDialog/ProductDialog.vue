@@ -165,7 +165,7 @@
 
             <v-col cols="12" md="4">
               <v-text-field
-                v-model.number="formData.dollar_price"
+                v-model.number="formData.dollarPrice"
                 label="Precio en USD"
                 variant="outlined"
                 density="compact"
@@ -249,6 +249,40 @@
                 density="compact"
                 type="date"
               />
+            </v-col>
+
+            <!-- Sección de Imagen -->
+            <v-col cols="12">
+              <h3 class="text-h6 mb-3 mt-4">Imagen del Producto</h3>
+            </v-col>
+
+            <v-col cols="12" md="6">
+              <v-file-input
+                v-model="imageFile"
+                label="Seleccionar imagen"
+                accept="image/*"
+                variant="outlined"
+                density="compact"
+                prepend-icon="mdi-camera"
+                @change="onFileChange"
+              />
+            </v-col>
+
+            <v-col v-if="imagePreview" cols="12" md="6">
+              <div class="d-flex align-center">
+                <v-img
+                  :src="imagePreview"
+                  max-height="100"
+                  max-width="100"
+                  class="mr-4"
+                />
+                <v-btn
+                  icon="mdi-close"
+                  size="small"
+                  variant="tonal"
+                  @click="removeImage"
+                />
+              </div>
             </v-col>
           </v-row>
         </v-form>
