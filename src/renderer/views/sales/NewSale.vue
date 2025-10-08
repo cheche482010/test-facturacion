@@ -36,7 +36,23 @@
           </div>
           <v-data-table v-else :headers="cartHeaders" :items="cartItems" item-key="id">
             <template v-slot:item.name="{ item }">
-              <div class="font-weight-bold">{{ item.name }}</div>
+              <div class="d-flex align-center">
+                <v-avatar
+                  class="mr-3"
+                  size="40"
+                  rounded="sm"
+                  :color="item.image ? 'transparent' : 'grey-lighten-2'"
+                >
+                  <v-img
+                    v-if="item.image"
+                    :src="`http://localhost:3001${item.image}`"
+                    :alt="item.name"
+                    cover
+                  />
+                  <v-icon v-else icon="mdi-camera-off" />
+                </v-avatar>
+                <div class="font-weight-bold">{{ item.name }}</div>
+              </div>
             </template>
             <template v-slot:item.quantity="{ item }">
               <v-text-field v-model.number="item.quantity" type="number" min="1" :max="item.stock" style="width: 100px"
