@@ -49,6 +49,11 @@ const routes = [
         name: "Settings",
         component: () => import("@/views/settings/Settings.vue"),
       },
+      {
+        path: "cash-reconciliation",
+        name: "CashReconciliation",
+        component: () => import("@/views/cash-reconciliation/CashReconciliationView.vue"),
+      },
     ],
   },
 ]
