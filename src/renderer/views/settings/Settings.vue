@@ -145,6 +145,10 @@
                                                 Crear Respaldo Manual
                                             </v-btn>
                                         </v-col>
+                                        <v-col cols="12" md="6">
+                                            <v-text-field v-model="settings.business_opening_time" label="Hora de Apertura del Negocio"
+                                                hint="Formato HH:mm (ej: 09:00)"></v-text-field>
+                                        </v-col>
                                     </v-row>
                                 </v-container>
                             </v-window-item>
