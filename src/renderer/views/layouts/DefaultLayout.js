@@ -18,6 +18,7 @@ export default {
         { title: 'Inventario', icon: 'mdi-warehouse', to: '/inventory' },
         { title: 'Arqueo de caja', icon: 'mdi-cash-register', to: '/cash-count' },
         { title: 'Reportes', icon: 'mdi-chart-bar', to: '/reports' },
+        { title: 'Arqueo de Caja', icon: 'mdi-cash-register', to: '/cash-reconciliation' },
         { title: 'Configuración', icon: 'mdi-cog', to: '/settings' }
       ]
 
