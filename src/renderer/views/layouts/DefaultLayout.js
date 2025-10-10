@@ -16,6 +16,7 @@ export default {
         { title: 'Ventas', icon: 'mdi-point-of-sale', to: '/sales/new' },
         { title: 'Productos', icon: 'mdi-package-variant-closed', to: '/products' },
         { title: 'Inventario', icon: 'mdi-warehouse', to: '/inventory' },
+        { title: 'Arqueo de caja', icon: 'mdi-cash-register', to: '/cash-count' },
         { title: 'Reportes', icon: 'mdi-chart-bar', to: '/reports' },
         { title: 'Configuración', icon: 'mdi-cog', to: '/settings' }
       ]

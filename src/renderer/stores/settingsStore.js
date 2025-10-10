@@ -18,6 +18,7 @@ export const useSettingsStore = defineStore("settings", () => {
     autoCalculateTax: true,
     autoBackup: false,
     backupInterval: 24,
+    openingTime: "08:00",
   });
 
   const loading = ref(false);

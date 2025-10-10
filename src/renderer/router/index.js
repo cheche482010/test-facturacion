@@ -45,6 +45,11 @@ const routes = [
         component: () => import("@/views/reports/ReportsDashboard.vue"),
       },
       {
+        path: "cash-count",
+        name: "CashCount",
+        component: () => import("@/views/cash-count/CashCount.vue"),
+      },
+      {
         path: "settings",
         name: "Settings",
         component: () => import("@/views/settings/Settings.vue"),
