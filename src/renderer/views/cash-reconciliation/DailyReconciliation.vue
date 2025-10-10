@@ -1,10 +1,11 @@
 <template>
-  <v-card flat>
+  <v-card>
+    <v-card-title>Gestión del Día</v-card-title>
     <v-card-text>
       <!-- Loading Indicator -->
       <div v-if="isLoading" class="text-center pa-4">
         <v-progress-circular indeterminate color="primary"></v-progress-circular>
-        <p class="mt-2">Cargando información del arqueo...</p>
+        <p class="mt-2">Cargando...</p>
       </div>
 
       <!-- Error Display -->
@@ -14,110 +15,98 @@
 
       <!-- Main Content -->
       <div v-if="!isLoading">
-        <!-- State: No reconciliation open -->
+        <!-- State: No reconciliation open -> Show Open Form -->
         <div v-if="!reconciliation">
           <v-alert type="info" variant="tonal" class="mb-4">
-            No hay una caja abierta para el día de hoy.
+            La caja está cerrada. Ingrese el saldo inicial para comenzar.
           </v-alert>
-          <v-btn color="primary" @click="showOpenDialog = true">
-            <v-icon start>mdi-cash-plus</v-icon>
-            Abrir Caja
-          </v-btn>
+          <v-row>
+            <v-col cols="12" md="4">
+              <v-text-field
+                v-model.number="openForm.openingBalance"
+                label="Saldo Inicial"
+                type="number"
+                prefix="$"
+                variant="outlined"
+                autofocus
+              ></v-text-field>
+            </v-col>
+            <v-col cols="12" md="6">
+              <v-textarea
+                v-model="openForm.notes"
+                label="Notas de Apertura (Opcional)"
+                rows="1"
+                variant="outlined"
+              ></v-textarea>
+            </v-col>
+            <v-col cols="12" md="2" class="d-flex align-center">
+              <v-btn color="primary" @click="handleOpenReconciliation" :loading="isLoading" block>
+                Abrir Caja
+              </v-btn>
+            </v-col>
+          </v-row>
         </div>
 
-        <!-- State: Reconciliation is open -->
+        <!-- State: Reconciliation is open -> Show Details and Close Form -->
         <div v-else>
           <v-row>
-            <v-col cols="12" md="6">
-              <v-card variant="outlined">
-                <v-card-title>Información del Arqueo</v-card-title>
+            <!-- Info -->
+            <v-col cols="12" md="4">
+              <v-card variant="tonal">
                 <v-list-item :title="reconciliation.user.username" subtitle="Abierta por"></v-list-item>
-                <v-list-item :title="new Date(reconciliation.openingDate).toLocaleString()" subtitle="Fecha de Apertura"></v-list-item>
-                <v-list-item :title="formatCurrency(reconciliation.openingBalance)" subtitle="Saldo Inicial" class="font-weight-bold"></v-list-item>
+                <v-list-item :title="formatCurrency(reconciliation.openingBalance)" subtitle="Saldo Inicial"></v-list-item>
               </v-card>
             </v-col>
-
-            <v-col cols="12" md="6">
-              <v-card variant="outlined">
-                <v-card-title>Resumen de Ventas (Hasta Ahora)</v-card-title>
-                 <v-list-item :title="formatCurrency(reconciliation.totalSales)" subtitle="Total de Ventas" class="font-weight-bold text-success"></v-list-item>
-                 <v-list-item :title="reconciliation.salesCount" subtitle="Número de Ventas"></v-list-item>
+            <!-- Sales -->
+            <v-col cols="12" md="4">
+              <v-card variant="tonal" color="success">
+                <v-list-item :title="formatCurrency(reconciliation.totalSales)" subtitle="Ventas del Día"></v-list-item>
+                 <v-list-item :title="reconciliation.salesCount" subtitle="Nº de Ventas"></v-list-item>
+              </v-card>
+            </v-col>
+             <!-- Expected -->
+            <v-col cols="12" md="4">
+               <v-card variant="tonal" color="info">
+                <v-list-item :title="formatCurrency(expectedBalance)" subtitle="Saldo Esperado en Caja"></v-list-item>
               </v-card>
             </v-col>
           </v-row>
 
           <v-divider class="my-4"></v-divider>
 
-          <v-btn color="success" @click="showCloseDialog = true" :disabled="!reconciliation">
-            <v-icon start>mdi-cash-check</v-icon>
-            Cerrar Caja
-          </v-btn>
+          <v-row>
+             <v-col cols="12" md="4">
+              <v-text-field
+                v-model.number="closeForm.closingBalance"
+                label="Saldo Final en Caja"
+                type="number"
+                prefix="$"
+                variant="outlined"
+                autofocus
+              ></v-text-field>
+            </v-col>
+            <v-col cols="12" md="6">
+              <v-textarea
+                v-model="closeForm.notes"
+                label="Notas de Cierre (Opcional)"
+                rows="1"
+                variant="outlined"
+              ></v-textarea>
+            </v-col>
+            <v-col cols="12" md="2" class="d-flex align-center">
+              <v-btn color="success" @click="handleCloseReconciliation" :loading="isLoading" block>
+                Cerrar Caja
+              </v-btn>
+            </v-col>
+          </v-row>
         </div>
       </div>
-
-      <!-- Dialog for Opening Reconciliation -->
-      <v-dialog v-model="showOpenDialog" persistent max-width="500px">
-        <v-card>
-          <v-card-title>Abrir Caja</v-card-title>
-          <v-card-text>
-            <v-text-field
-              v-model.number="openForm.openingBalance"
-              label="Saldo Inicial"
-              type="number"
-              prefix="$"
-              variant="outlined"
-              autofocus
-            ></v-text-field>
-            <v-textarea
-              v-model="openForm.notes"
-              label="Notas (Opcional)"
-              rows="3"
-              variant="outlined"
-            ></v-textarea>
-          </v-card-text>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn text @click="showOpenDialog = false">Cancelar</v-btn>
-            <v-btn color="primary" @click="handleOpenReconciliation" :loading="isLoading">Confirmar Apertura</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
-
-      <!-- Dialog for Closing Reconciliation -->
-      <v-dialog v-model="showCloseDialog" persistent max-width="500px">
-        <v-card>
-          <v-card-title>Cerrar Caja</v-card-title>
-          <v-card-text>
-            <p class="mb-4">Confirma el monto final en caja para realizar el cierre.</p>
-            <v-text-field
-              v-model.number="closeForm.closingBalance"
-              label="Saldo Final en Caja"
-              type="number"
-              prefix="$"
-              variant="outlined"
-              autofocus
-            ></v-text-field>
-            <v-textarea
-              v-model="closeForm.notes"
-              label="Notas de Cierre (Opcional)"
-              rows="3"
-              variant="outlined"
-            ></v-textarea>
-          </v-card-text>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn text @click="showCloseDialog = false">Cancelar</v-btn>
-            <v-btn color="success" @click="handleCloseReconciliation" :loading="isLoading">Confirmar Cierre</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
-
     </v-card-text>
   </v-card>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useCashReconciliationStore } from '@/stores/cashReconciliation'
 import { storeToRefs } from 'pinia'
 
@@ -125,9 +114,7 @@ import { storeToRefs } from 'pinia'
 const store = useCashReconciliationStore()
 const { todayReconciliation: reconciliation, isLoading, error } = storeToRefs(store)
 
-// --- Local State for Dialogs and Forms ---
-const showOpenDialog = ref(false)
-const showCloseDialog = ref(false)
+// --- Local State for Forms ---
 const openForm = ref({
   openingBalance: 0,
   notes: '',
@@ -135,6 +122,12 @@ const openForm = ref({
 const closeForm = ref({
   closingBalance: 0,
   notes: '',
+})
+
+// --- Computed ---
+const expectedBalance = computed(() => {
+  if (!reconciliation.value) return 0;
+  return parseFloat(reconciliation.value.openingBalance) + parseFloat(reconciliation.value.totalSales);
 })
 
 // --- Methods ---
@@ -145,7 +138,6 @@ const formatCurrency = (value) => {
 const handleOpenReconciliation = async () => {
   try {
     await store.openReconciliation(openForm.value)
-    showOpenDialog.value = false
     openForm.value = { openingBalance: 0, notes: '' } // Reset form
   } catch (e) {
     console.error('Failed to open reconciliation:', e)
@@ -156,7 +148,6 @@ const handleCloseReconciliation = async () => {
   if (!reconciliation.value) return
   try {
     await store.closeReconciliation(closeForm.value)
-    showCloseDialog.value = false
     closeForm.value = { closingBalance: 0, notes: '' } // Reset form
   } catch (e) {
     console.error('Failed to close reconciliation:', e)

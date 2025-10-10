@@ -15,7 +15,7 @@ const CashReconciliation = sequelize.define(
     },
     closingDate: {
       type: DataTypes.DATE,
-      allowNull: false,
+      allowNull: true,
     },
     openingBalance: {
       type: DataTypes.DECIMAL(10, 2),
@@ -23,11 +23,11 @@ const CashReconciliation = sequelize.define(
     },
     closingBalance: {
       type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
+      allowNull: true,
     },
     totalSales: {
       type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
+      allowNull: true,
     },
     totalExpenses: {
       type: DataTypes.DECIMAL(10, 2),
