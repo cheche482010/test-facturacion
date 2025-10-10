@@ -1,10 +1,11 @@
 const express = require("express")
-const { authenticateToken } = require("../middleware/auth")
+const { authenticateToken, authorize } = require("../middleware/auth")
 const inventoryController = require("../controllers/inventoryController")
 
 const router = express.Router()
 
 router.use(authenticateToken)
+router.use(authorize(["administrador", "dev"]))
 
 router.get("/movements", inventoryController.getMovements)
 router.get("/movements/product/:productId", inventoryController.getProductMovements)

@@ -102,6 +102,29 @@
         </div>
       </div>
 
+      <!-- Password Dialog -->
+      <v-dialog v-model="passwordDialog" max-width="400">
+        <v-card>
+          <v-card-title>Confirmación Requerida</v-card-title>
+          <v-card-text>
+            Para cerrar la caja, por favor ingrese la contraseña de un administrador.
+            <v-text-field
+              v-model="password"
+              label="Contraseña"
+              type="password"
+              autofocus
+              class="mt-4"
+              @keyup.enter="verifyPasswordAndClose"
+            ></v-text-field>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer />
+            <v-btn @click="passwordDialog = false">Cancelar</v-btn>
+            <v-btn color="primary" @click="verifyPasswordAndClose">Confirmar</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
       <!-- Report Preview Dialog -->
         <v-dialog v-model="showReportDialog" persistent max-width="800px">
             <v-card v-if="dailyReport">
@@ -159,16 +182,21 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useCashReconciliationStore } from '@/stores/cashReconciliation'
+import { useAuthStore } from '@/stores/auth'
 import { storeToRefs } from 'pinia'
+import api from '@/services/api'
 
 // --- Store ---
 const store = useCashReconciliationStore()
+const authStore = useAuthStore()
 const { todayReconciliation: reconciliation, dailyReport, isLoading, isReportLoading, error } = storeToRefs(store)
 
 // --- Local State ---
 const openForm = ref({ openingBalance: 0, notes: '' })
 const closeForm = ref({ closingBalance: 0, notes: '' })
 const showReportDialog = ref(false)
+const passwordDialog = ref(false)
+const password = ref('')
 
 // --- Computed ---
 const expectedBalance = computed(() => {
@@ -191,10 +219,31 @@ const handleOpenReconciliation = async () => {
 }
 
 const initiateClose = async () => {
-  if (!reconciliation.value) return;
-  await store.fetchDailyReport(reconciliation.value.id);
+  if (!reconciliation.value) return
+  if (authStore.isCajero) {
+    passwordDialog.value = true
+  } else {
+    await proceedToClose()
+  }
+}
+
+const verifyPasswordAndClose = async () => {
+  try {
+    // This is a simplified check. In a real app, you'd want a dedicated endpoint for this.
+    await api.post('/auth/login', { email: 'admin@sistema.com', password: password.value })
+    passwordDialog.value = false
+    password.value = ''
+    await proceedToClose()
+  } catch (error) {
+    console.error('Password verification failed:', error)
+    // You might want to show an error message to the user here
+  }
+}
+
+const proceedToClose = async () => {
+  await store.fetchDailyReport(reconciliation.value.id)
   if (store.dailyReport) {
-    showReportDialog.value = true;
+    showReportDialog.value = true
   }
 }
 

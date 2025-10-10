@@ -2,7 +2,7 @@ const express = require("express")
 const multer = require("multer")
 const path = require("path")
 const fs = require("fs")
-const { authenticateToken } = require("../middleware/auth")
+const { authenticateToken, authorize } = require("../middleware/auth")
 const productsController = require("../controllers/productsController")
 
 const router = express.Router()
@@ -42,14 +42,15 @@ router.use(authenticateToken)
 
 router.get("/", productsController.getAll)
 router.get("/:id", productsController.getById)
-router.post("/", productsController.create)
-router.put("/:id", productsController.update)
-router.delete("/:id", productsController.delete)
-router.put("/:id/stock", productsController.updateStock)
+router.post("/", authorize(["administrador", "dev"]), productsController.create)
+router.put("/:id", authorize(["administrador", "dev"]), productsController.update)
+router.delete("/:id", authorize(["administrador", "dev"]), productsController.delete)
+router.put("/:id/stock", authorize(["administrador", "dev"]), productsController.updateStock)
 
 // Nueva ruta para subir imagen de producto
 router.post(
   "/:id/upload-image",
+  authorize(["administrador", "dev"]),
   upload.single("image"),
   productsController.uploadImage,
 )

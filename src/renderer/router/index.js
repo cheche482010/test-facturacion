@@ -23,36 +23,43 @@ const routes = [
         path: "dashboard",
         name: "Dashboard",
         component: () => import("@/views/Dashboard.vue"),
+        meta: { roles: ["dev", "administrador"] },
       },
       {
         path: "sales/new",
         name: "NewSale",
         component: () => import("@/views/sales/NewSale.vue"),
+        meta: { roles: ["dev", "administrador", "cajero"] },
       },
       {
         path: "products",
         name: "Products",
         component: () => import("@/views/products/ProductList.vue"),
+        meta: { roles: ["dev", "administrador", "cajero"] },
       },
       {
         path: "inventory",
         name: "Inventory",
         component: () => import("@/views/inventory/InventoryList.vue"),
+        meta: { roles: ["dev", "administrador"] },
       },
       {
         path: "reports",
         name: "Reports",
         component: () => import("@/views/reports/ReportsDashboard.vue"),
+        meta: { roles: ["dev", "administrador"] },
       },
       {
         path: "settings",
         name: "Settings",
         component: () => import("@/views/settings/Settings.vue"),
+        meta: { roles: ["dev"] },
       },
       {
         path: "cash-reconciliation",
         name: "CashReconciliation",
         component: () => import("@/views/cash-reconciliation/CashReconciliationView.vue"),
+        meta: { roles: ["dev", "administrador", "cajero"] },
       },
     ],
   },
@@ -68,15 +75,18 @@ router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
   const requiresAuth = to.matched.some((record) => record.meta.requiresAuth)
 
-  // Si la ruta requiere autenticación y el usuario no está autenticado
   if (requiresAuth && !authStore.isAuthenticated) {
-    // Redirigir al login
-    next({ name: "Login" })
+    return next({ name: "Login" })
   }
-  // En cualquier otro caso, permitir la navegación
-  else {
-    next()
+
+  const requiredRoles = to.meta.roles
+  if (requiredRoles && requiredRoles.length > 0) {
+    if (!requiredRoles.includes(authStore.userRole)) {
+      return next({ name: "Dashboard" }) // Or a "not authorized" page
+    }
   }
+
+  next()
 })
 
 export default router

@@ -2,6 +2,7 @@ import { ref, computed, onMounted } from 'vue'
 import ProductDialog from '../../components/products/ProductDialog/ProductDialog.vue'
 import { useProductStore } from '../../stores/products'
 import { useCategoryStore } from '../../stores/categories'
+import { useAuthStore } from '@/stores/auth'
 import { formatCurrency } from '@/utils/formatters'
 
 export default {
@@ -11,6 +12,7 @@ export default {
   setup() {
     const productStore = useProductStore()
     const categoryStore = useCategoryStore()
+    const authStore = useAuthStore()
 
     const loading = ref(false)
     const search = ref('')
@@ -32,21 +34,28 @@ export default {
       { title: 'Agotado', value: 'agotado' },
     ]
 
-    const headers = [
-      { title: 'Imagen', key: 'image', sortable: false, align: 'center' },
-      { title: 'Producto', key: 'name', sortable: true },
-      { title: 'Código', key: 'internalCode', sortable: true },
-      { title: 'Categoría', key: 'categoryName', sortable: true },
-      { title: 'Stock', key: 'currentStock', sortable: true },
-      {
-        title: 'Precio Venta',
-        key: 'retailPrice',
-        sortable: true,
-        align: 'end',
-      },
-      { title: 'Estado', key: 'status', sortable: true },
-      { title: 'Acciones', key: 'actions', sortable: false, align: 'center' },
-    ]
+    const headers = computed(() => {
+      const baseHeaders = [
+        { title: 'Imagen', key: 'image', sortable: false, align: 'center' },
+        { title: 'Producto', key: 'name', sortable: true },
+        { title: 'Código', key: 'internalCode', sortable: true },
+        { title: 'Categoría', key: 'categoryName', sortable: true },
+        { title: 'Stock', key: 'currentStock', sortable: true },
+        {
+          title: 'Precio Venta',
+          key: 'retailPrice',
+          sortable: true,
+          align: 'end',
+        },
+        { title: 'Estado', key: 'status', sortable: true },
+      ]
+
+      if (!isCajero.value) {
+        baseHeaders.push({ title: 'Acciones', key: 'actions', sortable: false, align: 'center' })
+      }
+
+      return baseHeaders
+    })
 
     const products = computed(() => productStore.products.map(p => ({
       ...p,
@@ -203,6 +212,8 @@ export default {
       }
     }
 
+    const isCajero = computed(() => authStore.isCajero)
+
     return {
       loading,
       search,
@@ -234,6 +245,7 @@ export default {
       getStatusText,
       formatCurrency,
       showImage,
+      isCajero,
     }
   },
 }

@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const currencyController = require('../controllers/currencyController');
+const { authenticateToken, authorize } = require("../middleware/auth")
+
+router.use(authenticateToken)
+router.use(authorize(["administrador", "dev"]))
 
 router.get('/exchange-rate', async (req, res) => {
   try {

@@ -11,17 +11,20 @@ export default {
     const appStore = useAppStore()
 
     const menuItems = computed(() => {
-      const items = [
-        { title: 'Dashboard', icon: 'mdi-view-dashboard', to: '/dashboard' },
-        { title: 'Ventas', icon: 'mdi-point-of-sale', to: '/sales/new' },
-        { title: 'Productos', icon: 'mdi-package-variant-closed', to: '/products' },
-        { title: 'Inventario', icon: 'mdi-warehouse', to: '/inventory' },
-        { title: 'Reportes', icon: 'mdi-chart-bar', to: '/reports' },
-        { title: 'Arqueo de Caja', icon: 'mdi-cash-register', to: '/cash-reconciliation' },
-        { title: 'Configuración', icon: 'mdi-cog', to: '/settings' }
+      const allItems = [
+        { title: 'Dashboard', icon: 'mdi-view-dashboard', to: '/dashboard', roles: ['dev', 'administrador'] },
+        { title: 'Ventas', icon: 'mdi-point-of-sale', to: '/sales/new', roles: ['dev', 'administrador', 'cajero'] },
+        { title: 'Productos', icon: 'mdi-package-variant-closed', to: '/products', roles: ['dev', 'administrador', 'cajero'] },
+        { title: 'Inventario', icon: 'mdi-warehouse', to: '/inventory', roles: ['dev', 'administrador'] },
+        { title: 'Reportes', icon: 'mdi-chart-bar', to: '/reports', roles: ['dev', 'administrador'] },
+        { title: 'Arqueo de Caja', icon: 'mdi-cash-register', to: '/cash-reconciliation', roles: ['dev', 'administrador', 'cajero'] },
+        { title: 'Configuración', icon: 'mdi-cog', to: '/settings', roles: ['dev'] }
       ]
 
-      return items
+      return allItems.filter(item => {
+        if (!item.roles) return true
+        return item.roles.includes(authStore.userRole)
+      })
     })
 
     const logout = () => {

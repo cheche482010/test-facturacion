@@ -10,20 +10,10 @@ export const useAuthStore = defineStore("auth", {
   }),
 
   getters: {
-    hasRole: (state) => (role) => {
-      return state.user?.role === role
-    },
-
-    hasPermission: (state) => (permission) => {
-      const rolePermissions = {
-        admin: ["all"],
-        supervisor: ["sales", "inventory", "reports", "products", "settings"],
-        cashier: ["sales"],
-      }
-
-      const userPermissions = rolePermissions[state.user?.role] || []
-      return userPermissions.includes("all") || userPermissions.includes(permission)
-    },
+    userRole: (state) => state.user?.role,
+    isDev: (state) => state.user?.role === 'dev',
+    isAdministrador: (state) => state.user?.role === 'administrador',
+    isCajero: (state) => state.user?.role === 'cajero',
   },
 
   actions: {

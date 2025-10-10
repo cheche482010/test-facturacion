@@ -1,16 +1,18 @@
 const express = require("express")
-const { authenticateToken, requirePermission } = require("../middleware/auth")
+const express = require("express")
+const { authenticateToken, authorize } = require("../middleware/auth")
 const reportsController = require("../controllers/reportsController")
 
 const router = express.Router()
 
 router.use(authenticateToken)
+router.use(authorize(["administrador", "dev"]))
 
-router.get("/dashboard", requirePermission("reports"), reportsController.getDashboard)
-router.get("/sales", requirePermission("reports"), reportsController.getSalesReport)
-router.get("/products", requirePermission("reports"), reportsController.getProductsReport)
-router.get("/inventory", requirePermission("reports"), reportsController.getInventoryReport)
-router.get("/financial", requirePermission("reports"), reportsController.getFinancialReport)
-router.get("/users", requirePermission("reports"), reportsController.getUsersReport)
+router.get("/dashboard", reportsController.getDashboard)
+router.get("/sales", reportsController.getSalesReport)
+router.get("/products", reportsController.getProductsReport)
+router.get("/inventory", reportsController.getInventoryReport)
+router.get("/financial", reportsController.getFinancialReport)
+router.get("/users", reportsController.getUsersReport)
 
 module.exports = router

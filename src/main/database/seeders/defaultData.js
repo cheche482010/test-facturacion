@@ -3,18 +3,37 @@ const { sequelize } = require("../connection")
 
 const seedDefaultData = async () => {
   try {
-    // Crear usuario administrador por defecto
-    const adminExists = await User.findOne({ where: { username: "admin" } })
-    if (!adminExists) {
-      await User.create({
-        username: "admin",
-        email: "admin@sistema.com",
-        password: "admin123",
-        firstName: "Administrador",
-        lastName: "Sistema",
-        role: "admin",
-      })
-      console.log("   -> Usuario administrador creado.")
+    // Crear usuarios por defecto
+    const usersExist = await User.count()
+    if (usersExist === 0) {
+      const users = [
+        {
+          username: "dev",
+          email: "dev@sistema.com",
+          password: "dev",
+          firstName: "Developer",
+          lastName: "Sistema",
+          role: "dev",
+        },
+        {
+          username: "admin",
+          email: "admin@sistema.com",
+          password: "admin123",
+          firstName: "Administrador",
+          lastName: "Sistema",
+          role: "administrador",
+        },
+        {
+          username: "cajero",
+          email: "cajero@sistema.com",
+          password: "cajero123",
+          firstName: "Cajero",
+          lastName: "Sistema",
+          role: "cajero",
+        },
+      ]
+      await User.bulkCreate(users)
+      console.log("   -> Usuarios por defecto creados.")
     }
 
     // Crear categorías por defecto
@@ -98,7 +117,7 @@ const seedDefaultData = async () => {
     const transaction = await sequelize.transaction()
     try {
       // --- Obtener datos base ---
-      const adminUser = await User.findOne({ where: { username: "admin" }, transaction })
+      const devUser = await User.findOne({ where: { username: "dev" }, transaction })
       const categories = await Category.findAll({ transaction })
 
       // --- 2. Crear Productos ---
@@ -117,13 +136,13 @@ const seedDefaultData = async () => {
 
       // --- 3. Crear Ventas y Movimientos de Inventario ---
       const saleCount = await Sale.count({ transaction })
-      if (saleCount === 0 && adminUser) {
+      if (saleCount === 0 && devUser) {
         const products = await Product.findAll({ transaction })
         const saleDate = new Date()
 
         // Venta 1
         const sale1 = await Sale.create({
-          saleNumber: `BODEGA-000001`, userId: adminUser.id, saleType: "detal", subtotal: 1225, taxAmount: 196, total: 1225, paymentMethod: "pos", paymentStatus: "pagado", status: "completada", sale_date: new Date(new Date().setDate(new Date().getDate() - 5)),
+          saleNumber: `BODEGA-000001`, userId: devUser.id, saleType: "detal", subtotal: 1225, taxAmount: 196, total: 1225, paymentMethod: "pos", paymentStatus: "pagado", status: "completada", sale_date: new Date(new Date().setDate(new Date().getDate() - 5)),
         }, { transaction })
         await SaleItem.bulkCreate([
           { saleId: sale1.id, productId: products[0].id, quantity: 1, unitPrice: 1200, subtotal: 1200, total: 1200, taxRate: 16, taxAmount: 192 },
@@ -132,13 +151,13 @@ const seedDefaultData = async () => {
 
         // Venta 2
         const sale2 = await Sale.create({
-          saleNumber: `BODEGA-000002`, userId: adminUser.id, saleType: "detal", subtotal: 400, taxAmount: 64, total: 400, paymentMethod: "credito", paymentStatus: "pendiente", status: "completada", sale_date: new Date(new Date().setDate(new Date().getDate() - 2)),
+          saleNumber: `BODEGA-000002`, userId: devUser.id, saleType: "detal", subtotal: 400, taxAmount: 64, total: 400, paymentMethod: "credito", paymentStatus: "pendiente", status: "completada", sale_date: new Date(new Date().setDate(new Date().getDate() - 2)),
         }, { transaction })
         await SaleItem.create({ saleId: sale2.id, productId: products[3].id, quantity: 1, unitPrice: 400, subtotal: 400, total: 400, taxRate: 16, taxAmount: 64 }, { transaction })
 
         // Venta 3 (Hoy)
         const sale3 = await Sale.create({
-          saleNumber: `BODEGA-000003`, userId: adminUser.id, saleType: "detal", subtotal: 95, taxAmount: 15.2, total: 95, paymentMethod: "efectivo_usd", paymentStatus: "pagado", status: "completada", sale_date: new Date(),
+          saleNumber: `BODEGA-000003`, userId: devUser.id, saleType: "detal", subtotal: 95, taxAmount: 15.2, total: 95, paymentMethod: "efectivo_usd", paymentStatus: "pagado", status: "completada", sale_date: new Date(),
         }, { transaction })
         await SaleItem.create({ saleId: sale3.id, productId: products[2].id, quantity: 1, unitPrice: 95, subtotal: 95, total: 95, taxRate: 16, taxAmount: 15.2 }, { transaction })
 

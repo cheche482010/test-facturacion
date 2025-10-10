@@ -6,7 +6,7 @@
         <h1 class="text-h5 font-weight-bold">Gestión de Productos</h1>
         <p class="text-medium-emphasis">Administra tu catálogo de productos y controla el inventario</p>
       </div>
-      <v-btn color="primary" prepend-icon="mdi-plus" @click="openProductDialog()">
+      <v-btn v-if="!isCajero" color="primary" prepend-icon="mdi-plus" @click="openProductDialog()">
         Nuevo Producto
       </v-btn>
     </div>
@@ -104,7 +104,7 @@
           </v-chip>
         </template>
 
-        <template v-slot:item.actions="{ item }">
+        <template v-if="!isCajero" v-slot:item.actions="{ item }">
           <v-btn icon="mdi-pencil" size="x-small" variant="text" @click="openProductDialog(item)"></v-btn>
           <v-btn icon="mdi-delete" size="x-small" variant="text" color="error" @click="confirmDelete(item)"></v-btn>
         </template>

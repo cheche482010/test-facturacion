@@ -26,47 +26,22 @@ const authenticateToken = async (req, res, next) => {
 }
 
 // Role-based Authorization Middleware
-const requireRole = (roles) => {
+const authorize = (allowedRoles) => {
   return (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json({ error: "No autenticado" })
+    const { user } = req
+
+    if (!user || !user.role) {
+      return res.status(403).json({ message: "Forbidden: No role assigned" })
     }
 
-    const userRoles = Array.isArray(roles) ? roles : [roles]
-    if (!userRoles.includes(req.user.role)) {
-      return res.status(403).json({ error: "Permisos insuficientes" })
+    if (!allowedRoles.includes(user.role)) {
+      return res.status(403).json({ message: "Forbidden: Insufficient permissions" })
     }
 
     next()
   }
 }
-
-// Permission-based Authorization Middleware
-const requirePermission = (permission) => {
-  return (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json({ error: "No autenticado" })
-    }
-
-    const rolePermissions = {
-      admin: ["all"],
-      supervisor: ["sales", "inventory", "reports", "products", "settings"],
-      cashier: ["sales"],
-    }
-
-    const userPermissions = rolePermissions[req.user.role] || []
-    const hasPermission = userPermissions.includes("all") || userPermissions.includes(permission)
-
-    if (!hasPermission) {
-      return res.status(403).json({ error: "Permisos insuficientes" })
-    }
-
-    next()
-  }
-}
-
 module.exports = {
   authenticateToken,
-  requireRole,
-  requirePermission,
+  authorize,
 }

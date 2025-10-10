@@ -1,10 +1,11 @@
 const express = require("express")
-const { authenticateToken } = require("../middleware/auth")
+const { authenticateToken, authorize } = require("../middleware/auth")
 const categoriesController = require("../controllers/categoriesController")
 
 const router = express.Router()
 
 router.use(authenticateToken)
+router.use(authorize(["administrador", "dev"]))
 
 router.get("/", categoriesController.getAll)
 router.post("/", categoriesController.create)
