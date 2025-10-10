@@ -176,6 +176,40 @@ class CashReconciliationService {
 
     return report
   }
+
+  /**
+   * Genera un reporte detallado de ventas para un arqueo específico.
+   * @param {number} reconciliationId - El ID del arqueo.
+   * @returns {Promise<object>}
+   */
+  async getDailySalesReport(reconciliationId) {
+    const reconciliation = await CashReconciliation.findByPk(reconciliationId, {
+      include: [{ model: User, as: "user", attributes: ["username"] }],
+    })
+
+    if (!reconciliation) {
+      throw new Error("Arqueo de caja no encontrado.")
+    }
+
+    const sales = await Sale.findAll({
+      where: {
+        sale_date: {
+          [Op.between]: [reconciliation.openingDate, new Date()],
+        },
+        status: "completada",
+      },
+      include: [{ model: User, as: "user", attributes: ["username"] }],
+      order: [["sale_date", "ASC"]],
+    })
+
+    const summary = await this.calculateSalesData(reconciliation.openingDate, new Date())
+
+    return {
+      reconciliation,
+      sales,
+      summary,
+    }
+  }
 }
 
 module.exports = new CashReconciliationService()

@@ -40,6 +40,14 @@ const cashReconciliationService = {
     const query = new URLSearchParams({ startDate, endDate }).toString()
     return api.get(`/cash-reconciliation/report?${query}`)
   },
+
+  /**
+   * Obtiene el reporte detallado de ventas para un arqueo específico.
+   * @param {number} id - El ID del arqueo.
+   */
+  getDailyReport(id) {
+    return api.get(`/cash-reconciliation/${id}/report`)
+  },
 }
 
 export default cashReconciliationService
