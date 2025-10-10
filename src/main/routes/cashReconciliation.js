@@ -19,4 +19,7 @@ router.get("/report", CashReconciliationController.getReport)
 // PUT /api/cash-reconciliation/:id/close - Cerrar la caja
 router.put("/:id/close", CashReconciliationController.close)
 
+// GET /api/cash-reconciliation/:id/report - Obtener el reporte de ventas del día para un arqueo
+router.get("/:id/report", CashReconciliationController.getReportById)
+
 module.exports = router

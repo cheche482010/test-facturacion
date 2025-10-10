@@ -11,6 +11,7 @@ export const useCashReconciliationStore = defineStore('cashReconciliation', () =
   const isReportLoading = ref(false)
   const error = ref(null)
   const reportError = ref(null)
+  const dailyReport = ref(null)
 
   // --- HELPERS ---
   const formatDate = (date) => date.toISOString().split('T')[0]
@@ -35,6 +36,18 @@ export const useCashReconciliationStore = defineStore('cashReconciliation', () =
       }
     } finally {
       isLoading.value = false
+    }
+  }
+
+  async function fetchDailyReport(reconciliationId) {
+    isReportLoading.value = true
+    reportError.value = null
+    try {
+      dailyReport.value = await cashReconciliationService.getDailyReport(reconciliationId)
+    } catch (e) {
+      reportError.value = e.message
+    } finally {
+      isReportLoading.value = false
     }
   }
 
@@ -128,6 +141,7 @@ export const useCashReconciliationStore = defineStore('cashReconciliation', () =
     todayReconciliation,
     weeklyReport,
     monthlyReport,
+    dailyReport,
     isLoading,
     isReportLoading,
     error,
@@ -137,5 +151,6 @@ export const useCashReconciliationStore = defineStore('cashReconciliation', () =
     closeReconciliation,
     fetchWeeklyReport,
     fetchMonthlyReport,
+    fetchDailyReport,
   }
 })

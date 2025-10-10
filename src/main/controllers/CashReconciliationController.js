@@ -44,6 +44,16 @@ class CashReconciliationController {
       res.status(500).json({ message: "Error closing reconciliation", error: error.message })
     }
   }
+
+  async getReportById(req, res) {
+    try {
+      const { id } = req.params
+      const report = await CashReconciliationService.getDailySalesReport(id)
+      res.json(report)
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching daily sales report", error: error.message })
+    }
+  }
 }
 
 module.exports = new CashReconciliationController()
