@@ -5,6 +5,7 @@ const Sale = require("./Sale")
 const SaleItem = require("./SaleItem")
 const InventoryMovement = require("./InventoryMovement")
 const Settings = require("./Settings")
+const CashReconciliation = require("./CashReconciliation")
 
 // Definir relaciones
 // Product relationships
@@ -27,6 +28,10 @@ InventoryMovement.belongsTo(User, { foreignKey: "userId", as: "user" })
 Product.hasMany(InventoryMovement, { foreignKey: "productId", as: "movements" })
 User.hasMany(InventoryMovement, { foreignKey: "userId", as: "movements" })
 
+// CashReconciliation relationships
+CashReconciliation.belongsTo(User, { foreignKey: "userId", as: "user" })
+User.hasMany(CashReconciliation, { foreignKey: "userId", as: "cashReconciliations" })
+
 module.exports = {
   User,
   Category,
@@ -35,4 +40,5 @@ module.exports = {
   SaleItem,
   InventoryMovement,
   Settings,
+  CashReconciliation,
 }
