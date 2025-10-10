@@ -139,6 +139,10 @@
                                                 label="Intervalo de respaldo (horas)" type="number"
                                                 :disabled="!settings.autoBackup"></v-text-field>
                                         </v-col>
+                                        <v-col cols="12" md="6">
+                                            <v-text-field v-model="settings.openingTime" label="Hora de apertura"
+                                                type="time" hint="Usado para el arqueo diario"></v-text-field>
+                                        </v-col>
                                         <v-col cols="12">
                                             <v-btn color="primary" @click="createBackup">
                                                 <v-icon left>mdi-backup-restore</v-icon>

@@ -12,5 +12,6 @@ router.get("/products", requirePermission("reports"), reportsController.getProdu
 router.get("/inventory", requirePermission("reports"), reportsController.getInventoryReport)
 router.get("/financial", requirePermission("reports"), reportsController.getFinancialReport)
 router.get("/users", requirePermission("reports"), reportsController.getUsersReport)
+router.get("/cash-count", requirePermission("reports"), reportsController.getCashCount)
 
 module.exports = router

@@ -1,5 +1,5 @@
 const { Op } = require("sequelize")
-const { Sale, SaleItem, Product, User } = require("../database/models")
+const { Sale, SaleItem, Product, User, Settings } = require("../database/models")
 const { sequelize } = require("../database/connection")
 
 const reportsController = {
@@ -321,6 +321,114 @@ const reportsController = {
 
       res.json(userActivity)
     } catch (error) {
+      res.status(500).json({ error: error.message })
+    }
+  },
+
+  async getCashCount(req, res) {
+    try {
+      const { date } = req.query
+
+      // Obtener hora de apertura desde Settings
+      const openingSetting = await Settings.findOne({ where: { key: "openingTime" } })
+      const openingTime = (openingSetting?.value || "08:00").toString()
+
+      const [openHour, openMinute] = openingTime.split(":").map((v) => Number.parseInt(v, 10))
+      const target = date ? new Date(date) : new Date()
+
+      // Rango de día del arqueo basado en hora de apertura
+      const dayStart = new Date(
+        target.getFullYear(),
+        target.getMonth(),
+        target.getDate(),
+        Number.isFinite(openHour) ? openHour : 8,
+        Number.isFinite(openMinute) ? openMinute : 0,
+        0,
+        0,
+      )
+      const dayEnd = new Date(dayStart)
+      dayEnd.setDate(dayEnd.getDate() + 1)
+
+      const whereDay = {
+        sale_date: { [Op.between]: [dayStart, dayEnd] },
+        status: "completada",
+      }
+
+      // Totales del día
+      const dayTotalsRow = await Sale.findOne({
+        where: whereDay,
+        attributes: [
+          [sequelize.fn("SUM", sequelize.col("subtotal")), "subtotal"],
+          [sequelize.fn("SUM", sequelize.col("tax_amount")), "tax"],
+          [sequelize.fn("SUM", sequelize.col("total")), "total"],
+          [sequelize.fn("COUNT", sequelize.col("id")), "count"],
+        ],
+        raw: true,
+      })
+
+      const payments = await Sale.findAll({
+        where: whereDay,
+        attributes: [
+          "payment_method",
+          [sequelize.fn("COUNT", sequelize.col("id")), "count"],
+          [sequelize.fn("SUM", sequelize.col("total")), "total"],
+        ],
+        group: ["payment_method"],
+        raw: true,
+      })
+
+      const sales = await Sale.findAll({
+        where: whereDay,
+        attributes: ["id", "sale_number", "total", "payment_method", "sale_date", "status"],
+        order: [["sale_date", "ASC"]],
+        raw: true,
+      })
+
+      // Semana a la fecha (basado en lunes como inicio de semana)
+      const dayOfWeek = (dayStart.getDay() + 6) % 7 // 0 = lunes
+      const weekStartDate = new Date(dayStart)
+      weekStartDate.setDate(weekStartDate.getDate() - dayOfWeek)
+      weekStartDate.setHours(Number.isFinite(openHour) ? openHour : 8, Number.isFinite(openMinute) ? openMinute : 0, 0, 0)
+
+      const weekTotalsRow = await Sale.findOne({
+        where: {
+          sale_date: { [Op.between]: [weekStartDate, dayEnd] },
+          status: "completada",
+        },
+        attributes: [[sequelize.fn("SUM", sequelize.col("total")), "total"]],
+        raw: true,
+      })
+
+      // Mes a la fecha
+      const monthStartDate = new Date(dayStart.getFullYear(), dayStart.getMonth(), 1, Number.isFinite(openHour) ? openHour : 8, Number.isFinite(openMinute) ? openMinute : 0, 0, 0)
+      const monthTotalsRow = await Sale.findOne({
+        where: {
+          sale_date: { [Op.between]: [monthStartDate, dayEnd] },
+          status: "completada",
+        },
+        attributes: [[sequelize.fn("SUM", sequelize.col("total")), "total"]],
+        raw: true,
+      })
+
+      res.json({
+        range: { start: dayStart, end: dayEnd, openingTime },
+        totals: {
+          subtotal: Number.parseFloat(dayTotalsRow?.subtotal || 0),
+          tax: Number.parseFloat(dayTotalsRow?.tax || 0),
+          total: Number.parseFloat(dayTotalsRow?.total || 0),
+          count: Number.parseInt(dayTotalsRow?.count || 0, 10),
+        },
+        byPaymentMethod: payments.map((p) => ({
+          paymentMethod: p.payment_method,
+          count: Number.parseInt(p.count || 0, 10),
+          total: Number.parseFloat(p.total || 0),
+        })),
+        sales,
+        weekToDateTotal: Number.parseFloat(weekTotalsRow?.total || 0),
+        monthToDateTotal: Number.parseFloat(monthTotalsRow?.total || 0),
+      })
+    } catch (error) {
+      console.error("Error fetching cash count:", error)
       res.status(500).json({ error: error.message })
     }
   }
