@@ -81,6 +81,13 @@ const seedDefaultData = async () => {
           category: "system",
           description: "Tasa de IVA por defecto",
         },
+        {
+          key: "business_opening_time",
+          value: "09:00",
+          dataType: "string",
+          category: "system",
+          description: "Hora de apertura del negocio (HH:mm)",
+        },
       ]
 
       await Settings.bulkCreate(defaultSettings)
