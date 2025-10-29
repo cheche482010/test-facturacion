@@ -2,6 +2,7 @@ import { ref, computed, onMounted } from 'vue'
 import ProductDialog from '../../components/products/ProductDialog/ProductDialog.vue'
 import { useProductStore } from '../../stores/products'
 import { useCategoryStore } from '../../stores/categories'
+import { useAuthStore } from '../../stores/auth'
 import { formatCurrency } from '@/utils/formatters'
 
 export default {
@@ -11,6 +12,7 @@ export default {
   setup() {
     const productStore = useProductStore()
     const categoryStore = useCategoryStore()
+    const authStore = useAuthStore()
 
     const loading = ref(false)
     const search = ref('')
@@ -21,9 +23,13 @@ export default {
     const deleteDialog = ref(false)
     const barcodeDialog = ref(false)
     const imageDialog = ref(false)
+    const productDetailsDialog = ref(false)
     const selectedProduct = ref(null)
     const productToDelete = ref(null)
     const selectedProductImage = ref(null)
+    const selectedProductForDetails = ref(null)
+
+    const isCajero = computed(() => authStore.user?.role === 'cajero')
 
     const statusOptions = [
       { title: 'Todos', value: null },
@@ -203,6 +209,11 @@ export default {
       }
     }
 
+    const showProductDetails = (product) => {
+      selectedProductForDetails.value = product
+      productDetailsDialog.value = true
+    }
+
     return {
       loading,
       search,
@@ -213,9 +224,11 @@ export default {
       deleteDialog,
       barcodeDialog,
       imageDialog,
+      productDetailsDialog,
       selectedProduct,
       productToDelete,
       selectedProductImage,
+      selectedProductForDetails,
       statusOptions,
       headers,
       products,
@@ -234,6 +247,8 @@ export default {
       getStatusText,
       formatCurrency,
       showImage,
+      showProductDetails,
+      isCajero,
     }
   },
 }

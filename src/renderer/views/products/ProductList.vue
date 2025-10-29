@@ -3,10 +3,10 @@
     <!-- Header -->
     <div class="d-flex justify-space-between align-center mb-4">
       <div>
-        <h1 class="text-h5 font-weight-bold">Gestión de Productos</h1>
-        <p class="text-medium-emphasis">Administra tu catálogo de productos y controla el inventario</p>
+        <h1 class="text-h5 font-weight-bold">{{ isCajero ? 'Consulta de Productos' : 'Gestión de Productos' }}</h1>
+        <p class="text-medium-emphasis">{{ isCajero ? 'Consulta el catálogo de productos' : 'Administra tu catálogo de productos y controla el inventario' }}</p>
       </div>
-      <v-btn color="primary" prepend-icon="mdi-plus" @click="openProductDialog()">
+      <v-btn v-if="!isCajero" color="primary" prepend-icon="mdi-plus" @click="openProductDialog()">
         Nuevo Producto
       </v-btn>
     </div>
@@ -105,8 +105,9 @@
         </template>
 
         <template v-slot:item.actions="{ item }">
-          <v-btn icon="mdi-pencil" size="x-small" variant="text" @click="openProductDialog(item)"></v-btn>
-          <v-btn icon="mdi-delete" size="x-small" variant="text" color="error" @click="confirmDelete(item)"></v-btn>
+          <v-btn v-if="!isCajero" icon="mdi-pencil" size="x-small" variant="text" @click="openProductDialog(item)"></v-btn>
+          <v-btn v-if="!isCajero" icon="mdi-delete" size="x-small" variant="text" color="error" @click="confirmDelete(item)"></v-btn>
+          <v-btn v-if="isCajero" icon="mdi-eye" size="x-small" variant="text" color="primary" @click="showProductDetails(item)">Ver Detalles</v-btn>
         </template>
       </v-data-table>
     </v-card>
@@ -159,6 +160,73 @@
         <v-card-actions>
           <v-spacer />
           <v-btn @click="imageDialog = false">Cerrar</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Dialog para mostrar detalles del producto (solo para cajeros) -->
+    <v-dialog v-model="productDetailsDialog" max-width="800">
+      <v-card>
+        <v-card-title class="d-flex justify-space-between">
+          <span>Detalles del Producto</span>
+          <v-btn icon="mdi-close" variant="text" @click="productDetailsDialog = false"></v-btn>
+        </v-card-title>
+        <v-card-text v-if="selectedProductForDetails">
+          <v-row>
+            <v-col cols="12" md="4" class="text-center">
+              <v-avatar
+                size="150"
+                rounded="sm"
+                :color="selectedProductForDetails.image ? 'transparent' : 'grey-lighten-2'"
+              >
+                <v-img
+                  v-if="selectedProductForDetails.image"
+                  :src="`http://localhost:3001${selectedProductForDetails.image}`"
+                  cover
+                />
+                <v-icon v-else icon="mdi-camera-off" size="64" />
+              </v-avatar>
+            </v-col>
+            <v-col cols="12" md="8">
+              <v-row>
+                <v-col cols="12">
+                  <h2 class="text-h5">{{ selectedProductForDetails.name }}</h2>
+                  <p class="text-medium-emphasis">{{ selectedProductForDetails.brand }}</p>
+                </v-col>
+                <v-col cols="6">
+                  <v-list-item :title="selectedProductForDetails.internalCode" subtitle="Código Interno"></v-list-item>
+                </v-col>
+                <v-col cols="6">
+                  <v-list-item :title="selectedProductForDetails.barcode || 'N/A'" subtitle="Código de Barras"></v-list-item>
+                </v-col>
+                <v-col cols="6">
+                  <v-list-item :title="selectedProductForDetails.categoryName" subtitle="Categoría"></v-list-item>
+                </v-col>
+                <v-col cols="6">
+                  <v-list-item :title="getStatusText(selectedProductForDetails.status)" subtitle="Estado"></v-list-item>
+                </v-col>
+                <v-col cols="6">
+                  <v-list-item :title="selectedProductForDetails.currentStock" subtitle="Stock Actual"></v-list-item>
+                </v-col>
+                <v-col cols="6">
+                  <v-list-item :title="selectedProductForDetails.minStock" subtitle="Stock Mínimo"></v-list-item>
+                </v-col>
+                <v-col cols="6">
+                  <v-list-item :title="formatCurrency(selectedProductForDetails.costPrice)" subtitle="Precio Costo"></v-list-item>
+                </v-col>
+                <v-col cols="6">
+                  <v-list-item :title="formatCurrency(selectedProductForDetails.retailPrice)" subtitle="Precio Venta"></v-list-item>
+                </v-col>
+                <v-col cols="12">
+                  <v-list-item :title="selectedProductForDetails.description || 'Sin descripción'" subtitle="Descripción"></v-list-item>
+                </v-col>
+              </v-row>
+            </v-col>
+          </v-row>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn @click="productDetailsDialog = false">Cerrar</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
