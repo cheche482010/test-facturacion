@@ -5,9 +5,14 @@ const usersController = {
     try {
       const users = await User.findAll({
         attributes: { exclude: ["password"] },
-        order: [["createdAt", "DESC"]],
+        order: [["id", "DESC"]],
       })
-      res.json({ users })
+      // Transformar isActive a status para compatibilidad con frontend
+      const transformedUsers = users.map(user => ({
+        ...user.toJSON(),
+        status: user.isActive ? 'active' : 'inactive'
+      }))
+      res.json({ users: transformedUsers })
     } catch (error) {
       res.status(500).json({ error: error.message })
     }
@@ -33,6 +38,8 @@ const usersController = {
 
       const userResponse = user.toJSON()
       delete userResponse.password
+      // Agregar status para compatibilidad
+      userResponse.status = userResponse.isActive ? 'active' : 'inactive'
 
       res.status(201).json({ user: userResponse })
     } catch (error) {
@@ -66,6 +73,8 @@ const usersController = {
 
       const userResponse = user.toJSON()
       delete userResponse.password
+      // Agregar status para compatibilidad
+      userResponse.status = userResponse.isActive ? 'active' : 'inactive'
 
       res.json({ user: userResponse })
     } catch (error) {

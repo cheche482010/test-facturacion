@@ -59,6 +59,11 @@ const routes = [
         name: "CashReconciliation",
         component: () => import("@/views/cash-reconciliation/CashReconciliationView.vue"),
       },
+      {
+        path: "users",
+        name: "Users",
+        component: () => import("@/views/users/UserManagement.vue"),
+      },
     ],
   },
 ]
@@ -89,7 +94,8 @@ router.beforeEach(async (to, from, next) => {
             reports: 'reports',
             'cash-count': 'cash_reconciliation',
             settings: 'settings',
-            'cash-reconciliation': 'cash_reconciliation'
+            'cash-reconciliation': 'cash_reconciliation',
+            users: 'users'
           }
 
           const requiredPermission = routePermissions[to.path.replace('/', '')]
@@ -122,7 +128,8 @@ router.beforeEach(async (to, from, next) => {
       reports: 'reports',
       'cash-count': 'cash_reconciliation',
       settings: 'settings',
-      'cash-reconciliation': 'cash_reconciliation'
+      'cash-reconciliation': 'cash_reconciliation',
+      users: 'users'
     }
 
     const requiredPermission = routePermissions[to.path.replace('/', '')]

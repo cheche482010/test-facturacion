@@ -4,9 +4,9 @@ const usersController = require("../controllers/usersController")
 
 const router = express.Router()
 
-router.get("/", authenticateToken, requireRole("administrador"), usersController.getAll)
-router.post("/", authenticateToken, requireRole("administrador"), usersController.create)
-router.put("/:id", authenticateToken, requireRole("administrador"), usersController.update)
-router.delete("/:id", authenticateToken, requireRole("administrador"), usersController.delete)
+router.get("/", authenticateToken, requireRole("dev"), usersController.getAll)
+router.post("/", authenticateToken, requireRole("dev"), usersController.create)
+router.put("/:id", authenticateToken, requireRole("dev"), usersController.update)
+router.delete("/:id", authenticateToken, requireRole("dev"), usersController.delete)
 
 module.exports = router

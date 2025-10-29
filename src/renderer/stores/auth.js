@@ -24,6 +24,10 @@ export const useAuthStore = defineStore("auth", {
       const userPermissions = rolePermissions[state.user?.role] || []
       return userPermissions.includes("all") || userPermissions.includes(permission)
     },
+
+    hasRole: (state) => (role) => {
+      return state.user?.role === role
+    },
   },
 
   actions: {

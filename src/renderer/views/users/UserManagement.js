@@ -9,13 +9,19 @@ export default {
       loading: false,
       saving: false,
       userDialog: false,
+      deleteDialog: false,
       userFormValid: false,
       editingUser: null,
+      userToDelete: null,
+      selectedRole: null,
+      selectedStatus: null,
       userForm: {
         username: '',
-        fullName: '',
-        role: 'cashier',
-        status: 'active',
+        firstName: '',
+        lastName: '',
+        email: '',
+        role: 'cajero',
+        isActive: true,
         password: ''
       },
       headers: [
@@ -27,11 +33,16 @@ export default {
         { text: 'Acciones', value: 'actions', sortable: false }
       ],
       roleOptions: [
-        { text: 'Administrador', value: 'admin' },
-        { text: 'Cajero', value: 'cashier' },
-        { text: 'Supervisor', value: 'supervisor' }
+        { text: 'Cajero', value: 'cajero' },
+        { text: 'Administrador', value: 'administrador' },
+        { text: 'Dev', value: 'dev' }
       ],
       statusOptions: [
+        { text: 'Activo', value: true },
+        { text: 'Inactivo', value: false }
+      ],
+      statusFilterOptions: [
+        { text: 'Todos', value: null },
         { text: 'Activo', value: 'active' },
         { text: 'Inactivo', value: 'inactive' }
       ],
@@ -40,7 +51,12 @@ export default {
         v => v.length >= 3 || 'Mínimo 3 caracteres'
       ],
       nameRules: [
-        v => !!v || 'El nombre es requerido'
+        v => !!v || 'Este campo es requerido',
+        v => v.length >= 2 || 'Mínimo 2 caracteres'
+      ],
+      emailRules: [
+        v => !!v || 'El email es requerido',
+        v => /.+@.+\..+/.test(v) || 'Email inválido'
       ],
       roleRules: [
         v => !!v || 'El rol es requerido'
@@ -59,6 +75,36 @@ export default {
   computed: {
     users() {
       return this.usersStore.users
+    },
+
+    filteredUsers() {
+      let filtered = this.users
+
+      if (this.selectedRole) {
+        filtered = filtered.filter(user => user.role === this.selectedRole)
+      }
+
+      if (this.selectedStatus) {
+        filtered = filtered.filter(user => user.status === this.selectedStatus)
+      }
+
+      return filtered
+    },
+
+    totalUsers() {
+      return this.users.length
+    },
+
+    activeUsers() {
+      return this.users.filter(user => user.status === 'active').length
+    },
+
+    inactiveUsers() {
+      return this.users.filter(user => user.status === 'inactive').length
+    },
+
+    devUsers() {
+      return this.users.filter(user => user.role === 'dev').length
     }
   },
   async mounted() {
@@ -79,13 +125,23 @@ export default {
     openUserDialog(user = null) {
       this.editingUser = user
       if (user) {
-        this.userForm = { ...user, password: '' }
+        this.userForm = {
+          username: user.username,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          role: user.role,
+          isActive: user.status === 'active',
+          password: ''
+        }
       } else {
         this.userForm = {
           username: '',
-          fullName: '',
-          role: 'cashier',
-          status: 'active',
+          firstName: '',
+          lastName: '',
+          email: '',
+          role: 'cajero',
+          isActive: true,
           password: ''
         }
       }
@@ -96,6 +152,39 @@ export default {
       this.userDialog = false
       this.editingUser = null
       this.$refs.userForm?.resetValidation()
+    },
+
+    confirmDelete(user) {
+      this.userToDelete = user
+      this.deleteDialog = true
+    },
+
+    async deleteUser() {
+      try {
+        await this.usersStore.deleteUser(this.userToDelete.id)
+        this.$toast.success('Usuario eliminado exitosamente')
+        this.deleteDialog = false
+        this.userToDelete = null
+      } catch (error) {
+        this.$toast.error('Error al eliminar usuario')
+      }
+    },
+
+    clearFilters() {
+      this.selectedRole = null
+      this.selectedStatus = null
+      this.search = ''
+    },
+
+    formatDate(dateString) {
+      if (!dateString) return 'Nunca'
+      return new Date(dateString).toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
     },
     
     async saveUser() {
@@ -120,9 +209,9 @@ export default {
     
     async toggleUserStatus(user) {
       try {
-        const newStatus = user.status === 'active' ? 'inactive' : 'active'
-        await this.usersStore.updateUser(user.id, { status: newStatus })
-        this.$toast.success(`Usuario ${newStatus === 'active' ? 'activado' : 'desactivado'}`)
+        const newStatus = user.isActive ? false : true
+        await this.usersStore.updateUser(user.id, { isActive: newStatus })
+        this.$toast.success(`Usuario ${newStatus ? 'activado' : 'desactivado'}`)
       } catch (error) {
         this.$toast.error('Error al cambiar estado del usuario')
       }
@@ -130,18 +219,18 @@ export default {
     
     getRoleColor(role) {
       const colors = {
-        admin: 'red',
-        supervisor: 'orange',
-        cashier: 'blue'
+        cajero: 'blue',
+        administrador: 'red',
+        dev: 'purple'
       }
       return colors[role] || 'grey'
     },
-    
+
     getRoleLabel(role) {
       const labels = {
-        admin: 'Administrador',
-        supervisor: 'Supervisor',
-        cashier: 'Cajero'
+        cajero: 'Cajero',
+        administrador: 'Administrador',
+        dev: 'Dev'
       }
       return labels[role] || role
     }
