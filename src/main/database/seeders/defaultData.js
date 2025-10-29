@@ -3,7 +3,7 @@ const { sequelize } = require("../connection")
 
 const seedDefaultData = async () => {
   try {
-    // Crear usuario administrador por defecto
+    // Crear usuarios por defecto
     const adminExists = await User.findOne({ where: { username: "admin" } })
     if (!adminExists) {
       await User.create({
@@ -12,9 +12,35 @@ const seedDefaultData = async () => {
         password: "admin123",
         firstName: "Administrador",
         lastName: "Sistema",
-        role: "admin",
+        role: "administrador",
       })
       console.log("   -> Usuario administrador creado.")
+    }
+
+    const cajeroExists = await User.findOne({ where: { username: "cajero" } })
+    if (!cajeroExists) {
+      await User.create({
+        username: "cajero",
+        email: "cajero@sistema.com",
+        password: "cajero123",
+        firstName: "Cajero",
+        lastName: "Sistema",
+        role: "cajero",
+      })
+      console.log("   -> Usuario cajero creado.")
+    }
+
+    const devExists = await User.findOne({ where: { username: "dev" } })
+    if (!devExists) {
+      await User.create({
+        username: "dev",
+        email: "dev@sistema.com",
+        password: "dev123",
+        firstName: "Desarrollador",
+        lastName: "Sistema",
+        role: "dev",
+      })
+      console.log("   -> Usuario dev creado.")
     }
 
     // Crear categorías por defecto

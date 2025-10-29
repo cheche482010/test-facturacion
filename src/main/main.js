@@ -4,7 +4,10 @@ const fs = require("fs")
 // Explicitly specify the path to the .env file for robustness
 require("dotenv").config({ path: path.resolve(__dirname, "../../.env") })
 const isDev = process.env.NODE_ENV === "development"
-app.disableHardwareAcceleration()
+
+if (app && typeof app.disableHardwareAcceleration === 'function') {
+  app.disableHardwareAcceleration()
+}
 
 // Importar el servidor Express
 const { startServer } = require("./server")
@@ -114,46 +117,52 @@ function createMenu() {
   Menu.setApplicationMenu(menu)
 }
 
-app.whenReady().then(async () => {
-  // Iniciar servidor Express
-  // --- INICIO: Crear directorio de subidas ---
-  const uploadsDir = path.join(app.getPath("userData"), "uploads", "products")
-  if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true })
-    console.log(`Directorio de subidas creado en: ${uploadsDir}`)
-  }
-  // --- FIN: Crear directorio de subidas ---
+if (app && typeof app.whenReady === 'function') {
+  app.whenReady().then(async () => {
+    // Iniciar servidor Express
+    // --- INICIO: Crear directorio de subidas ---
+    const uploadsDir = path.join(app.getPath("userData"), "uploads", "products")
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true })
+      console.log(`Directorio de subidas creado en: ${uploadsDir}`)
+    }
+    // --- FIN: Crear directorio de subidas ---
 
-  await startServer()
+    await startServer()
 
-  // Actualizar la tasa de cambio al inicio y luego periódicamente
-  await currencyController.updateExchangeRate()
-  setInterval(currencyController.updateExchangeRate, 6 * 60 * 60 * 1000) // Cada 6 horas
+    // Actualizar la tasa de cambio al inicio y luego periódicamente
+    await currencyController.updateExchangeRate()
+    setInterval(currencyController.updateExchangeRate, 6 * 60 * 60 * 1000) // Cada 6 horas
 
-  createWindow()
-  createMenu()
+    createWindow()
+    createMenu()
 
-  app.on("activate", () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow()
+    app.on("activate", () => {
+      if (BrowserWindow.getAllWindows().length === 0) {
+        createWindow()
+      }
+    })
+  })
+}
+
+if (app && typeof app.on === 'function') {
+  app.on("window-all-closed", () => {
+    if (process.platform !== "darwin") {
+      app.quit()
     }
   })
-})
-
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
-    app.quit()
-  }
-})
+}
 
 // IPC handlers
-ipcMain.handle("get-app-version", () => {
-  return app.getVersion()
-})
+if (ipcMain && typeof ipcMain.handle === 'function') {
+  ipcMain.handle("get-app-version", () => {
+    return app.getVersion()
+  })
 
-ipcMain.handle("get-app-path", () => {
-  return app.getAppPath()
-})
+  ipcMain.handle("get-app-path", () => {
+    return app.getAppPath()
+  })
+}
 
 // Import other IPC handlers
 require("./routes/settings")

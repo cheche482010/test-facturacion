@@ -6,7 +6,7 @@
         <h1 class="text-h5 font-weight-bold">Dashboard</h1>
         <p class="text-medium-emphasis">{{ formattedDate }}</p>
       </div>
-      <v-btn color="primary" prepend-icon="mdi-plus" to="/sales/new">
+      <v-btn v-if="authStore.hasPermission('sales')" color="primary" prepend-icon="mdi-plus" to="/sales/new">
         Nueva Venta
       </v-btn>
     </div>

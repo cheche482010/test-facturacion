@@ -1,6 +1,7 @@
 const { CashReconciliation, Sale, Settings, User } = require("../database/models")
 const { Op } = require("sequelize")
 const { sequelize } = require("../database/connection")
+const bcrypt = require("bcryptjs")
 
 class CashReconciliationService {
   /**
@@ -209,6 +210,27 @@ class CashReconciliationService {
       sales,
       summary,
     }
+  }
+
+  /**
+   * Verifica la contraseña de administrador para cierres de caja.
+   * @param {string} password - Contraseña a verificar.
+   * @returns {Promise<boolean>} True si la contraseña es correcta.
+   */
+  async verifyAdminPassword(password) {
+    // Buscar usuario administrador (asumiendo que hay uno con rol 'administrador')
+    const adminUser = await User.findOne({
+      where: {
+        role: "administrador",
+        isActive: true
+      }
+    })
+
+    if (!adminUser) {
+      return false
+    }
+
+    return await bcrypt.compare(password, adminUser.password)
   }
 }
 

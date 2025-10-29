@@ -37,7 +37,22 @@ class CashReconciliationController {
   async close(req, res) {
     try {
       const { id } = req.params
-      const { closingBalance, notes } = req.body
+      const { closingBalance, notes, adminPassword } = req.body
+      const userRole = req.user.role
+
+      // If user is cajero, require admin password for closure
+      if (userRole === "cajero") {
+        if (!adminPassword) {
+          return res.status(400).json({ message: "Se requiere contraseña de administrador para cerrar caja" })
+        }
+
+        // Verify admin password (this would need to be implemented in the service)
+        const isValidAdminPassword = await CashReconciliationService.verifyAdminPassword(adminPassword)
+        if (!isValidAdminPassword) {
+          return res.status(403).json({ message: "Contraseña de administrador incorrecta" })
+        }
+      }
+
       const reconciliation = await CashReconciliationService.closeReconciliation(id, closingBalance, notes)
       res.json(reconciliation)
     } catch (error) {

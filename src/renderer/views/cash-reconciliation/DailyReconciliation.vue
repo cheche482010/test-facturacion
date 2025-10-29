@@ -103,6 +103,54 @@
       </div>
 
       <!-- Report Preview Dialog -->
+        <!-- Admin Password Dialog for Cajeros -->
+        <v-dialog v-model="showAdminPasswordDialog" persistent max-width="400px">
+            <v-card>
+                <v-card-title>Confirmar Cierre de Caja</v-card-title>
+                <v-card-text>
+                    <p class="mb-4">Como cajero, necesitas la contraseña de un administrador para cerrar la caja.</p>
+                    <v-text-field
+                        v-model="adminPassword"
+                        label="Contraseña de Administrador"
+                        type="password"
+                        variant="outlined"
+                        autofocus
+                        :error-messages="adminPasswordError"
+                    ></v-text-field>
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn text @click="showAdminPasswordDialog = false">Cancelar</v-btn>
+                    <v-btn color="primary" @click="confirmCloseWithAdminPassword" :loading="isLoading">
+                        Confirmar
+                    </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+
+        <!-- Confirmation Dialog for Admin/Dev -->
+        <v-dialog v-model="showConfirmationDialog" persistent max-width="400px">
+            <v-card>
+                <v-card-title>Confirmar Cierre de Caja</v-card-title>
+                <v-card-text>
+                    <p>¿Estás seguro de que deseas cerrar la caja con estos datos?</p>
+                    <v-list dense>
+                        <v-list-item :title="formatCurrency(closeForm.closingBalance)" subtitle="Saldo Final"></v-list-item>
+                        <v-list-item :title="formatCurrency(expectedBalance)" subtitle="Saldo Esperado"></v-list-item>
+                        <v-list-item :title="formatCurrency(closeForm.closingBalance - expectedBalance)" subtitle="Diferencia"></v-list-item>
+                    </v-list>
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn text @click="showConfirmationDialog = false">Cancelar</v-btn>
+                    <v-btn color="primary" @click="confirmClose" :loading="isLoading">
+                        Confirmar e Imprimir
+                    </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+
+        <!-- Report Preview Dialog -->
         <v-dialog v-model="showReportDialog" persistent max-width="800px">
             <v-card v-if="dailyReport">
                 <v-card-title class="d-flex justify-space-between">
@@ -145,7 +193,7 @@
                 <v-card-actions>
                     <v-spacer></v-spacer>
                     <v-btn text @click="showReportDialog = false">Cancelar</v-btn>
-                    <v-btn color="primary" @click="confirmAndPrint" :loading="isLoading">
+                    <v-btn color="primary" @click="handleConfirmAndPrint" :loading="isLoading">
                         Confirmar e Imprimir
                     </v-btn>
                 </v-card-actions>
@@ -169,6 +217,10 @@ const { todayReconciliation: reconciliation, dailyReport, isLoading, isReportLoa
 const openForm = ref({ openingBalance: 0, notes: '' })
 const closeForm = ref({ closingBalance: 0, notes: '' })
 const showReportDialog = ref(false)
+const showAdminPasswordDialog = ref(false)
+const showConfirmationDialog = ref(false)
+const adminPassword = ref('')
+const adminPasswordError = ref('')
 
 // --- Computed ---
 const expectedBalance = computed(() => {
@@ -195,6 +247,55 @@ const initiateClose = async () => {
   await store.fetchDailyReport(reconciliation.value.id);
   if (store.dailyReport) {
     showReportDialog.value = true;
+  }
+}
+
+const handleConfirmAndPrint = async () => {
+  // Import auth store to check user role
+  const { useAuthStore } = await import('@/stores/auth')
+  const authStore = useAuthStore()
+
+  if (authStore.user.role === 'cajero') {
+    // For cajeros, show admin password dialog
+    showReportDialog.value = false
+    showAdminPasswordDialog.value = true
+  } else {
+    // For admin/dev, show confirmation dialog
+    showReportDialog.value = false
+    showConfirmationDialog.value = true
+  }
+}
+
+const confirmCloseWithAdminPassword = async () => {
+  if (!adminPassword.value.trim()) {
+    adminPasswordError.value = 'La contraseña es requerida'
+    return
+  }
+
+  adminPasswordError.value = ''
+
+  try {
+    const closeData = {
+      ...closeForm.value,
+      adminPassword: adminPassword.value
+    }
+    await store.closeReconciliation(closeData)
+    showAdminPasswordDialog.value = false
+    adminPassword.value = ''
+    closeForm.value = { closingBalance: 0, notes: '' }
+  } catch (e) {
+    console.error('Failed to close reconciliation:', e)
+    adminPasswordError.value = e.message || 'Error al cerrar la caja'
+  }
+}
+
+const confirmClose = async () => {
+  try {
+    await store.closeReconciliation(closeForm.value)
+    showConfirmationDialog.value = false
+    closeForm.value = { closingBalance: 0, notes: '' }
+  } catch (e) {
+    console.error('Failed to close reconciliation:', e)
   }
 }
 
@@ -239,13 +340,8 @@ const confirmAndPrint = async () => {
 
   console.log(reportText);
 
-  try {
-    await store.closeReconciliation(closeForm.value)
-    showReportDialog.value = false
-    closeForm.value = { closingBalance: 0, notes: '' }
-  } catch (e) {
-    console.error('Failed to close reconciliation:', e)
-  }
+  // This method is kept for backward compatibility but should not be called directly
+  await confirmClose()
 }
 
 // --- Lifecycle ---

@@ -69,19 +69,72 @@ const router = createRouter({
 })
 
 // Guardia de navegación global
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
   const requiresAuth = to.matched.some((record) => record.meta.requiresAuth)
 
   // Si la ruta requiere autenticación y el usuario no está autenticado
   if (requiresAuth && !authStore.isAuthenticated) {
-    // Redirigir al login
-    next({ name: "Login" })
+    // Verificar si hay un token y intentar autenticar
+    if (authStore.token) {
+      try {
+        await authStore.checkAuth()
+        // Si la autenticación fue exitosa, continuar con la verificación de permisos
+        if (authStore.isAuthenticated) {
+          const routePermissions = {
+            dashboard: 'dashboard',
+            'sales/new': 'sales',
+            products: 'products',
+            inventory: 'inventory',
+            reports: 'reports',
+            'cash-count': 'cash_reconciliation',
+            settings: 'settings',
+            'cash-reconciliation': 'cash_reconciliation'
+          }
+
+          const requiredPermission = routePermissions[to.path.replace('/', '')]
+          if (requiredPermission && !authStore.hasPermission(requiredPermission)) {
+            // Redirigir al dashboard si no tiene permisos
+            next({ name: "Dashboard" })
+            return
+          }
+          next()
+          return
+        }
+      } catch (error) {
+        // Si falla la autenticación, redirigir al login
+        next({ name: "Login" })
+        return
+      }
+    } else {
+      // No hay token, redirigir al login
+      next({ name: "Login" })
+      return
+    }
   }
+  // Si está autenticado, verificar permisos basados en la ruta
+  else if (requiresAuth && authStore.isAuthenticated) {
+    const routePermissions = {
+      dashboard: 'dashboard',
+      'sales/new': 'sales',
+      products: 'products',
+      inventory: 'inventory',
+      reports: 'reports',
+      'cash-count': 'cash_reconciliation',
+      settings: 'settings',
+      'cash-reconciliation': 'cash_reconciliation'
+    }
+
+    const requiredPermission = routePermissions[to.path.replace('/', '')]
+    if (requiredPermission && !authStore.hasPermission(requiredPermission)) {
+      // Redirigir al dashboard si no tiene permisos
+      next({ name: "Dashboard" })
+      return
+    }
+  }
+
   // En cualquier otro caso, permitir la navegación
-  else {
-    next()
-  }
+  next()
 })
 
 export default router

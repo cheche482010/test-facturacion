@@ -41,7 +41,18 @@ const requireRole = (roles) => {
   }
 }
 
-// Permission-based Authorization Middleware
+const requireAdminForCashClosure = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ error: "No autenticado" })
+  }
+
+  if (req.user.role === "cajero" && req.body.action === "close") {
+    return next()
+  }
+
+  next()
+}
+
 const requirePermission = (permission) => {
   return (req, res, next) => {
     if (!req.user) {
@@ -49,9 +60,9 @@ const requirePermission = (permission) => {
     }
 
     const rolePermissions = {
-      admin: ["all"],
-      supervisor: ["sales", "inventory", "reports", "products", "settings"],
-      cashier: ["sales"],
+      cajero: ["sales", "cash_reconciliation"],
+      administrador: ["dashboard", "sales", "products", "inventory", "reports", "settings", "cash_reconciliation"],
+      dev: ["all"],
     }
 
     const userPermissions = rolePermissions[req.user.role] || []
@@ -69,4 +80,5 @@ module.exports = {
   authenticateToken,
   requireRole,
   requirePermission,
+  requireAdminForCashClosure,
 }
