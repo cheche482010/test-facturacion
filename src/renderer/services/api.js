@@ -29,6 +29,13 @@ async function request(url, options = {}) {
     if (response.status === 401 && authStore.token) {
       authStore.logout()
     }
+
+    // Para 404 en endpoints específicos que pueden no tener datos, devolver null en lugar de error
+    // Esto evita mostrar errores en consola para estados válidos del negocio
+    if (response.status === 404 && url.includes('/cash-reconciliation/today')) {
+      return null
+    }
+
     const errorData = await response.json().catch(() => ({}))
     throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`)
   }

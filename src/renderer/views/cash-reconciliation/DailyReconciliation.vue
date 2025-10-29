@@ -22,15 +22,14 @@
           </v-alert>
           <v-row>
             <v-col cols="12" md="4">
-              <v-text-field
-                v-model.number="openForm.openingBalance"
-                label="Saldo Inicial"
-                type="number"
-                prefix="$"
-                variant="outlined"
-                autofocus
-              ></v-text-field>
-            </v-col>
+             <v-text-field
+               v-model.number="openForm.openingBalance"
+               label="Saldo Inicial"
+               type="number"
+               prefix="$"
+               variant="outlined"
+             ></v-text-field>
+           </v-col>
             <v-col cols="12" md="6">
               <v-textarea
                 v-model="openForm.notes"
@@ -82,7 +81,6 @@
                 type="number"
                 prefix="$"
                 variant="outlined"
-                autofocus
               ></v-text-field>
             </v-col>
             <v-col cols="12" md="6">
@@ -114,7 +112,6 @@
                         label="Contraseña de Administrador"
                         type="password"
                         variant="outlined"
-                        autofocus
                         :error-messages="adminPasswordError"
                     ></v-text-field>
                 </v-card-text>

@@ -29,7 +29,7 @@ export const useCashReconciliationStore = defineStore('cashReconciliation', () =
       todayReconciliation.value = data
     } catch (e) {
       // Si es un 404 (no encontrado), significa que no hay caja abierta, lo cual es un estado válido.
-      if (e.message.includes('404')) {
+      if (e.message.includes('404') || e.message.includes('No reconciliation found for today')) {
         todayReconciliation.value = null
       } else {
         error.value = e.message
