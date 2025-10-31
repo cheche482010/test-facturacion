@@ -2,6 +2,7 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
+import { useSettingsStore } from '@/stores/settingsStore'
 
 export default {
   setup() {
@@ -9,6 +10,7 @@ export default {
     const router = useRouter()
     const authStore = useAuthStore()
     const appStore = useAppStore()
+    const settingsStore = useSettingsStore()
 
     const menuItems = computed(() => {
       const allItems = [
@@ -40,7 +42,8 @@ export default {
     return {
       drawer,
       menuItems,
-      logout
+      logout,
+      settingsStore
     }
   }
 }

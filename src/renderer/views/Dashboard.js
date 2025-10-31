@@ -1,12 +1,14 @@
 import { ref, onMounted, computed } from 'vue'
 import { useReportsStore } from '@/stores/reports'
 import { useAuthStore } from '@/stores/auth'
+import { useSettingsStore } from '@/stores/settingsStore'
 import { formatCurrency, formatDate } from '@/utils/formatters'
 
 export default {
   setup() {
     const reportsStore = useReportsStore()
     const authStore = useAuthStore()
+    const settingsStore = useSettingsStore()
     const loading = ref(true)
     const dashboardData = ref({})
 
@@ -86,7 +88,8 @@ export default {
       getPaymentMethodColor,
       formatCurrency,
       formatDate,
-      authStore
+      authStore,
+      settingsStore
     }
   }
 }

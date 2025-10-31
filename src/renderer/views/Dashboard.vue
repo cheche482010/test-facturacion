@@ -15,11 +15,12 @@
     <v-row>
       <v-col v-for="card in summaryCards" :key="card.title" cols="12" sm="6" md="4" lg="2.4">
         <v-card class="d-flex align-center">
-          <div :class="`bg-${card.color}`" class="pa-4 rounded-lg ma-2">
-            <v-icon :icon="card.icon" size="32" color="white" />
+          <div :class="`bg-${card.color}`" class="pa-4 rounded-lg ma-2" :style="{ backgroundColor: card.color }">
+            <v-icon :icon="settingsStore.settings.summaryCardsIcon || card.icon" size="32" color="white" />
           </div>
-          <div class="pa-4">    
-            <p class="text-h6 font-weight-bold">{{ card.value }}</p>
+          <div class="pa-4">
+            <p class="text-h6 font-weight-bold"
+              :style="{ fontSize: settingsStore.settings.summaryCardsTextSize || '16px' }">{{ card.value }}</p>
             <p class="text-medium-emphasis">{{ card.title }}</p>
           </div>
         </v-card>
@@ -123,8 +124,8 @@
                 {{ getStatusText(item.status) }}
               </v-chip>
             </template>
-            <template v-slot:item.paymentMethod="{ item }">
-              <v-chip :color="getPaymentMethodColor(item.paymentMethod)" size="small" variant="tonal" label>
+            <template v-slot:item.paymentMethod="{ item }"> <v-chip :color="getPaymentMethodColor(item.paymentMethod)"
+                size="small" variant="tonal" label>
                 {{ item.paymentMethod }}
               </v-chip>
             </template>

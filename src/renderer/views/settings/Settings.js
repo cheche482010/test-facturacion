@@ -1,6 +1,7 @@
 import { ref, onMounted, watch, computed } from 'vue'
 import { useAppStore } from '../../stores/app'
 import { useCurrencyStore } from '../../stores/currencyStore'
+import { useSettingsStore } from '../../stores/settingsStore'
 
 export default {
   name: 'Settings',
@@ -8,6 +9,7 @@ export default {
     const tab = ref(0)
     const appStore = useAppStore()
     const currencyStore = useCurrencyStore()
+    const settingsStore = useSettingsStore()
     const saving = ref(false)
     const isUpdatingRate = ref(false)
 
@@ -17,16 +19,24 @@ export default {
     const settings = ref({})
 
     // Watch for the store to be populated and then create a local copy
-    watch(() => appStore.settings, (newSettings) => {
+    watch(() => settingsStore.settings, (newSettings) => {
       if (newSettings) {
         settings.value = JSON.parse(JSON.stringify(newSettings))
+        // Ensure font objects exist
+        if (!settings.value.fontsTitle) settings.value.fontsTitle = { font: 'Arial', size: '24px' }
+        if (!settings.value.fontsSubtitle) settings.value.fontsSubtitle = { font: 'Arial', size: '18px' }
+        if (!settings.value.fontsText) settings.value.fontsText = { font: 'Arial', size: '14px' }
       }
     }, { immediate: true, deep: true })
 
     const saveSettings = async () => {
       saving.value = true
       try {
-        await appStore.saveSettings(settings.value)
+        // Update the store with local changes before saving
+        settingsStore.settings = { ...settingsStore.settings, ...settings.value }
+        await settingsStore.saveSettings()
+        // Force reload of settings store to apply changes
+        await settingsStore.fetchSettings()
         // Optionally show a success message
       } catch (error) {
         console.error('Error saving settings:', error)
@@ -40,11 +50,53 @@ export default {
       if (file) {
         const reader = new FileReader()
         reader.onload = (e) => {
-          settings.value.companyLogo = e.target.result
+          settings.value.systemLogo = e.target.result
         }
         reader.readAsDataURL(file)
       }
     }
+
+    const fontOptions = [
+      'Arial',
+      'Helvetica',
+      'Times New Roman',
+      'Georgia',
+      'Verdana',
+      'Courier New',
+      'Trebuchet MS',
+      'Comic Sans MS',
+      'Impact',
+      'Lucida Sans',
+      'Tahoma',
+      'Palatino',
+      'Garamond',
+      'Bookman',
+      'Avant Garde',
+      'Arial Black',
+      'Arial Narrow',
+      'Century Gothic',
+      'Franklin Gothic',
+      'Gill Sans',
+      'Lucida Grande',
+      'Myriad',
+      'Optima',
+      'Segoe UI',
+      'Candara',
+      'Calibri',
+      'Cambria',
+      'Consolas',
+      'Constantia',
+      'Corbel',
+      'Futura',
+      'Geneva',
+      'Lucida Console',
+      'Monaco',
+      'Papyrus',
+      'Rockwell',
+      'Symbol',
+      'Webdings',
+      'Wingdings'
+    ]
 
     const createBackup = async () => {
       try {
@@ -65,8 +117,8 @@ export default {
       }
     }
 
-    onMounted(() => {
-      appStore.loadSettings()
+    onMounted(async () => {
+      await settingsStore.fetchSettings()
       currencyStore.fetchExchangeRate()
     })
 
@@ -80,6 +132,7 @@ export default {
       exchangeRate,
       isUpdatingRate,
       updateExchangeRate,
+      fontOptions,
     }
   },
 }

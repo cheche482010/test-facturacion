@@ -52,16 +52,15 @@
                                <v-container>
                                     <v-row>
                                         <v-col cols="12" md="12">
-                                            <v-text-field v-model="settings.companyName" label="Título del Sistema"></v-text-field>
+                                            <v-text-field v-model="settings.systemTitle" label="Título del Sistema"></v-text-field>
                                         </v-col>
                                         <v-col cols="12">
-                                            <v-file-input label="Logo de la Empresa" accept="image/*" @change="onLogoChange"></v-file-input>
+                                            <v-file-input label="Logo del Sistema" accept="image/*" @change="onLogoChange"></v-file-input>
+                                            <v-img v-if="settings.systemLogo" :src="settings.systemLogo" max-height="100" contain></v-img>
+                                            <v-icon v-else size="100" color="grey">mdi-store-outline</v-icon>
                                         </v-col>
                                         <v-col cols="12"><v-divider class="my-2"></v-divider></v-col>
-                                        <v-col cols="12" md="4">
-                                            <v-switch v-model="settings.darkMode" label="Modo Oscuro" color="primary" inset></v-switch>
-                                        </v-col>
-                                        <v-col cols="12" md="8">
+                                        <v-col cols="12" md="6">
                                             <v-text-field v-model="settings.primaryColor" label="Color Primario" readonly>
                                                 <template v-slot:append-inner>
                                                     <v-menu activator="parent" :close-on-content-click="false">
@@ -70,6 +69,35 @@
                                                     <v-avatar :color="settings.primaryColor" size="24"></v-avatar>
                                                 </template>
                                             </v-text-field>
+                                        </v-col>
+                                        <v-col cols="12" md="6">
+                                            <v-text-field v-model="settings.secondaryColor" label="Color Secundario" readonly>
+                                                <template v-slot:append-inner>
+                                                    <v-menu activator="parent" :close-on-content-click="false">
+                                                      <v-color-picker v-model="settings.secondaryColor"></v-color-picker>
+                                                    </v-menu>
+                                                    <v-avatar :color="settings.secondaryColor" size="24"></v-avatar>
+                                                </template>
+                                            </v-text-field>
+                                        </v-col>
+                                        <v-col cols="12" md="6">
+                                            <v-switch v-model="settings.darkMode" label="Modo Oscuro" color="primary" inset></v-switch>
+                                        </v-col>
+                                        <v-col cols="12"><v-divider class="my-2"></v-divider></v-col>
+                                        <v-col cols="12">
+                                            <h3 class="text-h6 mb-3">Configuración de Fuentes</h3>
+                                        </v-col>
+                                        <v-col cols="12" md="4">
+                                            <v-select v-model="settings.fontsTitle.font" :items="fontOptions" label="Fuente Título"></v-select>
+                                            <v-text-field v-model="settings.fontsTitle.size" label="Tamaño Título" placeholder="24px"></v-text-field>
+                                        </v-col>
+                                        <v-col cols="12" md="4">
+                                            <v-select v-model="settings.fontsSubtitle.font" :items="fontOptions" label="Fuente Subtítulo"></v-select>
+                                            <v-text-field v-model="settings.fontsSubtitle.size" label="Tamaño Subtítulo" placeholder="18px"></v-text-field>
+                                        </v-col>
+                                        <v-col cols="12" md="4">
+                                            <v-select v-model="settings.fontsText.font" :items="fontOptions" label="Fuente Texto"></v-select>
+                                            <v-text-field v-model="settings.fontsText.size" label="Tamaño Texto" placeholder="14px"></v-text-field>
                                         </v-col>
                                     </v-row>
                                 </v-container>
