@@ -35,7 +35,7 @@
           <v-card-text>
             <!-- Chart placeholder -->
             <div style="height: 300px;"
-              class="d-flex align-end justify-center text-medium-emphasis bg-grey-lighten-4 rounded pa-4">
+              :class="`d-flex align-end justify-center text-medium-emphasis rounded pa-4 ${settingsStore.settings.darkMode ? 'bg-grey-darken-3' : 'bg-grey-lighten-4'}`">
               <!-- This is a simplified static representation of the bar chart -->
               <div class="d-flex align-end" style="width: 100%; height: 100%;">
                 <div v-for="(sale, index) in salesChartData.values" :key="index"
@@ -63,7 +63,7 @@
           </v-card-item>
 
           <v-list-item v-for="item in dashboardData.lowStockProducts" :key="item.id"
-            class="bg-red-lighten-5 rounded mx-4 mb-2">
+            :class="`rounded mx-4 mb-2 ${settingsStore.settings.darkMode ? 'bg-red-darken-4' : 'bg-red-lighten-5'}`">
             <v-list-item-title class="font-weight-bold">{{ item.name }}</v-list-item-title>
             <v-list-item-subtitle>{{ `Código: ${item.internalCode || 'N/A'}` }}</v-list-item-subtitle>
             <template v-slot:append>

@@ -1,11 +1,11 @@
 <template>
     <v-app>
-        <v-navigation-drawer v-model="drawer" app>
+        <v-navigation-drawer v-model="drawer" app :color="settingsStore.settings.darkMode ? 'grey-darken-4' : 'grey-lighten-4'">
             <v-list-item>
                 <div class="d-flex align-center justify-center mb-2">
                     <v-img v-if="settingsStore.settings.systemLogo" :src="settingsStore.settings.systemLogo"
                         max-height="60" max-width="60" contain></v-img>
-                    <v-icon v-else size="60" color="white">mdi-store-outline</v-icon>
+                    <v-icon v-else size="60" :color="settingsStore.settings.darkMode ? 'white' : 'primary'">mdi-store-outline</v-icon>
                 </div>
                 <v-list-item-title class="text-h6 text-center">
                     {{ settingsStore.settings.systemTitle || 'Facturación' }}
@@ -31,7 +31,7 @@
             </template>
         </v-navigation-drawer>
 
-        <v-app-bar app :color="settingsStore.settings.primaryColor" dark>
+        <v-app-bar app :color="settingsStore.settings.primaryColor" :dark="settingsStore.settings.darkMode">
             <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
             <v-toolbar-title>{{ settingsStore.settings.systemTitle || 'Sistema de Facturación' }}</v-toolbar-title>
         </v-app-bar>

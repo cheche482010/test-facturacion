@@ -29,6 +29,13 @@ export default {
       }
     }, { immediate: true, deep: true })
 
+    // Watch for changes in local settings and update store immediately for darkMode
+    watch(() => settings.value.darkMode, (newDarkMode) => {
+      if (settingsStore.settings.darkMode !== newDarkMode) {
+        settingsStore.settings.darkMode = newDarkMode
+      }
+    }, { immediate: false })
+
     const saveSettings = async () => {
       saving.value = true
       try {
