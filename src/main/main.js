@@ -12,6 +12,7 @@ if (app && typeof app.disableHardwareAcceleration === 'function') {
 // Importar el servidor Express
 const { startServer } = require("./server")
 const currencyController = require("./controllers/currencyController")
+const DolarService = require("./services/dolarService")
 
 let mainWindow
 
@@ -133,6 +134,22 @@ if (app && typeof app.whenReady === 'function') {
     // Actualizar la tasa de cambio al inicio y luego periódicamente
     await currencyController.updateExchangeRate()
     setInterval(currencyController.updateExchangeRate, 6 * 60 * 60 * 1000) // Cada 6 horas
+
+    // Actualizar la tasa del dólar al inicio y luego diariamente
+    try {
+      await DolarService.fetchDolarRate()
+      console.log('✅ Tasa del dólar actualizada al inicio')
+    } catch (error) {
+      console.error('❌ Error actualizando tasa del dólar al inicio:', error.message)
+    }
+    setInterval(async () => {
+      try {
+        await DolarService.fetchDolarRate()
+        console.log('✅ Tasa del dólar actualizada automáticamente')
+      } catch (error) {
+        console.error('❌ Error actualizando tasa del dólar automáticamente:', error.message)
+      }
+    }, 24 * 60 * 60 * 1000) // Cada 24 horas
 
     createWindow()
     createMenu()

@@ -94,8 +94,17 @@
           </div>
         </template>
 
+        <template v-slot:item.dollarPrice="{ item }">
+          <div v-if="item.costPrice && item.costPrice > 0" class="font-weight-bold">
+            ${{ item.costPrice }}
+          </div>
+          <div v-else class="text-caption text-medium-emphasis">
+            N/A 
+          </div>
+        </template>
+
         <template v-slot:item.retailPrice="{ item }">
-          <div class="font-weight-bold">{{ formatCurrency(item.retailPrice) }}</div>
+          <div class="font-weight-bold text-success">{{ formatBsEquivalent(item.costPrice) }}</div>
         </template>
 
         <template v-slot:item.status="{ item }">
@@ -107,7 +116,7 @@
         <template v-slot:item.actions="{ item }">
           <v-btn v-if="!isCajero" icon="mdi-pencil" size="x-small" variant="text" @click="openProductDialog(item)"></v-btn>
           <v-btn v-if="!isCajero" icon="mdi-delete" size="x-small" variant="text" color="error" @click="confirmDelete(item)"></v-btn>
-          <v-btn v-if="isCajero" icon="mdi-eye" size="x-small" variant="text" color="primary" @click="showProductDetails(item)">Ver Detalles</v-btn>
+          <v-btn icon="mdi-eye" size="x-small" variant="text" color="primary" @click="showProductDetails(item)"></v-btn>
         </template>
       </v-data-table>
     </v-card>

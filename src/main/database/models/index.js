@@ -6,6 +6,7 @@ const SaleItem = require("./SaleItem")
 const InventoryMovement = require("./InventoryMovement")
 const Settings = require("./Settings")
 const CashReconciliation = require("./CashReconciliation")
+const DolarRate = require("./DolarRate")
 
 // Definir relaciones
 // Product relationships
@@ -41,4 +42,5 @@ module.exports = {
   InventoryMovement,
   Settings,
   CashReconciliation,
+  DolarRate,
 }

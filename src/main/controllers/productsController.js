@@ -1,4 +1,4 @@
-const { Product, Category, InventoryMovement } = require("../database/models")
+const { Product, Category, InventoryMovement, DolarRate } = require("../database/models")
 const { Op } = require("sequelize")
 const fs = require("fs")
 const path = require("path")
@@ -26,7 +26,27 @@ const productsController = {
         order: [["name", "ASC"]],
       })
 
-      res.json(products)
+      // Obtener la tasa del dólar actual para calcular equivalentes
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+
+      const currentDolarRate = await DolarRate.findOne({
+        where: { date: today },
+        order: [['updatedAt', 'DESC']]
+      })
+
+      // Agregar información de conversión a cada producto
+      const productsWithConversion = products.map(product => {
+        const productData = product.toJSON()
+
+        if (currentDolarRate && productData.dollarPrice && productData.dollarPrice > 0) {
+          productData.bsEquivalent = (parseFloat(productData.dollarPrice) * parseFloat(currentDolarRate.rate)).toFixed(2)
+        }
+
+        return productData
+      })
+
+      res.json(productsWithConversion)
     } catch (error) {
       res.status(500).json({ error: error.message })
     }

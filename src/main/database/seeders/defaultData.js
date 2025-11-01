@@ -215,11 +215,11 @@ const seedDefaultData = async () => {
       const productCount = await Product.count({ transaction })
       if (productCount === 0 && categories.length > 0) {
         const productsData = [
-          { name: "Laptop Pro 15", internalCode: "LP15", barcode: "1234567890123", categoryId: categories[0].id, costPrice: 800, retailPrice: 1200, currentStock: 50, minStock: 10, maxStock: 100, taxRate: 16, status: "activo" },
-          { name: "Mouse Inalámbrico", internalCode: "MI01", barcode: "1234567890124", categoryId: categories[1].id, costPrice: 15, retailPrice: 25, currentStock: 200, minStock: 30, maxStock: 300, taxRate: 16, status: "activo" },
-          { name: "Teclado Mecánico RGB", internalCode: "TM02", barcode: "1234567890125", categoryId: categories[1].id, costPrice: 60, retailPrice: 95, currentStock: 8, minStock: 10, maxStock: 150, taxRate: 16, status: "activo" }, // Stock bajo
-          { name: "Monitor 27' 4K", internalCode: "M274K", barcode: "1234567890126", categoryId: categories[0].id, costPrice: 250, retailPrice: 400, currentStock: 30, minStock: 5, maxStock: 50, taxRate: 16, status: "activo" },
-          { name: "Cable HDMI 2m", internalCode: "HDMI2", barcode: "1234567890127", categoryId: categories[2].id, costPrice: 5, retailPrice: 12, currentStock: 0, minStock: 20, maxStock: 200, taxRate: 16, status: "activo" }, // Sin stock
+          { name: "Laptop Pro 15", internalCode: "LP15", barcode: "1234567890123", categoryId: categories[0].id, costPrice: 33.33, costCurrency: "USD", retailPrice: 1200, currentStock: 50, minStock: 10, maxStock: 100, taxRate: 16, status: "activo" },
+          { name: "Mouse Inalámbrico", internalCode: "MI01", barcode: "1234567890124", categoryId: categories[1].id, costPrice: 0.69, costCurrency: "USD", retailPrice: 25, currentStock: 200, minStock: 30, maxStock: 300, taxRate: 16, status: "activo" },
+          { name: "Teclado Mecánico RGB", internalCode: "TM02", barcode: "1234567890125", categoryId: categories[1].id, costPrice: 2.64, costCurrency: "USD", retailPrice: 95, currentStock: 8, minStock: 10, maxStock: 150, taxRate: 16, status: "activo" }, // Stock bajo
+          { name: "Monitor 27' 4K", internalCode: "M274K", barcode: "1234567890126", categoryId: categories[0].id, costPrice: 11.11, costCurrency: "USD", retailPrice: 400, currentStock: 30, minStock: 5, maxStock: 50, taxRate: 16, status: "activo" },
+          { name: "Cable HDMI 2m", internalCode: "HDMI2", barcode: "1234567890127", categoryId: categories[2].id, costPrice: 0.33, costCurrency: "USD", retailPrice: 12, currentStock: 0, minStock: 20, maxStock: 200, taxRate: 16, status: "activo" }, // Sin stock
         ]
         await Product.bulkCreate(productsData, { transaction })
         console.log(`   -> ${productsData.length} productos creados.`)

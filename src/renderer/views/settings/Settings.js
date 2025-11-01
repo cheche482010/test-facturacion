@@ -13,6 +13,16 @@ export default {
     const saving = ref(false)
     const isUpdatingRate = ref(false)
 
+    // Dolar rate variables
+    const currentDolarRate = ref({ rate: null, date: null })
+    const loadingDolarRate = ref(false)
+    const updatingDolarRate = ref(false)
+    const updatingManualRate = ref(false)
+    const manualRate = ref('')
+    const manualDate = ref('')
+    const dolarHistory = ref([])
+    const loadingHistory = ref(false)
+
     const exchangeRate = computed(() => currencyStore.exchangeRate)
 
     // Create a local ref for settings to avoid direct mutation of the store.
@@ -124,9 +134,116 @@ export default {
       }
     }
 
+    // Dolar rate functions
+    const fetchCurrentDolarRate = async () => {
+      loadingDolarRate.value = true
+      try {
+        const result = await window.electronAPI.invoke('get-current-dolar-rate')
+        if (result.success && result.data) {
+          const data = result.data.dataValues || result.data
+          currentDolarRate.value = {
+            rate: data.rate,
+            date: formatDate(data.date)
+          }
+        } else {
+          currentDolarRate.value = { rate: null, date: null }
+        }
+      } catch (error) {
+        console.error('Error fetching current dolar rate:', error)
+        currentDolarRate.value = { rate: null, date: null }
+      } finally {
+        loadingDolarRate.value = false
+      }
+    }
+
+    const fetchDolarHistory = async () => {
+      loadingHistory.value = true
+      try {
+        const result = await window.electronAPI.invoke('get-dolar-history', 30)
+        if (result.success) {
+          dolarHistory.value = result.data
+        } else {
+          dolarHistory.value = []
+        }
+      } catch (error) {
+        console.error('Error fetching dolar history:', error)
+        dolarHistory.value = []
+      } finally {
+        loadingHistory.value = false
+      }
+    }
+
+    const fetchDolarRate = async () => {
+      updatingDolarRate.value = true
+      try {
+        const result = await window.electronAPI.invoke('fetch-dolar-rate')
+        if (result.success) {
+          await fetchCurrentDolarRate()
+          await fetchDolarHistory()
+          // Show success message
+        } else {
+          console.error('Error fetching dolar rate:', result.error)
+        }
+      } catch (error) {
+        console.error('Error fetching dolar rate:', error)
+      } finally {
+        updatingDolarRate.value = false
+      }
+    }
+
+    const updateManualRate = async () => {
+      if (!manualRate.value) return
+
+      updatingManualRate.value = true
+      try {
+        const result = await window.electronAPI.invoke('update-dolar-rate', manualRate.value, manualDate.value || null)
+        if (result.success) {
+          await fetchCurrentDolarRate()
+          await fetchDolarHistory()
+          manualRate.value = ''
+          manualDate.value = ''
+          // Show success message
+        } else {
+          console.error('Error updating manual rate:', result.error)
+        }
+      } catch (error) {
+        console.error('Error updating manual rate:', error)
+      } finally {
+        updatingManualRate.value = false
+      }
+    }
+
+    const formatCurrency = (amount) => {
+      return new Intl.NumberFormat('es-VE', {
+        style: 'currency',
+        currency: 'VES'
+      }).format(amount)
+    }
+
+    const formatDate = (dateString) => {
+      if (!dateString) return ''
+      const date = new Date(dateString)
+      return date.toLocaleDateString('es-VE')
+    }
+
+    const formatDateTime = (dateString) => {
+      if (!dateString) return ''
+      const date = new Date(dateString)
+      return date.toLocaleString('es-VE')
+    }
+
+    const dolarHeaders = [
+      { title: 'Tasa (Bs)', key: 'rate', align: 'right' },
+      { title: 'Fecha', key: 'date', align: 'center' },
+      { title: 'Última Actualización', key: 'updatedAt', align: 'center' },
+      { title: 'Fuente', key: 'source', align: 'center' }
+    ]
+
     onMounted(async () => {
       await settingsStore.fetchSettings()
       currencyStore.fetchExchangeRate()
+      await fetchCurrentDolarRate()
+      await fetchDolarHistory()
     })
 
     return {
@@ -140,6 +257,21 @@ export default {
       isUpdatingRate,
       updateExchangeRate,
       fontOptions,
+      // Dolar rate
+      currentDolarRate,
+      loadingDolarRate,
+      updatingDolarRate,
+      updatingManualRate,
+      manualRate,
+      manualDate,
+      dolarHistory,
+      loadingHistory,
+      fetchDolarRate,
+      updateManualRate,
+      formatCurrency,
+      formatDate,
+      formatDateTime,
+      dolarHeaders,
     }
   },
 }

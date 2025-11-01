@@ -28,6 +28,8 @@ export default {
     const productToDelete = ref(null)
     const selectedProductImage = ref(null)
     const selectedProductForDetails = ref(null)
+    const currentDolarRate = ref(null)
+    const loadingDolarRate = ref(false)
 
     const isCajero = computed(() => authStore.user?.role === 'cajero')
 
@@ -45,7 +47,13 @@ export default {
       { title: 'Categoría', key: 'categoryName', sortable: true },
       { title: 'Stock', key: 'currentStock', sortable: true },
       {
-        title: 'Precio Venta',
+        title: 'Precio USD',
+        key: 'dollarPrice',
+        sortable: true,
+        align: 'end',
+      },
+      {
+        title: 'Precio BS',
         key: 'retailPrice',
         sortable: true,
         align: 'end',
@@ -56,7 +64,7 @@ export default {
 
     const products = computed(() => productStore.products.map(p => ({
       ...p,
-      categoryName: p.Category?.name || 'N/A'
+      categoryName: p.category?.name || 'Sin Categoría',
     })))
     const categories = computed(() => categoryStore.categories)
 
@@ -198,8 +206,30 @@ export default {
       }
     }
 
+    const fetchCurrentDolarRate = async () => {
+      loadingDolarRate.value = true
+      try {
+        const result = await window.electronAPI.invoke('get-current-dolar-rate')
+        if (result.success && result.data) {
+          const data = result.data.dataValues || result.data
+          currentDolarRate.value = data
+        }
+      } catch (error) {
+        console.error('Error fetching current dolar rate:', error)
+      } finally {
+        loadingDolarRate.value = false
+      }
+    }
+
+    const formatBsEquivalent = (usdAmount) => {
+      if (!currentDolarRate.value || !currentDolarRate.value.rate) return ''
+      const bsAmount = parseFloat(usdAmount) * parseFloat(currentDolarRate.value.rate)
+      return formatCurrency(bsAmount)
+    }
+
     onMounted(() => {
       loadProducts()
+      fetchCurrentDolarRate()
     })
 
     const showImage = (product) => {
@@ -249,6 +279,9 @@ export default {
       showImage,
       showProductDetails,
       isCajero,
+      currentDolarRate,
+      loadingDolarRate,
+      formatBsEquivalent,
     }
   },
 }

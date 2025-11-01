@@ -11,6 +11,8 @@ export default {
     const settingsStore = useSettingsStore()
     const loading = ref(true)
     const dashboardData = ref({})
+    const currentDolarRate = ref(null)
+    const loadingDolarRate = ref(false)
 
     const formattedDate = computed(() => {
       return new Date().toLocaleDateString('es-ES', {
@@ -25,7 +27,6 @@ export default {
       { title: 'Total Productos', value: dashboardData.value.summary?.totalProducts || 0, icon: 'mdi-package-variant-closed', color: 'blue-grey' },
       { title: 'Ventas Totales', value: formatCurrency(dashboardData.value.summary?.totalSales), icon: 'mdi-cash-multiple', color: 'deep-purple' },
       { title: 'Ventas Hoy', value: formatCurrency(dashboardData.value.summary?.todaySales), icon: 'mdi-cash-register', color: 'orange' },
-      { title: 'Valor Inventario', value: formatCurrency(dashboardData.value.summary?.inventoryValue), icon: 'mdi-warehouse', color: 'indigo' },
     ])
 
     const salesChartData = computed(() => {
@@ -64,11 +65,26 @@ export default {
       return 'grey'
     }
 
+    const fetchCurrentDolarRate = async () => {
+      loadingDolarRate.value = true
+      try {
+        const result = await window.electronAPI.invoke('get-current-dolar-rate')
+        if (result.success && result.data) {
+          currentDolarRate.value = result.data
+        }
+      } catch (error) {
+        console.error('Error fetching current dolar rate:', error)
+      } finally {
+        loadingDolarRate.value = false
+      }
+    }
+
     onMounted(async () => {
       try {
         loading.value = true
         const data = await reportsStore.fetchDashboardData()
         dashboardData.value = data
+        await fetchCurrentDolarRate()
       } catch (error) {
         console.error('Error loading dashboard:', error)
       } finally {
@@ -89,7 +105,9 @@ export default {
       formatCurrency,
       formatDate,
       authStore,
-      settingsStore
+      settingsStore,
+      currentDolarRate,
+      loadingDolarRate
     }
   }
 }

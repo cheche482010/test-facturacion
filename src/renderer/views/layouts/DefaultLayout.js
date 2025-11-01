@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
@@ -11,6 +11,8 @@ export default {
     const authStore = useAuthStore()
     const appStore = useAppStore()
     const settingsStore = useSettingsStore()
+    const currentDolarRate = ref(null)
+    const loadingDolarRate = ref(false)
 
     const menuItems = computed(() => {
       const allItems = [
@@ -34,16 +36,59 @@ export default {
       })
     })
 
+    const fetchCurrentDolarRate = async () => {
+      loadingDolarRate.value = true
+      try {
+        const result = await window.electronAPI.invoke('get-current-dolar-rate')
+        if (result.success && result.data) {
+          currentDolarRate.value = result.data
+        }
+      } catch (error) {
+        console.error('Error fetching current dolar rate:', error)
+      } finally {
+        loadingDolarRate.value = false
+      }
+    }
+
+    const formatCurrency = (amount) => {
+      if (!amount) return '0.00'
+      return new Intl.NumberFormat('es-VE', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(amount)
+    }
+
+    const formatDateTime = (dateString) => {
+      if (!dateString) return ''
+      const date = new Date(dateString)
+      return date.toLocaleString('es-VE', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    }
+
     const logout = () => {
       authStore.logout()
       router.push('/login')
     }
 
+    onMounted(() => {
+      fetchCurrentDolarRate()
+      // Actualizar cada 5 minutos
+      setInterval(fetchCurrentDolarRate, 5 * 60 * 1000)
+    })
+
     return {
       drawer,
       menuItems,
       logout,
-      settingsStore
+      settingsStore,
+      currentDolarRate,
+      formatCurrency,
+      formatDateTime
     }
   }
 }
