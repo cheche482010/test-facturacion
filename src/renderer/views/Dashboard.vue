@@ -34,7 +34,15 @@
           <v-card-title>Ventas de los Últimos 7 Días</v-card-title>
           <v-card-text>
             <!-- Chart placeholder -->
-            <div style="height: 300px;"
+            <div v-if="salesChartData.values.length === 0" style="height: 300px;"
+              :class="`d-flex align-center justify-center text-medium-emphasis rounded pa-4 ${settingsStore.settings.darkMode ? 'bg-grey-darken-3' : 'bg-grey-lighten-4'}`">
+              <div class="text-center">
+                <v-icon size="64" class="mb-4" color="grey">mdi-chart-line</v-icon>
+                <p class="text-h6">No hay ventas esta semana</p>
+                <p class="text-body-2">Las ventas aparecerán aquí cuando se realicen</p>
+              </div>
+            </div>
+            <div v-else style="height: 300px;"
               :class="`d-flex align-end justify-center text-medium-emphasis rounded pa-4 ${settingsStore.settings.darkMode ? 'bg-grey-darken-3' : 'bg-grey-lighten-4'}`">
               <!-- This is a simplified static representation of the bar chart -->
               <div class="d-flex align-end" style="width: 100%; height: 100%;">
@@ -91,7 +99,6 @@
               <p class="font-weight-bold">{{ dashboardData.quickSummary?.activeProducts || 0 }}</p>
             </div>
             <v-divider class="my-2"></v-divider>
-            <v-divider class="my-2"></v-divider>
             <div class="d-flex justify-space-between">
               <p>Alertas de Stock</p>
               <v-badge color="error" :content="dashboardData.quickSummary?.lowStockCount || 0" inline></v-badge>
@@ -113,6 +120,9 @@
           <v-card-title>Ventas Recientes</v-card-title>
           <v-data-table :headers="recentSalesHeaders" :items="dashboardData.recentSales || []" :loading="loading"
             no-data-text="No hay ventas recientes para mostrar" density="compact">
+            <template v-slot:item.saleNumber="{ item }">
+              {{ item.saleNumber }}
+            </template>
             <template v-slot:item.total="{ item }">
               {{ formatCurrency(item.total) }}
             </template>

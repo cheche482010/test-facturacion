@@ -36,7 +36,7 @@ export default {
     })
 
     const recentSalesHeaders = [
-      { title: 'Factura', key: 'invoiceNumber' },
+      { title: 'Factura', key: 'saleNumber' },
       { title: 'Fecha', key: 'saleDate' },
       { title: 'Pago', key: 'paymentMethod' },
       { title: 'Estado', key: 'status' },

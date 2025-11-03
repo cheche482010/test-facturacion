@@ -50,6 +50,14 @@ const reportsController = {
       const recentSales = await Sale.findAll({
         limit: 5,
         order: [["sale_date", "DESC"]],
+        attributes: [
+          "id",
+          "sale_number",
+          "total",
+          "sale_date",
+          "payment_method",
+          "status"
+        ]
       })
 
       res.json({
