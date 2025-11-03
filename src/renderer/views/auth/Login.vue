@@ -20,7 +20,7 @@
                   <v-text-field
                     v-model="credentials.username"
                     :rules="usernameRules"
-                    label="Usuario"
+                    label="Usuario o Email"
                     prepend-inner-icon="mdi-account"
                     variant="outlined"
                     required

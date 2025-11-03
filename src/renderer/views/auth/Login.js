@@ -13,8 +13,8 @@ export default {
         password: ''
       },
       usernameRules: [
-        v => !!v || 'El usuario es requerido',
-        v => v.length >= 3 || 'El usuario debe tener al menos 3 caracteres'
+        v => !!v || 'El usuario o email es requerido',
+        v => v.length >= 3 || 'El usuario o email debe tener al menos 3 caracteres'
       ],
       passwordRules: [
         v => !!v || 'La contraseña es requerida',

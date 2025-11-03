@@ -4,9 +4,19 @@ const { User } = require("../database/models")
 const authController = {
   async login(req, res) {
     try {
-      const { username: email, password } = req.body
+      const { username: identifier, password } = req.body
 
-      const user = await User.findOne({ where: { email: email, isActive: true } })
+      // Buscar usuario por email o username
+      const user = await User.findOne({
+        where: {
+          [require('sequelize').Op.or]: [
+            { email: identifier },
+            { username: identifier }
+          ],
+          isActive: true
+        }
+      })
+
       if (!user) {
         return res.status(401).json({ error: "Usuario no encontrado" })
       }
