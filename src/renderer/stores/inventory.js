@@ -30,10 +30,14 @@ export const useInventoryStore = defineStore("inventory", {
     async fetchMovements() {
       this.loading = true
       try {
-        this.movements = await api.get("/inventory/movements")
+        const result = await api.get("/inventory/movements")
+        this.movements = result || []
+        return this.movements
       } catch (error) {
         this.error = error.message
         console.error("Error fetching movements:", error)
+        this.movements = []
+        return []
       } finally {
         this.loading = false
       }

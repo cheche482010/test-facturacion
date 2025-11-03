@@ -102,11 +102,24 @@
             <v-row v-else>
                 <v-col cols="12">
                   <v-select
+                    v-model="formData.product"
+                    :items="products"
+                    item-title="name"
+                    item-value="id"
+                    label="Producto"
+                    variant="outlined"
+                    density="compact"
+                    clearable
+                  />
+                </v-col>
+
+                <v-col cols="12">
+                  <v-select
                     v-model="formData.category"
                     :items="categories"
                     item-title="name"
                     item-value="id"
-                    label="Categoría"
+                    label="Categoría (opcional)"
                     variant="outlined"
                     density="compact"
                     clearable

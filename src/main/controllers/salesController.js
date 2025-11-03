@@ -89,7 +89,7 @@ const salesController = {
         }
 
         const itemSubtotal = product.retailPrice * item.quantity;
-        const itemTaxAmount = (itemSubtotal * (product.taxRate || 0)) / 100;
+        const itemTaxAmount = 0; // IVA eliminado
         const itemTotal = itemSubtotal;
 
         calculatedSubtotal += itemSubtotal;
@@ -104,7 +104,7 @@ const salesController = {
             unitPrice: product.retailPrice,
             discountPercentage: 0,
             discountAmount: 0,
-            taxRate: product.taxRate || 0,
+            taxRate: 0, // IVA eliminado
             taxAmount: itemTaxAmount,
             subtotal: itemSubtotal,
             total: itemTotal,

@@ -110,9 +110,10 @@ const inventoryController = {
     const transaction = await sequelize.transaction()
 
     try {
-      const { category, adjustmentType, adjustmentValue, reason, notes } = req.body
+      const { product, category, adjustmentType, adjustmentValue, reason, notes } = req.body
 
       const whereClause = {}
+      if (product) whereClause.id = product
       if (category) whereClause.categoryId = category
 
       const products = await Product.findAll({

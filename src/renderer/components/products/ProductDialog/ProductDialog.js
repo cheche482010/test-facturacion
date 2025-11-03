@@ -46,28 +46,20 @@ export default {
     }
 
     const formData = ref({
-      internalCode: '',
-      barcode: '',
-      name: '',
-      description: '',
-      brand: '',
-      unit: 'unidad',
-      categoryId: null,
-      costPrice: 0,
-      costCurrency: 'VES',
-      profitPercentage: 30,
-      retailPrice: 0,
-      wholesalePrice: 0,
-      dollarPrice: 0,
-      taxRate: 16,
-      currentStock: 0,
-      minStock: 5,
-      maxStock: 100,
-      location: '',
-      status: 'activo',
-      expirationDate: null,
-      image: null,
-    })
+       internalCode: '',
+       barcode: '',
+       name: '',
+       description: '',
+       brand: '',
+       unit: 'unidad',
+       categoryId: null,
+       costPrice: 0,
+       profitPercentage: 30,
+       retailPrice: 0,
+       currentStock: 0,
+       status: 'activo',
+       image: null,
+     })
 
     const dialog = computed({
       get: () => props.modelValue,
@@ -77,35 +69,27 @@ export default {
     const isEditing = computed(() => !!props.product)
 
     const resetForm = () => {
-      formData.value = {
-        internalCode: '',
-        barcode: '',
-        name: '',
-        description: '',
-        brand: '',
-        unit: 'unidad',
-        categoryId: null,
-        costPrice: 0,
-        costCurrency: 'VES',
-        profitPercentage: 30,
-        retailPrice: 0,
-        wholesalePrice: 0,
-        dollarPrice: 0,
-        taxRate: 16,
-        currentStock: 0,
-        minStock: 5,
-        maxStock: 100,
-        location: '',
-        status: 'activo',
-        expirationDate: null,
-        image: null,
-      }
-      autoPricing.value = true
-      imageFile.value = null
-      imagePreview.value = null
-      imageRemoved.value = false
-      form.value?.resetValidation()
-    }
+       formData.value = {
+         internalCode: '',
+         barcode: '',
+         name: '',
+         description: '',
+         brand: '',
+         unit: 'unidad',
+         categoryId: null,
+         costPrice: 0,
+         profitPercentage: 30,
+         retailPrice: 0,
+         currentStock: 0,
+         status: 'activo',
+         image: null,
+       }
+       autoPricing.value = true
+       imageFile.value = null
+       imagePreview.value = null
+       imageRemoved.value = false
+       form.value?.resetValidation()
+     }
 
     watch(
       () => props.product,
@@ -144,24 +128,19 @@ export default {
     }
 
     const calculatePrices = () => {
-      if (!autoPricing.value) return
+       const cost = formData.value.costPrice || 0
+       const profitPercent = formData.value.profitPercentage || 0
 
-      const cost = formData.value.costPrice || 0
-      const profitPercent = formData.value.profitPercentage || 0
-      const exchangeRate = appStore.settings.exchangeRate || 1
+       const profit = cost * (profitPercent / 100)
+       formData.value.retailPrice = Math.round((cost + profit) * 100) / 100
+     }
 
-      let costInVES = cost
-      if (formData.value.costCurrency === 'USD') {
-        costInVES = cost * exchangeRate
-      }
-
-      const profit = costInVES * (profitPercent / 100)
-      formData.value.retailPrice = Math.round((costInVES + profit) * 100) / 100
-
-      formData.value.wholesalePrice = Math.round(formData.value.retailPrice * 0.9 * 100) / 100
-
-      formData.value.dollarPrice = Math.round((formData.value.retailPrice / exchangeRate) * 100) / 100
-    }
+     const calculatedSalePrice = computed(() => {
+       const cost = formData.value.costPrice || 0
+       const profitPercent = formData.value.profitPercentage || 0
+       const profit = cost * (profitPercent / 100)
+       return Math.round((cost + profit) * 100) / 100
+     })
 
     const generateBarcode = () => {
       if (!formData.value.barcode) {
@@ -214,27 +193,27 @@ export default {
     }
 
     return {
-      valid,
-      saving,
-      autoPricing,
-      form,
-      unitOptions,
-      statusOptions,
-      currencyOptions,
-      rules,
-      formData,
-      dialog,
-      isEditing,
-      imageFile,
-      imagePreview,
-      onFileChange,
-      removeImage,
-      resetForm,
-      calculatePrices,
-      generateBarcode,
-      scanBarcode,
-      saveProduct,
-      closeDialog,
-    }
+       valid,
+       saving,
+       autoPricing,
+       form,
+       unitOptions,
+       statusOptions,
+       rules,
+       formData,
+       dialog,
+       isEditing,
+       calculatedSalePrice,
+       imageFile,
+       imagePreview,
+       onFileChange,
+       removeImage,
+       resetForm,
+       calculatePrices,
+       generateBarcode,
+       scanBarcode,
+       saveProduct,
+       closeDialog,
+     }
   },
 }

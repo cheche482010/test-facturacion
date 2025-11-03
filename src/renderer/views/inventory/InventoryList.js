@@ -20,7 +20,17 @@ export default {
     const valueOptions = ['Cualquiera', 'Con valor', 'Sin valor']
     const tab = ref('inventory') // Default to inventory tab
     const adjustmentDialog = ref(false)
+    const productDetailsDialog = ref(false)
+    const movementDetailsDialog = ref(false)
     const selectedProduct = ref(null)
+    const selectedMovement = ref(null)
+    const loadingMovements = ref(false)
+    const searchMovement = ref('')
+    const movementTypeFilter = ref('Todos')
+    const movementTypeOptions = ['Todos', 'Entrada', 'Salida', 'Ajuste']
+    const startDate = ref('')
+    const endDate = ref('')
+    const movements = ref([])
 
     // Computed Properties
     const products = computed(() => productStore.products)
@@ -66,12 +76,41 @@ export default {
       return filtered
     })
 
+    const filteredMovements = computed(() => {
+      let filtered = movements.value
+      const searchTerm = searchMovement.value?.toLowerCase() || ''
+
+      if (searchTerm) {
+        filtered = filtered.filter(m =>
+          m.product?.name.toLowerCase().includes(searchTerm) ||
+          m.product?.internalCode?.toLowerCase().includes(searchTerm)
+        )
+      }
+
+      if (movementTypeFilter.value && movementTypeFilter.value !== 'Todos') {
+        const typeMap = {
+          'Entrada': 'entrada',
+          'Salida': 'salida',
+          'Ajuste': 'ajuste'
+        }
+        filtered = filtered.filter(m => m.movementType === typeMap[movementTypeFilter.value])
+      }
+
+      if (startDate.value) {
+        filtered = filtered.filter(m => new Date(m.movementDate) >= new Date(startDate.value))
+      }
+
+      if (endDate.value) {
+        filtered = filtered.filter(m => new Date(m.movementDate) <= new Date(endDate.value))
+      }
+
+      return filtered
+    })
+
     const inventoryHeaders = [
       { title: 'Producto', key: 'name', sortable: true },
       { title: 'Código', key: 'internalCode', sortable: true },
       { title: 'Stock Actual', key: 'currentStock', sortable: true, align: 'center' },
-      { title: 'Stock Mín.', key: 'minStock', sortable: true, align: 'center' },
-      { title: 'Stock Máx.', key: 'maxStock', sortable: true, align: 'center' },
       { title: 'Valor Stock', key: 'stockValue', sortable: true, align: 'end' },
       { title: 'Estado', key: 'status', sortable: true, align: 'center' },
       { title: 'Acciones', key: 'actions', sortable: false, align: 'center' }
@@ -82,8 +121,6 @@ export default {
       loading.value = true
       try {
         await productStore.fetchProducts()
-        // We might need movements for the other tab later
-        // await inventoryStore.fetchMovements()
       } catch (error) {
         console.error('Error loading inventory:', error)
       } finally {
@@ -91,16 +128,82 @@ export default {
       }
     }
 
+    const loadMovements = async () => {
+      loadingMovements.value = true
+      try {
+        const result = await inventoryStore.fetchMovements()
+        movements.value = result || []
+      } catch (error) {
+        console.error('Error loading movements:', error)
+        movements.value = []
+      } finally {
+        loadingMovements.value = false
+      }
+    }
+
     const openAdjustmentDialog = (product = null) => {
       selectedProduct.value = product
       adjustmentDialog.value = true
-      console.log("Adjustment dialog should open for:", product)
     }
 
     const onAdjustmentSaved = async () => {
       adjustmentDialog.value = false
       selectedProduct.value = null
       await loadInventory()
+      await loadMovements()
+    }
+
+    const deleteProduct = async (product) => {
+      if (confirm(`¿Estás seguro de que quieres eliminar "${product.name}"?`)) {
+        try {
+          await productStore.deleteProduct(product.id)
+          await loadInventory()
+        } catch (error) {
+          console.error('Error deleting product:', error)
+        }
+      }
+    }
+
+    const viewProductDetails = (product) => {
+      selectedProduct.value = product
+      productDetailsDialog.value = true
+    }
+
+    const closeProductDetailsDialog = () => {
+      productDetailsDialog.value = false
+      selectedProduct.value = null
+    }
+
+    const viewMovementDetails = (movement) => {
+      selectedMovement.value = movement
+      movementDetailsDialog.value = true
+    }
+
+    const closeMovementDetailsDialog = () => {
+      movementDetailsDialog.value = false
+      selectedMovement.value = null
+    }
+
+    const getMovementTypeText = (type) => {
+      const types = {
+        'entrada': 'Entrada',
+        'salida': 'Salida',
+        'ajuste': 'Ajuste'
+      }
+      return types[type] || type
+    }
+
+    const getMovementTypeColor = (type) => {
+      const colors = {
+        'entrada': 'success',
+        'salida': 'error',
+        'ajuste': 'warning'
+      }
+      return colors[type] || 'info'
+    }
+
+    const formatDate = (date) => {
+      return new Date(date).toLocaleDateString('es-ES')
     }
 
     const getStockStatusText = (product) => {
@@ -122,7 +225,19 @@ export default {
     }
 
     // Lifecycle
-    onMounted(loadInventory)
+    onMounted(async () => {
+      await loadInventory()
+      await loadMovements()
+    })
+
+    const movementHeaders = [
+      { title: 'Producto', key: 'product', sortable: true },
+      { title: 'Tipo', key: 'movementType', sortable: true, align: 'center' },
+      { title: 'Cantidad', key: 'quantity', sortable: true, align: 'center' },
+      { title: 'Precio', key: 'priceInfo', sortable: false, align: 'end' },
+      { title: 'Fecha', key: 'movementDate', sortable: true, align: 'center' },
+      { title: 'Acciones', key: 'actions', sortable: false, align: 'center' }
+    ]
 
     return {
       loading,
@@ -133,15 +248,36 @@ export default {
       valueOptions,
       tab,
       adjustmentDialog,
+      productDetailsDialog,
+      movementDetailsDialog,
       selectedProduct,
+      selectedMovement,
+      loadingMovements,
+      searchMovement,
+      movementTypeFilter,
+      movementTypeOptions,
+      startDate,
+      endDate,
+      movements,
       summaryCards,
       filteredProducts,
+      filteredMovements,
       inventoryHeaders,
+      movementHeaders,
       loadInventory,
+      loadMovements,
       openAdjustmentDialog,
       onAdjustmentSaved,
+      deleteProduct,
+      viewProductDetails,
+      closeProductDetailsDialog,
+      viewMovementDetails,
+      closeMovementDetailsDialog,
       getStockStatusText,
       getStockStatusColor,
+      getMovementTypeText,
+      getMovementTypeColor,
+      formatDate,
       formatCurrency
     }
   }

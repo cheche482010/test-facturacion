@@ -1,6 +1,7 @@
 import { ref, computed, watch } from 'vue'
 import { useInventoryStore } from '../../../stores/inventory'
 import { useCategoryStore } from '../../../stores/categories'
+import { useProductStore } from '../../../stores/products'
 
 export default {
   props: {
@@ -11,6 +12,13 @@ export default {
   setup(props, { emit }) {
     const inventoryStore = useInventoryStore()
     const categoryStore = useCategoryStore()
+    const productStore = useProductStore()
+
+    // Load categories and products when component is created
+    categoryStore.fetchCategories()
+    if (!productStore.products || productStore.products.length === 0) {
+      productStore.fetchProducts()
+    }
 
     const valid = ref(false)
     const saving = ref(false)
@@ -41,6 +49,7 @@ export default {
       newStock: 0,
       reason: '',
       notes: '',
+      product: null,
       category: null,
       adjustmentType: 'fixed',
       adjustmentValue: 0
@@ -52,6 +61,8 @@ export default {
     })
 
     const categories = computed(() => categoryStore.categories)
+
+    const products = computed(() => productStore.products)
 
     const adjustmentQuantity = computed(() => {
       if (!props.product) return 0
@@ -77,6 +88,7 @@ export default {
         newStock: props.product?.currentStock || 0,
         reason: '',
         notes: '',
+        product: null,
         category: null,
         adjustmentType: 'fixed',
         adjustmentValue: 0
@@ -105,6 +117,7 @@ export default {
           )
         } else {
           await inventoryStore.massAdjustment({
+            product: formData.value.product,
             category: formData.value.category,
             adjustmentType: formData.value.adjustmentType,
             adjustmentValue: formData.value.adjustmentValue,
@@ -135,6 +148,7 @@ export default {
       formData,
       dialog,
       categories,
+      products,
       adjustmentQuantity,
       adjustmentType,
       adjustmentMessage,

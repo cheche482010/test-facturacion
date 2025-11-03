@@ -105,24 +105,13 @@
             <v-col cols="12" md="4">
               <v-text-field
                 v-model.number="formData.costPrice"
-                label="Costo de Compra *"
+                label="Precio de Compra *"
                 :rules="[rules.required, rules.positive]"
                 variant="outlined"
                 density="compact"
                 type="number"
                 step="0.01"
                 @input="calculatePrices"
-              />
-            </v-col>
-
-            <v-col cols="12" md="4">
-              <v-select
-                v-model="formData.costCurrency"
-                :items="currencyOptions"
-                label="Moneda del Costo"
-                variant="outlined"
-                density="compact"
-                @update:model-value="calculatePrices"
               />
             </v-col>
 
@@ -141,58 +130,13 @@
 
             <v-col cols="12" md="4">
               <v-text-field
-                v-model.number="formData.retailPrice"
-                label="Precio Detal"
+                v-model.number="calculatedSalePrice"
+                label="Precio de Venta"
                 variant="outlined"
                 density="compact"
                 type="number"
                 step="0.01"
-                :readonly="autoPricing"
-              />
-            </v-col>
-
-            <v-col cols="12" md="4">
-              <v-text-field
-                v-model.number="formData.wholesalePrice"
-                label="Precio Mayorista"
-                variant="outlined"
-                density="compact"
-                type="number"
-                step="0.01"
-                :readonly="autoPricing"
-              />
-            </v-col>
-
-            <v-col cols="12" md="4">
-              <v-text-field
-                v-model.number="formData.dollarPrice"
-                label="Precio en USD"
-                variant="outlined"
-                density="compact"
-                type="number"
-                step="0.01"
-              />
-            </v-col>
-
-            <v-col cols="12">
-              <v-switch
-                v-model="autoPricing"
-                label="Cálculo automático de precios"
-                color="primary"
-                @update:model-value="calculatePrices"
-              />
-            </v-col>
-
-            <!-- Impuestos -->
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model.number="formData.taxRate"
-                label="Tasa de IVA (%)"
-                variant="outlined"
-                density="compact"
-                type="number"
-                step="0.01"
-                suffix="%"
+                readonly
               />
             </v-col>
 
@@ -201,7 +145,7 @@
               <h3 class="text-h6 mb-3 mt-4">Control de Inventario</h3>
             </v-col>
 
-            <v-col cols="12" md="4">
+            <v-col cols="12" md="6">
               <v-text-field
                 v-model.number="formData.currentStock"
                 label="Stock Actual"
@@ -212,42 +156,13 @@
               />
             </v-col>
 
-            <v-col cols="12" md="4">
-              <v-text-field
-                v-model.number="formData.minStock"
-                label="Stock Mínimo"
-                variant="outlined"
-                density="compact"
-                type="number"
-              />
-            </v-col>
-
-            <v-col cols="12" md="4">
-              <v-text-field
-                v-model.number="formData.maxStock"
-                label="Stock Máximo"
-                variant="outlined"
-                density="compact"
-                type="number"
-              />
-            </v-col>
-
             <v-col cols="12" md="6">
-              <v-text-field
-                v-model="formData.location"
-                label="Ubicación en Almacén"
+              <v-select
+                v-model="formData.status"
+                :items="statusOptions"
+                label="Estado"
                 variant="outlined"
                 density="compact"
-              />
-            </v-col>
-
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="formData.expirationDate"
-                label="Fecha de Vencimiento"
-                variant="outlined"
-                density="compact"
-                type="date"
               />
             </v-col>
 

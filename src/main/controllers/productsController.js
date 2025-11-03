@@ -119,6 +119,22 @@ const productsController = {
         req.body.image = null
       }
 
+      // Crear movimiento de inventario si el estado cambió
+      if (req.body.status && req.body.status !== product.status) {
+        await InventoryMovement.create({
+          productId: product.id,
+          userId: req.user?.id || 1,
+          movementType: "ajuste",
+          reason: "ajuste_inventario",
+          quantity: 0,
+          previousStock: product.currentStock,
+          newStock: product.currentStock,
+          unitCost: product.costPrice,
+          totalCost: 0,
+          notes: `Cambio de estado: ${product.status} -> ${req.body.status}`,
+        })
+      }
+
       await product.update(req.body)
 
       const updatedProduct = await Product.findByPk(req.params.id, {
