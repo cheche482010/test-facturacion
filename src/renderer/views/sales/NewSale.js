@@ -16,7 +16,7 @@ const getCurrentDolarRate = async () => {
   } catch (error) {
     console.error('Error fetching current dolar rate:', error)
   }
-  return 36.50 // fallback
+  return null
 }
 
 export default {
@@ -97,8 +97,15 @@ export default {
       if (product) {
         addProduct(product)
         selectedProduct.value = null
-        productSearch.value = ''
-        // Keep filtered products for next search
+        
+        setTimeout(() => {
+          productSearch.value = ''
+          filteredProducts.value = []
+          const autocomplete = document.querySelector('.v-autocomplete input')
+          if (autocomplete) {
+            autocomplete.blur()
+          }
+        }, 100)
       }
     }
 
@@ -107,19 +114,17 @@ export default {
 
       searchLoading.value = true
       try {
-        if (!search) {
-          // Show all products when no search term
-          filteredProducts.value = products.value.slice(0, 20) // Show first 20 products
+        if (!search || search.trim() === '') {
+          filteredProducts.value = products.value.slice(0, 20) 
         } else if (search.length < 2) {
           filteredProducts.value = []
         } else {
-          // Filter products based on search term
           const searchTerm = search.toLowerCase()
           filteredProducts.value = products.value.filter(p =>
             p.barcode === searchTerm ||
             p.internalCode?.toLowerCase() === searchTerm ||
             p.name.toLowerCase().includes(searchTerm)
-          ).slice(0, 10) // Limit to 10 results
+          ).slice(0, 10) 
         }
       } catch (error) {
         console.error('Error searching products:', error)
@@ -138,6 +143,20 @@ export default {
         item.quantity = item.stock
       }
       updateItemSubtotal(item)
+    }
+
+    const increaseQuantity = (item) => {
+      if (item.quantity < item.stock) {
+        item.quantity++
+        updateItemSubtotal(item)
+      }
+    }
+
+    const decreaseQuantity = (item) => {
+      if (item.quantity > 1) {
+        item.quantity--
+        updateItemSubtotal(item)
+      }
     }
 
     const removeItem = (itemToRemove) => {
@@ -195,7 +214,6 @@ export default {
 
     const cancelSale = () => {
       resetSale()
-      router.push('/dashboard')
     }
 
     // Lifecycle
@@ -230,6 +248,8 @@ export default {
       addProductFromAutocomplete,
       onSearchInput,
       updateQuantity,
+      increaseQuantity,
+      decreaseQuantity,
       removeItem,
       processSale,
       cancelSale,

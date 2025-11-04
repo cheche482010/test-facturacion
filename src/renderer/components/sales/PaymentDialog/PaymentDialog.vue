@@ -31,8 +31,10 @@
                 <div class="font-weight-medium">{{ payment.methodName }}</div>
                 <div class="text-caption text-medium-emphasis">{{ payment.reference || 'Sin referencia' }}</div>
               </div>
-              <div class="text-right">
-                <div class="font-weight-bold">{{ formatCurrency(payment.amount, payment.currency) }}</div>
+              <div class="text-right d-flex align-center">
+                <div class="font-weight-bold mr-2">{{ formatCurrency(payment.amount, payment.currency) }}</div>
+                <v-btn icon="mdi-pencil" variant="text" size="small" color="primary" @click="editPayment(index)" />
+                <v-btn icon="mdi-delete" variant="text" size="small" color="error" @click="removePayment(index)" />
               </div>
             </div>
             <v-divider class="my-2"></v-divider>
@@ -52,10 +54,19 @@
                 <div class="text-caption text-medium-emphasis">{{ formatCurrency(remainingAmount / exchangeRate, 'USD') }}</div>
               </div>
             </div>
+            <div v-if="changeAmount > 0" class="d-flex justify-space-between align-center mt-1">
+              <div class="font-weight-bold text-warning">Cambio a devolver</div>
+              <div class="text-right">
+                <div class="font-weight-bold text-warning">
+                  {{ formatCurrency(changeAmount, 'VES') }}
+                </div>
+                <div class="text-caption text-medium-emphasis">{{ formatCurrency(changeAmount / exchangeRate, 'USD') }}</div>
+              </div>
+            </div>
           </v-card-text>
         </v-card>
 
-        <v-form ref="form" v-model="valid">
+        <v-form ref="form" v-model="valid" v-if="remainingAmount > 0">
           <!-- Método de pago -->
           <v-row>
             <v-col cols="12" md="8">
@@ -87,7 +98,7 @@
 
           <!-- Campos específicos por método de pago -->
           <v-row>
-            <v-col cols="12" md="6">
+            <v-col cols="12" md="6" v-if="!isCashPayment">
               <v-text-field
                 v-model="paymentData.reference"
                 label="Referencia (opcional)"
@@ -129,7 +140,7 @@
         </v-btn>
         <v-btn
           color="primary"
-          :disabled="remainingAmount > 0"
+          :disabled="remainingAmount > 0 && changeAmount <= 0"
           :loading="processing"
           @click="completeSale"
         >

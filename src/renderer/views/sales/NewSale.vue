@@ -22,15 +22,15 @@
         <!-- Product Search & Cart -->
         <v-card>
           <v-card-text>
-            <v-autocomplete 
-              v-model="selectedProduct" 
-              :items="filteredProducts" 
+            <v-autocomplete
+              v-model="selectedProduct"
+              :items="filteredProducts"
               :loading="searchLoading"
-              :search="productSearch" 
+              v-model:search="productSearch"
               item-title="name" item-value="id"
               label="Buscar producto por nombre, código o escanear..." variant="solo-filled" flat
               prepend-inner-icon="mdi-barcode-scan" clearable return-object
-              :no-data-text="productSearch ? 'No se encontraron productos' : 'Escribe para buscar productos...'"
+              :no-data-text="productSearch && productSearch.trim() !== '' ? 'No se encontraron productos' : 'Escribe para buscar productos...'"
               :menu-props="{ maxHeight: '400px' }" @focus="onSearchInput('')"
               @update:model-value="addProductFromAutocomplete" @update:search="onSearchInput">
               <template v-slot:item="{ props, item, index }">
@@ -75,8 +75,11 @@
               </div>
             </template>
             <template v-slot:item.quantity="{ item }">
-              <v-text-field v-model.number="item.quantity" type="number" min="1" :max="item.stock" style="width: 100px"
-                density="compact" variant="outlined" hide-details @change="updateQuantity(item)" />
+              <div class="pos__quantity-control">
+                <v-btn icon="mdi-minus" variant="text" size="small" color="primary" @click="decreaseQuantity(item)" :disabled="item.quantity <= 1" />
+                <span class="quantity-value">{{ item.quantity }}</span>
+                <v-btn icon="mdi-plus" variant="text" size="small" color="primary" @click="increaseQuantity(item)" :disabled="item.quantity >= item.stock" />
+              </div>
             </template>
             <template v-slot:item.price="{ item }">
               <div>

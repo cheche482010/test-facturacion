@@ -67,7 +67,16 @@ export default {
     })
 
     const remainingAmount = computed(() => {
-      return props.saleData.totalBs - totalPaid.value
+      return Math.max(0, props.saleData.totalBs - totalPaid.value)
+    })
+
+    const changeAmount = computed(() => {
+      return Math.max(0, totalPaid.value - props.saleData.totalBs)
+    })
+
+    const isCashPayment = computed(() => {
+      const selectedMethod = availablePaymentMethods.value.find(m => m.id === paymentData.value.paymentMethodId)
+      return selectedMethod && (selectedMethod.name === 'Efectivo BS' || selectedMethod.name === 'Efectivo USD')
     })
 
     const onPaymentMethodChange = () => {
@@ -101,7 +110,7 @@ export default {
     }
 
     const completeSale = async () => {
-      if (remainingAmount.value > 0) return
+      if (remainingAmount.value > 0 && changeAmount.value <= 0) return
 
       processing.value = true
       try {
@@ -124,6 +133,21 @@ export default {
       } finally {
         processing.value = false
       }
+    }
+
+    const editPayment = (index) => {
+      const payment = payments.value[index]
+      paymentData.value = {
+        paymentMethodId: payment.paymentMethodId,
+        amount: payment.amount,
+        reference: payment.reference || '',
+        notes: payment.notes || ''
+      }
+      removePayment(index)
+    }
+
+    const removePayment = (index) => {
+      payments.value.splice(index, 1)
     }
 
     const closeDialog = () => {
@@ -200,8 +224,12 @@ export default {
       exchangeRate,
       totalPaid,
       remainingAmount,
+      changeAmount,
+      isCashPayment,
       onPaymentMethodChange,
       addPayment,
+      editPayment,
+      removePayment,
       completeSale,
       closeDialog,
       formatCurrency

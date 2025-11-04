@@ -43,4 +43,29 @@
     padding: 1rem 2rem;
     border-radius: 8px;
   }
+
+  &__quantity-control {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+
+    .quantity-value {
+      min-width: 30px;
+      text-align: center;
+      font-weight: 500;
+      color: #1976d2;
+      font-size: 0.9rem;
+    }
+
+    .v-btn {
+      min-width: 24px;
+      width: 24px;
+      height: 24px;
+
+      .v-btn__content {
+        font-size: 14px;
+      }
+    }
+  }
 }
