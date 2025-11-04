@@ -14,8 +14,42 @@
                 <div class="text-h6">Total a Pagar</div>
                 <div class="text-caption">{{ saleData.items.length }} productos</div>
               </div>
-              <div class="text-h4 text-primary">
-                {{ formatCurrency(saleData.total) }}
+              <div class="text-right">
+                <div class="text-h5 text-primary">{{ formatCurrency(saleData.totalBs, 'VES') }}</div>
+                <div class="text-body-2 text-medium-emphasis">{{ formatCurrency(saleData.totalUsd, 'USD') }}</div>
+              </div>
+            </div>
+          </v-card-text>
+        </v-card>
+
+        <!-- Pagos existentes -->
+        <v-card v-if="payments.length > 0" variant="outlined" class="mb-4">
+          <v-card-title class="text-subtitle-1">Pagos Registrados</v-card-title>
+          <v-card-text>
+            <div v-for="(payment, index) in payments" :key="index" class="d-flex justify-space-between align-center mb-2">
+              <div>
+                <div class="font-weight-medium">{{ payment.methodName }}</div>
+                <div class="text-caption text-medium-emphasis">{{ payment.reference || 'Sin referencia' }}</div>
+              </div>
+              <div class="text-right">
+                <div class="font-weight-bold">{{ formatCurrency(payment.amount, payment.currency) }}</div>
+              </div>
+            </div>
+            <v-divider class="my-2"></v-divider>
+            <div class="d-flex justify-space-between align-center">
+              <div class="font-weight-bold">Total Pagado</div>
+              <div class="text-right">
+                <div class="font-weight-bold text-success">{{ formatCurrency(totalPaid, 'VES') }}</div>
+                <div class="text-caption text-medium-emphasis">{{ formatCurrency(totalPaid / exchangeRate, 'USD') }}</div>
+              </div>
+            </div>
+            <div class="d-flex justify-space-between align-center mt-1">
+              <div class="font-weight-bold">Restante</div>
+              <div class="text-right">
+                <div class="font-weight-bold" :class="remainingAmount <= 0 ? 'text-success' : 'text-error'">
+                  {{ formatCurrency(remainingAmount, 'VES') }}
+                </div>
+                <div class="text-caption text-medium-emphasis">{{ formatCurrency(remainingAmount / exchangeRate, 'USD') }}</div>
               </div>
             </div>
           </v-card-text>
@@ -24,10 +58,12 @@
         <v-form ref="form" v-model="valid">
           <!-- Método de pago -->
           <v-row>
-            <v-col cols="12">
+            <v-col cols="12" md="8">
               <v-select
-                v-model="paymentData.method"
-                :items="paymentMethods"
+                v-model="paymentData.paymentMethodId"
+                :items="availablePaymentMethods"
+                item-title="name"
+                item-value="id"
                 label="Método de Pago *"
                 :rules="[rules.required]"
                 variant="outlined"
@@ -35,133 +71,35 @@
                 @update:model-value="onPaymentMethodChange"
               />
             </v-col>
-          </v-row>
-
-          <!-- Campos específicos por método de pago -->
-          <v-row v-if="paymentData.method === 'efectivo_bs' || paymentData.method === 'efectivo_usd'">
-            <v-col cols="12" md="6">
+            <v-col cols="12" md="4">
               <v-text-field
-                v-model.number="paymentData.receivedAmount"
-                :label="`Monto Recibido (${paymentData.method === 'efectivo_usd' ? 'USD' : 'Bs'}) *`"
+                v-model.number="paymentData.amount"
+                label="Monto *"
                 :rules="[rules.required, rules.positive]"
                 variant="outlined"
                 density="compact"
                 type="number"
                 step="0.01"
-                @input="calculateChange"
-              />
-            </v-col>
-            <v-col cols="12" md="6">
-              <v-text-field
-                :model-value="changeAmount"
-                :label="`Cambio (${paymentData.method === 'efectivo_usd' ? 'USD' : 'Bs'})`"
-                variant="outlined"
-                density="compact"
-                readonly
-                :color="changeAmount >= 0 ? 'success' : 'error'"
+                :max="remainingAmount"
               />
             </v-col>
           </v-row>
 
-          <v-row v-else-if="paymentData.method === 'transferencia'">
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="paymentData.referenceNumber"
-                label="Número de Referencia *"
-                :rules="[rules.required]"
-                variant="outlined"
-                density="compact"
-              />
-            </v-col>
-            <v-col cols="12" md="6">
-              <v-select
-                v-model="paymentData.bank"
-                :items="banks"
-                label="Banco"
-                variant="outlined"
-                density="compact"
-              />
-            </v-col>
-          </v-row>
-
-          <v-row v-else-if="paymentData.method === 'pos'">
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="paymentData.referenceNumber"
-                label="Número de Lote *"
-                :rules="[rules.required]"
-                variant="outlined"
-                density="compact"
-              />
-            </v-col>
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="paymentData.lastFourDigits"
-                label="Últimos 4 dígitos"
-                variant="outlined"
-                density="compact"
-                maxlength="4"
-              />
-            </v-col>
-          </v-row>
-
-          <v-row v-else-if="paymentData.method === 'pago_movil'">
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="paymentData.referenceNumber"
-                label="Número de Referencia *"
-                :rules="[rules.required]"
-                variant="outlined"
-                density="compact"
-              />
-            </v-col>
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="paymentData.phoneNumber"
-                label="Teléfono"
-                variant="outlined"
-                density="compact"
-              />
-            </v-col>
-          </v-row>
-
-          <v-row v-else-if="paymentData.method === 'credito'">
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model.number="paymentData.paidAmount"
-                label="Monto Pagado"
-                variant="outlined"
-                density="compact"
-                type="number"
-                step="0.01"
-              />
-            </v-col>
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="paymentData.dueDate"
-                label="Fecha de Vencimiento"
-                variant="outlined"
-                density="compact"
-                type="date"
-              />
-            </v-col>
-          </v-row>
-
-          <!-- Tipo de documento -->
+          <!-- Campos específicos por método de pago -->
           <v-row>
             <v-col cols="12" md="6">
-              <v-select
-                v-model="paymentData.documentType"
-                :items="documentTypes"
-                label="Tipo de Documento"
+              <v-text-field
+                v-model="paymentData.reference"
+                label="Referencia (opcional)"
                 variant="outlined"
                 density="compact"
+                placeholder="Número de lote, referencia, etc."
               />
             </v-col>
             <v-col cols="12" md="6">
               <v-text-field
                 v-model="paymentData.notes"
-                label="Notas"
+                label="Notas (opcional)"
                 variant="outlined"
                 density="compact"
               />
@@ -182,10 +120,18 @@
         <v-spacer />
         <v-btn @click="closeDialog">Cancelar</v-btn>
         <v-btn
+          color="success"
+          variant="outlined"
+          :disabled="!valid"
+          @click="addPayment"
+        >
+          Agregar Pago
+        </v-btn>
+        <v-btn
           color="primary"
-          :disabled="!valid || (paymentData.method.includes('efectivo') && changeAmount < 0)"
+          :disabled="remainingAmount > 0"
           :loading="processing"
-          @click="processSale"
+          @click="completeSale"
         >
           Completar Venta
         </v-btn>

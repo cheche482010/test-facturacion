@@ -1,16 +1,31 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
-export const useSaleStore = defineStore('sales', () => {
+export const useSalesStore = defineStore('sales', () => {
   const recentSales = ref([])
 
   async function createSale(saleData) {
-    // This is a mock implementation. Replace with your actual API call.
-    console.log('Creating sale:', saleData)
-    const newId = Math.max(0, ...recentSales.value.map(s => s.id)) + 1
-    const newSale = { id: newId, date: new Date().toISOString(), ...saleData }
-    recentSales.value.unshift(newSale) // Add to the beginning of the list
-    return newSale
+    try {
+      const response = await fetch('http://localhost:3001/api/sales', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(saleData),
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const result = await response.json()
+      console.log('Sale created successfully:', result)
+      return result
+    } catch (error) {
+      console.error('Error creating sale:', error)
+      throw error
+    }
   }
 
   return {

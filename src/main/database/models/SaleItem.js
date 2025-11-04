@@ -29,31 +29,27 @@ const SaleItem = sequelize.define(
       type: DataTypes.DECIMAL(8, 2),
       allowNull: false,
     },
-    unitPrice: {
+    unitPriceUsd: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
     },
-    discountPercentage: {
-      type: DataTypes.DECIMAL(5, 2),
-      defaultValue: 0,
-    },
-    discountAmount: {
-      type: DataTypes.DECIMAL(10, 2),
-      defaultValue: 0,
-    },
-    taxRate: {
-      type: DataTypes.DECIMAL(5, 2),
-      defaultValue: 0,
-    },
-    taxAmount: {
-      type: DataTypes.DECIMAL(10, 2),
-      defaultValue: 0,
-    },
-    subtotal: {
+    unitPriceBs: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
     },
-    total: {
+    subtotalUsd: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false,
+    },
+    subtotalBs: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false,
+    },
+    totalUsd: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false,
+    },
+    totalBs: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
     },

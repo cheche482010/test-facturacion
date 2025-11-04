@@ -22,9 +22,39 @@
         <!-- Product Search & Cart -->
         <v-card>
           <v-card-text>
-            <v-text-field v-model="productSearch" label="Buscar producto por nombre, código o escanear..."
-              variant="solo-filled" flat prepend-inner-icon="mdi-barcode-scan" @keydown.enter="addProductFromSearch"
-              clearable />
+            <v-autocomplete 
+              v-model="selectedProduct" 
+              :items="filteredProducts" 
+              :loading="searchLoading"
+              :search="productSearch" 
+              item-title="name" item-value="id"
+              label="Buscar producto por nombre, código o escanear..." variant="solo-filled" flat
+              prepend-inner-icon="mdi-barcode-scan" clearable return-object
+              :no-data-text="productSearch ? 'No se encontraron productos' : 'Escribe para buscar productos...'"
+              :menu-props="{ maxHeight: '400px' }" @focus="onSearchInput('')"
+              @update:model-value="addProductFromAutocomplete" @update:search="onSearchInput">
+              <template v-slot:item="{ props, item, index }">
+                <v-list-item v-bind="props" :disabled="item.raw.currentStock <= 0">
+                  <template v-slot:prepend>
+                    <v-avatar size="32" rounded="sm" :color="item.raw.image ? 'transparent' : 'grey-lighten-2'">
+                      <v-img v-if="item.raw.image" :src="`http://localhost:3001${item.raw.image}`" cover />
+                      <v-icon v-else icon="mdi-camera-off" size="16" />
+                    </v-avatar>
+                  </template>
+                  <v-list-item-title :class="item.raw.currentStock <= 0 ? 'text-error' : ''">{{ item.raw.name}}</v-list-item-title>
+                  <v-list-item-subtitle :class="item.raw.currentStock <= 0 ? 'text-error' : ''">
+                    Código: {{ item.raw.internalCode || 'N/A' }} |
+                    Precio: {{ formatCurrency(item.raw.retailPrice, 'USD') }} |
+                    Stock: <span :class="item.raw.currentStock <= 0 ? 'text-error font-weight-bold' : ''">
+                      {{
+                        item.raw.currentStock
+                      }}</span>
+                    <span v-if="item.raw.currentStock <= 0" class="text-error font-weight-bold">(SIN STOCK)</span>
+                  </v-list-item-subtitle>
+                </v-list-item>
+                <v-divider v-if="index < filteredProducts.length - 1"></v-divider>
+              </template>
+            </v-autocomplete>
           </v-card-text>
           <v-divider></v-divider>
           <v-card-item>
@@ -37,18 +67,8 @@
           <v-data-table v-else :headers="cartHeaders" :items="cartItems" item-key="id">
             <template v-slot:item.name="{ item }">
               <div class="d-flex align-center">
-                <v-avatar
-                  class="mr-3"
-                  size="40"
-                  rounded="sm"
-                  :color="item.image ? 'transparent' : 'grey-lighten-2'"
-                >
-                  <v-img
-                    v-if="item.image"
-                    :src="`http://localhost:3001${item.image}`"
-                    :alt="item.name"
-                    cover
-                  />
+                <v-avatar class="mr-3" size="40" rounded="sm" :color="item.image ? 'transparent' : 'grey-lighten-2'">
+                  <v-img v-if="item.image" :src="`http://localhost:3001${item.image}`" :alt="item.name" cover />
                   <v-icon v-else icon="mdi-camera-off" />
                 </v-avatar>
                 <div class="font-weight-bold">{{ item.name }}</div>
@@ -59,12 +79,18 @@
                 density="compact" variant="outlined" hide-details @change="updateQuantity(item)" />
             </template>
             <template v-slot:item.price="{ item }">
-              {{ formatCurrency(item.price) }}
+              <div>
+                <div>$ {{ formatCurrency(item.price, 'USD').replace('$', '').trim() }}</div>
+                <div class="text-caption text-medium-emphasis">{{ formatCurrency(item.price * currentDolarRate, 'VES')
+                  }}</div>
+              </div>
             </template>
             <template v-slot:item.subtotal="{ item }">
-              <span class="font-weight-bold">
-                {{ formatCurrency(item.subtotal) }}
-              </span>
+              <div>
+                <div class="font-weight-bold">$ {{ formatCurrency(item.subtotal, 'USD').replace('$', '').trim() }}</div>
+                <div class="text-caption text-medium-emphasis">{{ formatCurrency(item.subtotal * currentDolarRate,
+                  'VES') }}</div>
+              </div>
             </template>
             <template v-slot:item.actions="{ item }">
               <v-btn icon="mdi-delete" variant="text" color="error" size="small" @click="removeItem(item)" />
@@ -81,42 +107,38 @@
           </v-card-item>
           <v-card-text>
             <div class="d-flex justify-space-between mb-2">
-              <p>Subtotal</p>
-              <p class="font-weight-bold">{{ formatCurrency(totals.subtotal) }}</p>
+              <p>Cantidad de productos</p>
+              <p class="font-weight-bold">{{ cartItems.length }}</p>
             </div>
-            <div class="d-flex justify-space-between mb-2">
-              <p>Descuento</p>
-              <p class="font-weight-bold text-success">-{{ formatCurrency(totals.discount) }}</p>
-            </div>
-            <div class="d-flex justify-space-between mb-2">
-              <p>IVA ({{ taxRate * 100 }}%)</p>
-              <p class="font-weight-bold">{{ formatCurrency(totals.tax) }}</p>
+            <div class="d-flex justify-space-between mb-2 text-h5 font-weight-bold text-primary">
+              <p>Tasa del día</p>
+              <p>{{ formatCurrency(currentDolarRate, 'VES').replace('Bs.S', '').replace('Bs.', '').trim() }} Bs/USD</p>
             </div>
             <v-divider class="my-2"></v-divider>
             <div class="d-flex justify-space-between text-h6">
-              <p class="font-weight-bold">Total</p>
-              <p class="font-weight-bold">{{ formatCurrency(totals.total) }}</p>
+              <p class="font-weight-bold">Total USD</p>
+              <p class="font-weight-bold">{{ formatCurrency(totals.totalUsd, 'USD') }}</p>
             </div>
-            <div v-if="exchangeRate" class="d-flex justify-space-between text-body-1 mt-2 text-medium-emphasis">
-              <p>Total en USD (aprox.)</p>
-              <p>{{ formatCurrency(totals.total / exchangeRate, 'USD') }}</p>
+            <div class="d-flex justify-space-between text-h6">
+              <p class="font-weight-bold">Total Bs</p>
+              <p class="font-weight-bold">{{ formatCurrency(totals.totalBs, 'VES') }}</p>
             </div>
 
             <v-divider class="my-4"></v-divider>
 
-            <v-text-field v-model.number="globalDiscount" label="Descuento Global ($)" type="number" min="0"
-              variant="outlined" density="compact"></v-text-field>
-
-            <v-select v-model="paymentMethod" :items="paymentMethods" label="Método de Pago" variant="outlined"
-              density="compact"></v-select>
+            <PaymentDialog v-model="showPaymentDialog" :sale-data="{
+              items: cartItems,
+              totalUsd: totals.totalUsd,
+              totalBs: totals.totalBs
+            }" @payment-completed="onPaymentCompleted" />
 
             <v-textarea v-model="notes" label="Añadir notas a la factura..." rows="3" variant="outlined"
-              density="compact"></v-textarea>
+              density="compact" class="mt-4"></v-textarea>
           </v-card-text>
           <v-divider></v-divider>
           <v-card-actions class="pa-4">
             <v-btn color="success" variant="flat" block size="large"
-              :disabled="cartItems.length === 0 || processingSale" :loading="processingSale" @click="processSale">
+              :disabled="cartItems.length === 0 || processingSale" :loading="processingSale" @click="openPaymentDialog">
               Procesar Venta
             </v-btn>
           </v-card-actions>
@@ -128,8 +150,14 @@
 
 <script>
 import newSaleLogic from './NewSale.js'
+import PaymentDialog from '../../components/sales/PaymentDialog/PaymentDialog.vue'
 
-export default newSaleLogic
+export default {
+  ...newSaleLogic,
+  components: {
+    PaymentDialog
+  }
+}
 </script>
 
 <style scoped src="./NewSale.scss"></style>

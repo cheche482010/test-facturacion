@@ -1,16 +1,29 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useProductStore } from '../../stores/products'
-import { useSaleStore } from '../../stores/sales'
+import { useSalesStore } from '../../stores/sales'
 import { useAppStore } from '../../stores/app'
 import { useCurrencyStore } from '../../stores/currencyStore'
 import { formatCurrency } from '@/utils/formatters'
+
+// Get current dolar rate from main process
+const getCurrentDolarRate = async () => {
+  try {
+    const result = await window.electronAPI.invoke('get-current-dolar-rate')
+    if (result.success && result.data) {
+      return result.data.dataValues.rate
+    }
+  } catch (error) {
+    console.error('Error fetching current dolar rate:', error)
+  }
+  return 36.50 // fallback
+}
 
 export default {
   setup() {
     const router = useRouter()
     const productStore = useProductStore()
-    const saleStore = useSaleStore()
+    const saleStore = useSalesStore()
     const appStore = useAppStore()
     const currencyStore = useCurrencyStore()
 
@@ -19,13 +32,13 @@ export default {
     const processingSale = ref(false)
     const isFastSale = ref(false)
     const productSearch = ref('')
-    const globalDiscount = ref(0)
-    const paymentMethod = ref('Efectivo (Bs)')
+    const selectedProduct = ref(null)
+    const searchLoading = ref(false)
+    const filteredProducts = ref([])
     const notes = ref('')
-    const taxRate = ref(0.16) // Default 16%
-
-    // Options
-    const paymentMethods = ['Efectivo (Bs)', 'Efectivo ($)', 'Transferencia', 'Tarjeta de Débito', 'Tarjeta de Crédito', 'Crédito']
+    const payments = ref([])
+    const showPaymentDialog = ref(false)
+    const currentDolarRate = ref(36.50)
     const cartHeaders = [
       { title: 'Producto', key: 'name', width: '40%', sortable: false },
       { title: 'Cantidad', key: 'quantity', sortable: false, width: '150px' },
@@ -39,12 +52,11 @@ export default {
     const exchangeRate = computed(() => currencyStore.exchangeRate)
 
     const totals = computed(() => {
-      const subtotal = cartItems.value.reduce((acc, item) => acc + (item.quantity * item.price), 0)
-      const discount = globalDiscount.value > subtotal ? subtotal : globalDiscount.value
-      const subtotalAfterDiscount = subtotal - discount
-      const tax = subtotalAfterDiscount * taxRate.value
-      const total = subtotalAfterDiscount + tax
-      return { subtotal, discount, tax, total }
+      const subtotalUsd = cartItems.value.reduce((acc, item) => acc + (item.quantity * item.price), 0)
+      const subtotalBs = subtotalUsd * currentDolarRate.value
+      const totalUsd = subtotalUsd
+      const totalBs = subtotalBs
+      return { subtotalUsd, subtotalBs, totalUsd, totalBs }
     })
 
     // Methods
@@ -81,19 +93,39 @@ export default {
       }
     }
 
-    const addProductFromSearch = () => {
-      if (!productSearch.value) return
-      const searchTerm = productSearch.value.toLowerCase()
-      const product = products.value.find(p =>
-        p.barcode === searchTerm ||
-        p.internalCode?.toLowerCase() === searchTerm ||
-        p.name.toLowerCase().includes(searchTerm)
-      )
+    const addProductFromAutocomplete = (product) => {
       if (product) {
         addProduct(product)
+        selectedProduct.value = null
         productSearch.value = ''
-      } else {
-        console.warn(`Product with search term "${searchTerm}" not found.`)
+        // Keep filtered products for next search
+      }
+    }
+
+    const onSearchInput = async (search) => {
+      productSearch.value = search
+
+      searchLoading.value = true
+      try {
+        if (!search) {
+          // Show all products when no search term
+          filteredProducts.value = products.value.slice(0, 20) // Show first 20 products
+        } else if (search.length < 2) {
+          filteredProducts.value = []
+        } else {
+          // Filter products based on search term
+          const searchTerm = search.toLowerCase()
+          filteredProducts.value = products.value.filter(p =>
+            p.barcode === searchTerm ||
+            p.internalCode?.toLowerCase() === searchTerm ||
+            p.name.toLowerCase().includes(searchTerm)
+          ).slice(0, 10) // Limit to 10 results
+        }
+      } catch (error) {
+        console.error('Error searching products:', error)
+        filteredProducts.value = []
+      } finally {
+        searchLoading.value = false
       }
     }
 
@@ -114,6 +146,10 @@ export default {
 
     const processSale = async () => {
       if (cartItems.value.length === 0) return
+      if (payments.value.length === 0) {
+        console.error('Debe configurar al menos un método de pago')
+        return
+      }
 
       processingSale.value = true
       try {
@@ -121,16 +157,10 @@ export default {
           items: cartItems.value.map(item => ({
             productId: item.id,
             quantity: item.quantity,
-            unitPrice: item.price,
-            subtotal: item.subtotal
           })),
-          subtotal: totals.value.subtotal,
-          discount: totals.value.discount,
-          tax: totals.value.tax,
-          total: totals.value.total,
-          paymentMethod: paymentMethod.value,
+          payments: payments.value,
+          exchangeRate: currentDolarRate.value,
           notes: notes.value,
-          status: paymentMethod.value === 'Crédito' ? 'pending' : 'paid'
         }
 
         await saleStore.createSale(saleData)
@@ -147,9 +177,20 @@ export default {
     const resetSale = () => {
       cartItems.value = []
       productSearch.value = ''
-      globalDiscount.value = 0
-      paymentMethod.value = 'Efectivo (Bs)'
+      selectedProduct.value = null
+      filteredProducts.value = []
+      payments.value = []
       notes.value = ''
+    }
+
+    const openPaymentDialog = () => {
+      showPaymentDialog.value = true
+    }
+
+    const onPaymentCompleted = (result) => {
+      console.log('Payment completed:', result)
+      resetSale()
+      router.push('/sales')
     }
 
     const cancelSale = () => {
@@ -163,6 +204,10 @@ export default {
         productStore.fetchProducts(),
         currencyStore.fetchExchangeRate()
       ])
+
+      // Fetch current dolar rate
+      const rate = await getCurrentDolarRate()
+      currentDolarRate.value = rate
     })
 
     // Watchers
@@ -172,22 +217,27 @@ export default {
       processingSale,
       isFastSale,
       productSearch,
-      globalDiscount,
-      paymentMethod,
+      selectedProduct,
+      searchLoading,
+      filteredProducts,
       notes,
-      taxRate,
-      paymentMethods,
+      payments,
+      showPaymentDialog,
       cartHeaders,
       products,
       totals,
       appStore,
-      addProductFromSearch,
+      addProductFromAutocomplete,
+      onSearchInput,
       updateQuantity,
       removeItem,
       processSale,
       cancelSale,
+      openPaymentDialog,
+      onPaymentCompleted,
       formatCurrency,
-      exchangeRate
+      exchangeRate,
+      currentDolarRate
     }
   }
 }

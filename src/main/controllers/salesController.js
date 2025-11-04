@@ -1,4 +1,4 @@
-const { Sale, SaleItem, Product, User, InventoryMovement, sequelize } = require("../database/models")
+const { Sale, SaleItem, SalePayment, PaymentMethod, Product, User, InventoryMovement, sequelize } = require("../database/models")
 const { Op } = require("sequelize")
 
 const salesController = {
@@ -41,17 +41,26 @@ const salesController = {
     try {
       const {
         items,
-        saleType,
-        payment,
+        payments,
+        exchangeRate,
       } = req.body
 
       if (!items || items.length === 0) {
         return res.status(400).json({ error: "La venta debe tener al menos un producto." });
       }
 
-      let calculatedSubtotal = 0;
-      let calculatedTaxAmount = 0;
-      let calculatedTotal = 0;
+      if (!payments || payments.length === 0) {
+        return res.status(400).json({ error: "La venta debe tener al menos un método de pago." });
+      }
+
+      if (!exchangeRate) {
+        return res.status(400).json({ error: "La tasa de cambio es requerida." });
+      }
+
+      let calculatedSubtotalUsd = 0;
+      let calculatedSubtotalBs = 0;
+      let calculatedTotalUsd = 0;
+      let calculatedTotalBs = 0;
 
       const saleCount = await Sale.count({ transaction })
       const saleNumber = `BODEGA-${String(saleCount + 1).padStart(6, "0")}`
@@ -60,26 +69,25 @@ const salesController = {
         {
           saleNumber,
           userId: req.user?.id || 1,
-          saleType,
-          subtotal: 0,
-          taxAmount: 0,
-          discountAmount: 0,
-          discountPercentage: 0,
-          total: 0,
-          paymentMethod: payment.method,
-          paymentStatus: payment.method === "credito" ? "pendiente" : "pagado",
-          paidAmount: payment.paidAmount || 0,
-          changeAmount: payment.changeAmount || 0,
-          documentType: payment.documentType || "ticket",
+          subtotalUsd: 0,
+          subtotalBs: 0,
+          totalUsd: 0,
+          totalBs: 0,
+          exchangeRate,
+          paymentStatus: "pagado",
+          paidAmountBs: 0,
+          paidAmountUsd: 0,
+          changeAmountBs: 0,
+          changeAmountUsd: 0,
           status: "completada",
-          notes: payment.notes || "",
+          notes: "",
         },
         { transaction },
       )
 
       for (const item of items) {
         const product = await Product.findByPk(item.productId, { transaction, lock: true })
-        
+
         if (!product) {
           throw new Error(`Producto con ID ${item.productId} no encontrado`)
         }
@@ -88,26 +96,29 @@ const salesController = {
           throw new Error(`Stock insuficiente para ${product.name}. Disponible: ${product.currentStock}`)
         }
 
-        const itemSubtotal = product.retailPrice * item.quantity;
-        const itemTaxAmount = 0; // IVA eliminado
-        const itemTotal = itemSubtotal;
+        const itemUnitPriceUsd = product.retailPrice;
+        const itemUnitPriceBs = itemUnitPriceUsd * exchangeRate;
+        const itemSubtotalUsd = itemUnitPriceUsd * item.quantity;
+        const itemSubtotalBs = itemSubtotalUsd * exchangeRate;
+        const itemTotalUsd = itemSubtotalUsd;
+        const itemTotalBs = itemSubtotalBs;
 
-        calculatedSubtotal += itemSubtotal;
-        calculatedTaxAmount += itemTaxAmount;
-        calculatedTotal += itemTotal;
+        calculatedSubtotalUsd += itemSubtotalUsd;
+        calculatedSubtotalBs += itemSubtotalBs;
+        calculatedTotalUsd += itemTotalUsd;
+        calculatedTotalBs += itemTotalBs;
 
         await SaleItem.create(
           {
             saleId: sale.id,
             productId: product.id,
             quantity: item.quantity,
-            unitPrice: product.retailPrice,
-            discountPercentage: 0,
-            discountAmount: 0,
-            taxRate: 0, // IVA eliminado
-            taxAmount: itemTaxAmount,
-            subtotal: itemSubtotal,
-            total: itemTotal,
+            unitPriceUsd: itemUnitPriceUsd,
+            unitPriceBs: itemUnitPriceBs,
+            subtotalUsd: itemSubtotalUsd,
+            subtotalBs: itemSubtotalBs,
+            totalUsd: itemTotalUsd,
+            totalBs: itemTotalBs,
           },
           { transaction },
         )
@@ -134,12 +145,45 @@ const salesController = {
         )
       }
 
+      // Crear pagos
+      let totalPaidBs = 0;
+      let totalPaidUsd = 0;
+
+      for (const payment of payments) {
+        const paymentMethod = await PaymentMethod.findByPk(payment.paymentMethodId, { transaction });
+        if (!paymentMethod) {
+          throw new Error(`Método de pago con ID ${payment.paymentMethodId} no encontrado`);
+        }
+
+        await SalePayment.create(
+          {
+            saleId: sale.id,
+            paymentMethodId: payment.paymentMethodId,
+            amount: payment.amount,
+          },
+          { transaction },
+        );
+
+        // Asumir que si el método contiene "usd" es en USD, sino en BS
+        if (paymentMethod.name.toLowerCase().includes('usd')) {
+          totalPaidUsd += payment.amount;
+        } else {
+          totalPaidBs += payment.amount;
+        }
+      }
+
+      const changeBs = totalPaidBs - calculatedTotalBs;
+      const changeUsd = totalPaidUsd - calculatedTotalUsd;
+
       await sale.update({
-        subtotal: calculatedSubtotal,
-        taxAmount: calculatedTaxAmount,
-        total: calculatedTotal,
-        paidAmount: payment.paidAmount || calculatedTotal,
-        changeAmount: (payment.paidAmount || 0) - calculatedTotal,
+        subtotalUsd: calculatedSubtotalUsd,
+        subtotalBs: calculatedSubtotalBs,
+        totalUsd: calculatedTotalUsd,
+        totalBs: calculatedTotalBs,
+        paidAmountBs: totalPaidBs,
+        paidAmountUsd: totalPaidUsd,
+        changeAmountBs: Math.max(0, changeBs),
+        changeAmountUsd: Math.max(0, changeUsd),
       }, { transaction });
 
       await transaction.commit()
@@ -151,6 +195,11 @@ const salesController = {
             model: SaleItem,
             as: "items",
             include: [{ model: Product, as: "product" }],
+          },
+          {
+            model: SalePayment,
+            as: "payments",
+            include: [{ model: PaymentMethod, as: "paymentMethod" }],
           },
         ],
       })
@@ -171,6 +220,11 @@ const salesController = {
             model: SaleItem,
             as: "items",
             include: [{ model: Product, as: "product" }],
+          },
+          {
+            model: SalePayment,
+            as: "payments",
+            include: [{ model: PaymentMethod, as: "paymentMethod" }],
           },
         ],
       })
@@ -248,6 +302,11 @@ const salesController = {
             as: "items",
             include: [{ model: Product, as: "product" }],
           },
+          {
+            model: SalePayment,
+            as: "payments",
+            include: [{ model: PaymentMethod, as: "paymentMethod" }],
+          },
         ],
       })
 
@@ -268,6 +327,11 @@ const salesController = {
             model: SaleItem,
             as: "items",
             include: [{ model: Product, as: "product" }],
+          },
+          {
+            model: SalePayment,
+            as: "payments",
+            include: [{ model: PaymentMethod, as: "paymentMethod" }],
           },
         ],
       })

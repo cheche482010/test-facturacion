@@ -22,54 +22,49 @@ const Sale = sequelize.define(
         key: "id",
       },
     },
-    // Tipo de venta
-    saleType: {
-      type: DataTypes.ENUM("detal", "mayorista", "mixta"),
-      defaultValue: "detal",
-    },
     // Montos
-    subtotal: {
+    subtotalUsd: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
       defaultValue: 0,
     },
-    taxAmount: {
+    subtotalBs: {
       type: DataTypes.DECIMAL(10, 2),
+      allowNull: false,
       defaultValue: 0,
     },
-    discountAmount: {
+    totalUsd: {
       type: DataTypes.DECIMAL(10, 2),
-      defaultValue: 0,
+      allowNull: false,
     },
-    discountPercentage: {
-      type: DataTypes.DECIMAL(5, 2),
-      defaultValue: 0,
-    },
-    total: {
+    totalBs: {
       type: DataTypes.DECIMAL(10, 2),
+      allowNull: false,
+    },
+    exchangeRate: {
+      type: DataTypes.DECIMAL(10, 4),
       allowNull: false,
     },
     // Pago
-    paymentMethod: {
-      type: DataTypes.ENUM("efectivo_bs", "efectivo_usd", "transferencia", "pos", "pago_movil", "credito"),
-      allowNull: false,
-    },
     paymentStatus: {
       type: DataTypes.ENUM("pagado", "pendiente", "parcial"),
       defaultValue: "pagado",
     },
-    paidAmount: {
+    paidAmountBs: {
       type: DataTypes.DECIMAL(10, 2),
       defaultValue: 0,
     },
-    changeAmount: {
+    paidAmountUsd: {
       type: DataTypes.DECIMAL(10, 2),
       defaultValue: 0,
     },
-    // Documento
-    documentType: {
-      type: DataTypes.ENUM("factura", "ticket", "nota_debito", "nota_credito"),
-      defaultValue: "ticket",
+    changeAmountBs: {
+      type: DataTypes.DECIMAL(10, 2),
+      defaultValue: 0,
+    },
+    changeAmountUsd: {
+      type: DataTypes.DECIMAL(10, 2),
+      defaultValue: 0,
     },
     // Estado
     status: {

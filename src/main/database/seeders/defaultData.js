@@ -1,4 +1,4 @@
-const { User, Category, Settings, Product, Sale, SaleItem, InventoryMovement } = require("../models")
+const { User, Category, Settings, Product, Sale, SaleItem, SalePayment, PaymentMethod, InventoryMovement } = require("../models")
 const { sequelize } = require("../connection")
 
 const seedDefaultData = async () => {
@@ -41,6 +41,22 @@ const seedDefaultData = async () => {
         role: "dev",
       })
       console.log("   -> Usuario dev creado.")
+    }
+
+    // Crear métodos de pago por defecto
+    const paymentMethodsExist = await PaymentMethod.count()
+    if (paymentMethodsExist === 0) {
+      const paymentMethods = [
+        { name: "Efectivo BS", description: "Pago en efectivo en bolívares" },
+        { name: "Efectivo USD", description: "Pago en efectivo en dólares" },
+        { name: "Transferencia", description: "Pago por transferencia bancaria" },
+        { name: "POS", description: "Pago con tarjeta de débito/crédito" },
+        { name: "Pago Móvil", description: "Pago móvil" },
+        { name: "Crédito", description: "Pago a crédito" },
+      ]
+
+      await PaymentMethod.bulkCreate(paymentMethods)
+      console.log("   -> Métodos de pago por defecto creados.")
     }
 
     // Crear categorías por defecto

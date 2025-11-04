@@ -3,6 +3,8 @@ const Category = require("./Category")
 const Product = require("./Product")
 const Sale = require("./Sale")
 const SaleItem = require("./SaleItem")
+const SalePayment = require("./SalePayment")
+const PaymentMethod = require("./PaymentMethod")
 const InventoryMovement = require("./InventoryMovement")
 const Settings = require("./Settings")
 const CashReconciliation = require("./CashReconciliation")
@@ -23,6 +25,12 @@ SaleItem.belongsTo(Sale, { foreignKey: "saleId", as: "sale" })
 SaleItem.belongsTo(Product, { foreignKey: "productId", as: "product" })
 Product.hasMany(SaleItem, { foreignKey: "productId", as: "saleItems" })
 
+// SalePayment relationships
+Sale.hasMany(SalePayment, { foreignKey: "saleId", as: "payments" })
+SalePayment.belongsTo(Sale, { foreignKey: "saleId", as: "sale" })
+SalePayment.belongsTo(PaymentMethod, { foreignKey: "paymentMethodId", as: "paymentMethod" })
+PaymentMethod.hasMany(SalePayment, { foreignKey: "paymentMethodId", as: "salePayments" })
+
 // InventoryMovement relationships
 InventoryMovement.belongsTo(Product, { foreignKey: "productId", as: "product" })
 InventoryMovement.belongsTo(User, { foreignKey: "userId", as: "user" })
@@ -39,6 +47,8 @@ module.exports = {
   Product,
   Sale,
   SaleItem,
+  SalePayment,
+  PaymentMethod,
   InventoryMovement,
   Settings,
   CashReconciliation,

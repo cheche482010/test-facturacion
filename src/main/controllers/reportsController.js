@@ -10,14 +10,14 @@ const reportsController = {
       const sevenDaysAgo = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7)
 
       const totalProducts = await Product.count()
-      const totalSales = await Sale.sum("total")
+      const totalSales = await Sale.sum("total_bs")
       const inventoryValueResult = await Product.findOne({
         attributes: [[sequelize.literal("SUM(current_stock * cost_price)"), "value"]],
         raw: true,
       })
       const inventoryValue = inventoryValueResult?.value
 
-      const todaySales = await Sale.sum("total", {
+      const todaySales = await Sale.sum("total_bs", {
         where: { sale_date: { [Op.gte]: startOfDay } },
       })
 
@@ -25,7 +25,7 @@ const reportsController = {
         where: { sale_date: { [Op.gte]: sevenDaysAgo } },
         attributes: [
           [sequelize.fn("DATE", sequelize.col("sale_date")), "date"],
-          [sequelize.fn("SUM", sequelize.col("total")), "total"],
+          [sequelize.fn("SUM", sequelize.col("total_bs")), "total"],
         ],
         group: [sequelize.literal("DATE(sale_date)")],
         order: [[sequelize.literal("DATE(sale_date)"), "ASC"]],
@@ -53,9 +53,8 @@ const reportsController = {
         attributes: [
           "id",
           "sale_number",
-          "total",
+          "total_bs",
           "sale_date",
-          "payment_method",
           "status"
         ]
       })
@@ -113,9 +112,8 @@ const reportsController = {
         attributes: [
           [sequelize.literal(`DATE_FORMAT(sale_date, '${dateFormat}')`), "period"],
           [sequelize.fn("COUNT", sequelize.col("id")), "totalSales"],
-          [sequelize.fn("SUM", sequelize.col("total")), "totalAmount"],
-          [sequelize.fn("SUM", sequelize.col("tax_amount")), "totalTax"],
-          [sequelize.fn("AVG", sequelize.col("total")), "averageTicket"],
+          [sequelize.fn("SUM", sequelize.col("total_bs")), "totalAmount"],
+          [sequelize.fn("AVG", sequelize.col("total_bs")), "averageTicket"],
         ],
         group: [sequelize.literal(`DATE_FORMAT(sale_date, '${dateFormat}')`)],
         order: [[sequelize.literal(`DATE_FORMAT(sale_date, '${dateFormat}')`), "ASC"]],
@@ -156,11 +154,11 @@ const reportsController = {
           "product_id",
           [sequelize.col("product.name"), "productName"],
           [sequelize.fn("SUM", sequelize.col("quantity")), "totalSold"],
-          [sequelize.fn("SUM", sequelize.col("SaleItem.total")), "totalRevenue"],
+          [sequelize.fn("SUM", sequelize.col("SaleItem.total_bs")), "totalRevenue"],
           [sequelize.literal("SUM(SaleItem.quantity * product.cost_price)"), "totalCost"],
         ],
         group: ["product_id", "product.id"],
-        order: [[sequelize.fn("SUM", sequelize.col("SaleItem.total")), "DESC"]],
+        order: [[sequelize.fn("SUM", sequelize.col("SaleItem.total_bs")), "DESC"]],
         limit: Number.parseInt(limit),
       })
 
@@ -236,9 +234,8 @@ const reportsController = {
           },
         },
         attributes: [
-          [sequelize.fn("SUM", sequelize.col("subtotal")), "totalRevenue"],
-          [sequelize.fn("SUM", sequelize.col("tax_amount")), "totalTax"],
-          [sequelize.fn("SUM", sequelize.col("total")), "totalSales"],
+          [sequelize.fn("SUM", sequelize.col("subtotal_bs")), "totalRevenue"],
+          [sequelize.fn("SUM", sequelize.col("total_bs")), "totalSales"],
           [sequelize.fn("COUNT", sequelize.col("id")), "transactionCount"],
         ],
       })
@@ -271,11 +268,26 @@ const reportsController = {
           },
         },
         attributes: [
-          "payment_method",
           [sequelize.fn("COUNT", sequelize.col("id")), "count"],
-          [sequelize.fn("SUM", sequelize.col("total")), "total"],
+          [sequelize.fn("SUM", sequelize.col("total_bs")), "total"],
         ],
-        group: ["payment_method"],
+        // Note: payment_method column no longer exists, using SalePayment instead
+        include: [{
+          model: require('../database/models').SalePayment,
+          as: 'payments',
+          include: [{
+            model: require('../database/models').PaymentMethod,
+            as: 'paymentMethod',
+            attributes: ['name']
+          }],
+          attributes: []
+        }],
+        attributes: [
+          [sequelize.col('payments->paymentMethod.name'), 'payment_method'],
+          [sequelize.fn("COUNT", sequelize.col("id")), "count"],
+          [sequelize.fn("SUM", sequelize.col("total_bs")), "total"],
+        ],
+        group: [sequelize.col('payments->paymentMethod.name')],
       })
 
       const revenue = Number.parseFloat(salesData?.dataValues?.totalRevenue || 0)
@@ -288,7 +300,7 @@ const reportsController = {
         cost,
         grossProfit,
         grossMargin,
-        tax: Number.parseFloat(salesData?.dataValues?.totalTax || 0),
+        tax: 0, // IVA eliminado
         totalSales: Number.parseFloat(salesData?.dataValues?.totalSales || 0),
         transactionCount: Number.parseInt(salesData?.dataValues?.transactionCount || 0),
         paymentMethods,
@@ -320,8 +332,8 @@ const reportsController = {
         attributes: [
           "user_id",
           [sequelize.fn("COUNT", sequelize.col("Sale.id")), "totalSales"],
-          [sequelize.fn("SUM", sequelize.col("total")), "totalAmount"],
-          [sequelize.fn("AVG", sequelize.col("total")), "averageTicket"],
+          [sequelize.fn("SUM", sequelize.col("total_bs")), "totalAmount"],
+          [sequelize.fn("AVG", sequelize.col("total_bs")), "averageTicket"],
         ],
         group: ["user_id", "User.id"],
         order: [[sequelize.fn("SUM", sequelize.col("total")), "DESC"]],
@@ -366,9 +378,8 @@ const reportsController = {
       const dayTotalsRow = await Sale.findOne({
         where: whereDay,
         attributes: [
-          [sequelize.fn("SUM", sequelize.col("subtotal")), "subtotal"],
-          [sequelize.fn("SUM", sequelize.col("tax_amount")), "tax"],
-          [sequelize.fn("SUM", sequelize.col("total")), "total"],
+          [sequelize.fn("SUM", sequelize.col("subtotal_bs")), "subtotal"],
+          [sequelize.fn("SUM", sequelize.col("total_bs")), "total"],
           [sequelize.fn("COUNT", sequelize.col("id")), "count"],
         ],
         raw: true,
@@ -376,18 +387,28 @@ const reportsController = {
 
       const payments = await Sale.findAll({
         where: whereDay,
+        include: [{
+          model: require('../database/models').SalePayment,
+          as: 'payments',
+          include: [{
+            model: require('../database/models').PaymentMethod,
+            as: 'paymentMethod',
+            attributes: ['name']
+          }],
+          attributes: []
+        }],
         attributes: [
-          "payment_method",
+          [sequelize.col('payments->paymentMethod.name'), 'payment_method'],
           [sequelize.fn("COUNT", sequelize.col("id")), "count"],
-          [sequelize.fn("SUM", sequelize.col("total")), "total"],
+          [sequelize.fn("SUM", sequelize.col("total_bs")), "total"],
         ],
-        group: ["payment_method"],
+        group: [sequelize.col('payments->paymentMethod.name')],
         raw: true,
       })
 
       const sales = await Sale.findAll({
         where: whereDay,
-        attributes: ["id", "sale_number", "total", "payment_method", "sale_date", "status"],
+        attributes: ["id", "sale_number", "total_bs", "sale_date", "status"],
         order: [["sale_date", "ASC"]],
         raw: true,
       })
@@ -403,7 +424,7 @@ const reportsController = {
           sale_date: { [Op.between]: [weekStartDate, dayEnd] },
           status: "completada",
         },
-        attributes: [[sequelize.fn("SUM", sequelize.col("total")), "total"]],
+        attributes: [[sequelize.fn("SUM", sequelize.col("total_bs")), "total"]],
         raw: true,
       })
 
@@ -414,7 +435,7 @@ const reportsController = {
           sale_date: { [Op.between]: [monthStartDate, dayEnd] },
           status: "completada",
         },
-        attributes: [[sequelize.fn("SUM", sequelize.col("total")), "total"]],
+        attributes: [[sequelize.fn("SUM", sequelize.col("total_bs")), "total"]],
         raw: true,
       })
 
@@ -422,7 +443,7 @@ const reportsController = {
         range: { start: dayStart, end: dayEnd, openingTime },
         totals: {
           subtotal: Number.parseFloat(dayTotalsRow?.subtotal || 0),
-          tax: Number.parseFloat(dayTotalsRow?.tax || 0),
+          tax: 0, // IVA eliminado
           total: Number.parseFloat(dayTotalsRow?.total || 0),
           count: Number.parseInt(dayTotalsRow?.count || 0, 10),
         },

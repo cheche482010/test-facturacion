@@ -138,16 +138,15 @@ if (app && typeof app.whenReady === 'function') {
     // Actualizar la tasa del dólar al inicio y luego diariamente
     try {
       await DolarService.fetchDolarRate()
-      console.log('✅ Tasa del dólar actualizada al inicio')
     } catch (error) {
-      console.error('❌ Error actualizando tasa del dólar al inicio:', error.message)
+      console.error('Error actualizando tasa del dólar al inicio:', error.message)
     }
     setInterval(async () => {
       try {
         await DolarService.fetchDolarRate()
-        console.log('✅ Tasa del dólar actualizada automáticamente')
+        console.log('Tasa del dólar actualizada automáticamente')
       } catch (error) {
-        console.error('❌ Error actualizando tasa del dólar automáticamente:', error.message)
+        console.error('Error actualizando tasa del dólar automáticamente:', error.message)
       }
     }, 24 * 60 * 60 * 1000) // Cada 24 horas
 
