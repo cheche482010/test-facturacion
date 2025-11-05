@@ -1,5 +1,8 @@
+require("dotenv").config()
+
 const { User, Category, Settings, Product, Sale, SaleItem, SalePayment, PaymentMethod, InventoryMovement } = require("../models")
 const { sequelize } = require("../connection")
+const { Op } = require("sequelize")
 
 const seedDefaultData = async () => {
   try {
@@ -62,13 +65,28 @@ const seedDefaultData = async () => {
     // Crear categorías por defecto
     const categoriesExist = await Category.count()
     if (categoriesExist === 0) {
-      const categories = [
-        { name: "Electrónica", description: "Equipos electrónicos y componentes" },
-        { name: "Bebidas", description: "Bebidas y refrescos" },
-        { name: "Limpieza", description: "Productos de limpieza" },
-        { name: "Cuidado Personal", description: "Productos de higiene personal" },
+      const categories = [ // Categorías extraídas del JSON de productos
+        { name: "Lácteos", description: "Productos derivados de la leche" },
+        { name: "Bebés", description: "Productos para el cuidado de bebés" },
+        { name: "Limpieza", description: "Productos para la limpieza del hogar" },
+        { name: "Aseo Personal", description: "Productos de higiene y cuidado personal" },
+        { name: "Víveres", description: "Alimentos no perecederos y de consumo básico" },
         { name: "Hogar", description: "Artículos para el hogar" },
-      ]
+        { name: "Verduras", description: "Hortalizas y verduras frescas" },
+        { name: "Granos", description: "Granos y legumbres" },
+        { name: "Pastas", description: "Pastas alimenticias" },
+        { name: "Enlatados", description: "Alimentos enlatados y conservas" },
+        { name: "Aceites", description: "Aceites comestibles" },
+        { name: "Cereales", description: "Cereales para el desayuno y otros" },
+        { name: "Panadería", description: "Productos de panadería y repostería" },
+        { name: "Confitería", description: "Dulces, chocolates y golosinas" },
+        { name: "Salsas", description: "Salsas y aderezos" },
+        { name: "Bebidas", description: "Jugos, refrescos y otras bebidas" },
+        { name: "Embutidos", description: "Embutidos y charcutería" },
+        { name: "Huevos", description: "Huevos de gallina y otros" },
+        { name: "Pizzas", description: "Pizzas y productos relacionados" },
+        { name: "Medicinal", description: "Productos de uso medicinal natural" },
+      ];
 
       await Category.bulkCreate(categories)
       console.log("   -> Categorías por defecto creadas.")
@@ -230,13 +248,116 @@ const seedDefaultData = async () => {
       // --- 2. Crear Productos ---
       const productCount = await Product.count({ transaction })
       if (productCount === 0 && categories.length > 0) {
+        const categoryMap = categories.reduce((acc, cat) => {
+          acc[cat.name.toLowerCase()] = cat.id;
+          return acc;
+        }, {});
+
+        const getCategoryId = (tags) => {
+          const tagMap = {
+            lactios: "lácteos", bebe: "bebés", limpieza: "limpieza", jabon: "limpieza", aseo: "aseo personal",
+            viveres: "víveres", toallas: "aseo personal", verdura: "verduras", arroz: "granos",
+            harina: "víveres", sardina: "enlatados", enlatado: "enlatados", bombillos: "hogar",
+            aceite: "aceites", cereal: "cereales", panes: "panadería", chucherias: "confitería",
+            salsas: "salsas", jugo: "bebidas", frutas: "bebidas", lacteos: "lácteos", huevosr: "huevos",
+            pizza: "pizzas", medicinal: "medicinal", aluminio: "hogar", cepillo: "hogar",
+            refresco: "bebidas", embutidos: "embutidos", velas: "hogar", vinagre: "víveres",
+            mayonesa: "salsas", diablito: "enlatados", prestobarba: "aseo personal",
+            mostaza: "salsas", pepito: "confitería",
+          };
+          if (!tags || tags.length === 0) return categoryMap["víveres"];
+          const firstTag = tags[0].toLowerCase();
+          const mappedCategory = tagMap[firstTag] || firstTag;
+          return categoryMap[mappedCategory] || categoryMap["víveres"];
+        };
+
         const productsData = [
-          { name: "Laptop Pro 15", internalCode: "LP15", barcode: "1234567890123", categoryId: categories[0].id, costPrice: 33.33, costCurrency: "USD", retailPrice: 1200, currentStock: 50, minStock: 10, maxStock: 100, taxRate: 16, status: "activo" },
-          { name: "Mouse Inalámbrico", internalCode: "MI01", barcode: "1234567890124", categoryId: categories[1].id, costPrice: 0.69, costCurrency: "USD", retailPrice: 25, currentStock: 200, minStock: 30, maxStock: 300, taxRate: 16, status: "activo" },
-          { name: "Teclado Mecánico RGB", internalCode: "TM02", barcode: "1234567890125", categoryId: categories[1].id, costPrice: 2.64, costCurrency: "USD", retailPrice: 95, currentStock: 8, minStock: 10, maxStock: 150, taxRate: 16, status: "activo" }, // Stock bajo
-          { name: "Monitor 27' 4K", internalCode: "M274K", barcode: "1234567890126", categoryId: categories[0].id, costPrice: 11.11, costCurrency: "USD", retailPrice: 400, currentStock: 30, minStock: 5, maxStock: 50, taxRate: 16, status: "activo" },
-          { name: "Cable HDMI 2m", internalCode: "HDMI2", barcode: "1234567890127", categoryId: categories[2].id, costPrice: 0.33, costCurrency: "USD", retailPrice: 12, currentStock: 0, minStock: 20, maxStock: 200, taxRate: 16, status: "activo" }, // Sin stock
-        ]
+          { name: "Leche la Campesina 400gr", retailPrice: 2.70, tags: ["bebe", "sin_existencia"] },
+          { name: "Leche Pastoreña Completa 1 Lt", retailPrice: 1.40, tags: ["lactios", "prioridad", "sin_existencia"] },
+          { name: "Leche Valle Hondo 400 Grs", retailPrice: 3.14, tags: ["lactios", "prioridad", "sin_existencia"] },
+          { name: "Jabon Pastilla Las Llaves", retailPrice: 0.83, tags: ["jabon", "limpieza", "sin_existencia"] },
+          { name: "Leche Liquida Guaralact 1.8ml", retailPrice: 2.19, tags: ["lactios", "prioridad"] },
+          { name: "Leche Pastoreña Descremada 1 Lt", retailPrice: 1.38, tags: ["prioridad", "sin_existencia"] },
+          { name: "Pañales Pramnpars Talla M", retailPrice: 1.90, tags: ["aseo", "sin_existencia"] },
+          { name: "Toalla sanitaria Allison nocturna", retailPrice: 0.63, tags: [] },
+          { name: "CREMA DENTAL MAKSIN MULTI ACTION 90gr", retailPrice: 0.74, tags: ["viveres"] },
+          { name: "Toallas Almessy", retailPrice: 0.47, tags: ["toallas", "aseo"] },
+          { name: "Toallas Allisson Diurno", retailPrice: 0.71, tags: ["aseo"] },
+          { name: "Fideo Nido La Especial 500gr", retailPrice: 0.74, tags: ["viveres", "sin_existencia"] },
+          { name: "LAVAPLATOS CONCORD LIMON 500GR", retailPrice: 1.37, tags: ["viveres", "sin_existencia"] },
+          { name: "arveja amarilla medio kilo", retailPrice: 0.67, tags: ["refuera"] },
+          { name: "Harina de Trigo Doña Maria 1Kg", retailPrice: 1.11, tags: ["viveres", "sin_existencia"] },
+          { name: "fororo valle hondo 250g", retailPrice: 0.30, tags: ["sin_existencia"] },
+          { name: "ABONO LIQUIDO", retailPrice: 1.37, tags: ["verdura"] },
+          { name: "Arvejas Verde Partidas Pesada", retailPrice: 0.97, tags: ["arroz", "prioridad", "reguera"] },
+          { name: "Tallarin Capri 500 gr", retailPrice: 1.11, tags: ["sin_existencia", "reguera"] },
+          { name: "PRECIO SOLIDARIO", retailPrice: 0.33, tags: ["verdura"] },
+          { name: "Harina De Trigo Dulce Mar Leudante 1 Kg", retailPrice: 1.03, tags: ["harina", "prioridad"] },
+          { name: "Harina De Trigo Dulce Mar Todo Uso 1 Kg", retailPrice: 0.95, tags: ["harina", "prioridad"] },
+          { name: "Sardina El Morro Tomate", retailPrice: 0.48, tags: ["sin_existencia"] },
+          { name: "Sardina El Morro en Aceite", retailPrice: 0.48, tags: ["reguera", "sin_existencia"] },
+          { name: "Papel Luciano Natural 4 Rollos", retailPrice: 0.81, tags: ["aseo", "limpieza"] },
+          { name: "jabon especial jirafa limon", retailPrice: 0.70, tags: ["jabon"] },
+          { name: "SARDINA PEÑERO EN TOMATE 170G", retailPrice: 0.64, tags: ["sin_existencia"] },
+          { name: "SARDINA PEÑERO EN ACEITE 170G", retailPrice: 0.64, tags: ["reguera", "sin_existencia"] },
+          { name: "Jabon Especial jirafa Aloe Vera", retailPrice: 0.66, tags: ["jabon", "limpieza"] },
+          { name: "Jabon Especial jirafa Bebe", retailPrice: 0.66, tags: ["jabon", "limpieza"] },
+          { name: "Jabon Especial Jirafa Especial Blancura", retailPrice: 0.66, tags: ["jabon", "limpieza"] },
+          { name: "Jabon Especial Jirafa limón", retailPrice: 0.66, tags: [] },
+          { name: "Bombillo Led 18W", retailPrice: 1.30, tags: ["bombillos"] },
+          { name: "sardina el farallon", retailPrice: 0.60, tags: ["sardina", "enlatado", "sin_existencia"] },
+          { name: "ACEITE MI ACEITE 900 ML", retailPrice: 2.45, tags: ["viveres"] },
+          { name: "ACEITE MI ACEITE 830ML", retailPrice: 2.45, tags: ["viveres"] },
+          { name: "TOMATE", retailPrice: 1.54, tags: ["verdura"] },
+          { name: "JUGO DE NARANJA TUNAL 200 ML", retailPrice: 0.27, tags: [] },
+          { name: "MANZANA ROJA CALIBRE 125", retailPrice: 0.85, tags: [] },
+          { name: "MANZANA ROJA CAL 113", retailPrice: 0.74, tags: ["verdura"] },
+          { name: "Suavitel", retailPrice: 0.61, tags: ["limpieza"] },
+          { name: "Suavitel fresca primavera 180ml", retailPrice: 0.61, tags: ["suavitel"] },
+          { name: "Suavitel cuidado superior 180ml", retailPrice: 0.61, tags: [] },
+          { name: "Aceituna entera Giralda 500GM", retailPrice: 1.99, tags: [] },
+          { name: "Maiz Kaldini 400gr", retailPrice: 1.52, tags: ["enlatado", "sin_existencia"] },
+          { name: "Konga De Limon", retailPrice: 0.51, tags: ["jugo", "frutas"] },
+          { name: "Konga De Naranja", retailPrice: 0.51, tags: ["jugo", "frutas"] },
+          { name: "Konga Sabor Mora", retailPrice: 0.51, tags: ["jugo", "frutas"] },
+          { name: "Azucar Montalban", retailPrice: 1.27, tags: ["azucar", "reguera"] },
+          { name: "Azucar Montalban blanca 1kg", retailPrice: 1.27, tags: ["reguera"] },
+          { name: "konga parchita", retailPrice: 0.51, tags: [] },
+          { name: "Konga", retailPrice: 0.51, tags: [] },
+          { name: "Pañales Baby Finger Talla G 10 unidades", retailPrice: 3.21, tags: ["viveres"] },
+          { name: "Pañales Baby Finger XG 10 unidades", retailPrice: 3.21, tags: ["reguera"] },
+          { name: "Mezcla Semillas Nutritivas Pan 500gr", retailPrice: 2.37, tags: ["secundario"] },
+          { name: "bombillo almessy 12w", retailPrice: 1.03, tags: ["viveres"] },
+          { name: "Mayonesa Kemy 190 gms", retailPrice: 1.11, tags: [] },
+          { name: "MANZANA VERDE", retailPrice: 0.87, tags: [] },
+          { name: "Shampoo sobre Pantene PRO-V", retailPrice: 0.49, tags: [] },
+          { name: "Afrecho 8 de Marzo", retailPrice: 1.70, tags: ["upc"] },
+          { name: "Margarina Kemy 400Gr", retailPrice: 1.74, tags: [] },
+        ].map((p, index) => {
+          const profitPercentage = Math.floor(Math.random() * (35 - 15 + 1)) + 15; // Ganancia entre 15% y 35%
+          const costPrice = parseFloat((p.retailPrice / (1 + profitPercentage / 100)).toFixed(2));
+          const stockOptions = [0, 5, Math.floor(Math.random() * 50) + 20]; // 0, 5 (bajo), o aleatorio > 20
+          const currentStock = stockOptions[index % 3];
+          const minStock = Math.max(5, Math.floor(currentStock * 0.2));
+
+          return {
+            name: p.name.trim(),
+            internalCode: `P${String(index + 1).padStart(4, '0')}`,
+            barcode: String(Date.now() + index),
+            categoryId: getCategoryId(p.tags),
+            costPrice: costPrice,
+            costCurrency: "USD",
+            profitPercentage: profitPercentage,
+            retailPrice: p.retailPrice,
+            dollarPrice: p.retailPrice,
+            currentStock: currentStock,
+            minStock: minStock,
+            maxStock: minStock * 5,
+            taxRate: 16,
+            status: currentStock > 0 ? "activo" : "agotado",
+          };
+        });
+
         await Product.bulkCreate(productsData, { transaction })
         console.log(`   -> ${productsData.length} productos creados.`)
       }
@@ -244,35 +365,109 @@ const seedDefaultData = async () => {
       // --- 3. Crear Ventas y Movimientos de Inventario ---
       const saleCount = await Sale.count({ transaction })
       if (saleCount === 0 && adminUser) {
-        const products = await Product.findAll({ transaction })
-        const saleDate = new Date()
+        const products = await Product.findAll({ where: { currentStock: { [Op.gt]: 0 } }, transaction }).catch(() => [])
+        if (!products || products.length === 0) {
+          console.log("   -> No hay suficientes productos con stock para crear ventas de ejemplo.")
+          await transaction.commit()
+          return
+        }
+
+
+
+        if (products.length < 10) {
+          console.log("   -> No hay suficientes productos con stock para crear ventas de ejemplo.");
+          await transaction.commit();
+          return;
+        }
+
+        // --- 4. Crear Movimientos de Inventario (Ajustes) ---
+        // Ajuste de entrada para simular compra
+        const productToAdjustIn = products[0];
+        const previousStockIn = productToAdjustIn.currentStock;
+        const quantityIn = 50;
+        const newStockIn = previousStockIn + quantityIn;
+        await productToAdjustIn.update({ currentStock: newStockIn }, { transaction });
+        await InventoryMovement.create({
+          productId: productToAdjustIn.id,
+          userId: adminUser.id,
+          movementType: "entrada",
+          reason: "compra",
+          quantity: quantityIn,
+          previousStock: previousStockIn,
+          newStock: newStockIn,
+          unitCost: productToAdjustIn.costPrice,
+          totalCost: productToAdjustIn.costPrice * quantityIn,
+          notes: "Recepción de mercancía proveedor A",
+          movementDate: new Date(new Date().setDate(new Date().getDate() - 10)),
+        }, { transaction });
+
+        // Ajuste de salida por pérdida
+        const productToAdjustOut = products[1];
+        const previousStockOut = productToAdjustOut.currentStock;
+        const quantityOut = 2;
+        const newStockOut = previousStockOut - quantityOut;
+        await productToAdjustOut.update({ currentStock: newStockOut }, { transaction });
+        await InventoryMovement.create({
+          productId: productToAdjustOut.id,
+          userId: adminUser.id,
+          movementType: "salida",
+          reason: "merma",
+          quantity: quantityOut,
+          previousStock: previousStockOut,
+          newStock: newStockOut,
+          unitCost: productToAdjustOut.costPrice,
+          totalCost: productToAdjustOut.costPrice * quantityOut,
+          notes: "Producto dañado en almacén",
+          movementDate: new Date(new Date().setDate(new Date().getDate() - 8)),
+        }, { transaction });
+        console.log("   -> 2 ajustes de inventario creados.");
 
         // Venta 1
+        const totalUsd1 = parseFloat((Number(products[2].retailPrice) + Number(products[3].retailPrice)).toFixed(2))
         const sale1 = await Sale.create({
-          saleNumber: `BODEGA-000001`, userId: adminUser.id, saleType: "detal", subtotal: 1225, taxAmount: 196, total: 1225, paymentMethod: "pos", paymentStatus: "pagado", status: "completada", sale_date: new Date(new Date().setDate(new Date().getDate() - 5)),
+          saleNumber: `BODEGA-000001`, userId: adminUser.id, totalUsd: totalUsd1, totalBs: totalUsd1 * 36.5, exchangeRate: 36.5, status: "completada", saleDate: new Date(new Date().setDate(new Date().getDate() - 5)),
         }, { transaction })
         await SaleItem.bulkCreate([
-          { saleId: sale1.id, productId: products[0].id, quantity: 1, unitPrice: 1200, subtotal: 1200, total: 1200, taxRate: 16, taxAmount: 192 },
-          { saleId: sale1.id, productId: products[1].id, quantity: 1, unitPrice: 25, subtotal: 25, total: 25, taxRate: 16, taxAmount: 4 },
+          { saleId: sale1.id, productId: products[2].id, quantity: 1, unitPriceUsd: products[2].retailPrice, unitPriceBs: products[2].retailPrice * 36.5, subtotalUsd: products[2].retailPrice, subtotalBs: products[2].retailPrice * 36.5, totalUsd: products[2].retailPrice, totalBs: products[2].retailPrice * 36.5 },
+          { saleId: sale1.id, productId: products[3].id, quantity: 1, unitPriceUsd: products[3].retailPrice, unitPriceBs: products[3].retailPrice * 36.5, subtotalUsd: products[3].retailPrice, subtotalBs: products[3].retailPrice * 36.5, totalUsd: products[3].retailPrice, totalBs: products[3].retailPrice * 36.5 },
         ], { transaction })
 
         // Venta 2
+        const totalUsd2 = parseFloat(Number(products[4].retailPrice).toFixed(2))
         const sale2 = await Sale.create({
-          saleNumber: `BODEGA-000002`, userId: adminUser.id, saleType: "detal", subtotal: 400, taxAmount: 64, total: 400, paymentMethod: "credito", paymentStatus: "pendiente", status: "completada", sale_date: new Date(new Date().setDate(new Date().getDate() - 2)),
+          saleNumber: `BODEGA-000002`, userId: adminUser.id, totalUsd: totalUsd2, totalBs: totalUsd2 * 36.5, exchangeRate: 36.5, status: "completada", saleDate: new Date(new Date().setDate(new Date().getDate() - 2)),
         }, { transaction })
-        await SaleItem.create({ saleId: sale2.id, productId: products[3].id, quantity: 1, unitPrice: 400, subtotal: 400, total: 400, taxRate: 16, taxAmount: 64 }, { transaction })
+        await SaleItem.create({ saleId: sale2.id, productId: products[4].id, quantity: 1, unitPriceUsd: products[4].retailPrice, unitPriceBs: products[4].retailPrice * 36.5, subtotalUsd: products[4].retailPrice, subtotalBs: products[4].retailPrice * 36.5, totalUsd: products[4].retailPrice, totalBs: products[4].retailPrice * 36.5 }, { transaction })
 
         // Venta 3 (Hoy)
+        const totalUsd3 = parseFloat(Number(products[5].retailPrice).toFixed(2))
         const sale3 = await Sale.create({
-          saleNumber: `BODEGA-000003`, userId: adminUser.id, saleType: "detal", subtotal: 95, taxAmount: 15.2, total: 95, paymentMethod: "efectivo_usd", paymentStatus: "pagado", status: "completada", sale_date: new Date(),
+          saleNumber: `BODEGA-000003`, userId: adminUser.id, totalUsd: totalUsd3, totalBs: totalUsd3 * 36.5, exchangeRate: 36.5, status: "completada", saleDate: new Date(),
         }, { transaction })
-        await SaleItem.create({ saleId: sale3.id, productId: products[2].id, quantity: 1, unitPrice: 95, subtotal: 95, total: 95, taxRate: 16, taxAmount: 15.2 }, { transaction })
+        await SaleItem.create({ saleId: sale3.id, productId: products[5].id, quantity: 1, unitPriceUsd: products[5].retailPrice, unitPriceBs: products[5].retailPrice * 36.5, subtotalUsd: products[5].retailPrice, subtotalBs: products[5].retailPrice * 36.5, totalUsd: products[5].retailPrice, totalBs: products[5].retailPrice * 36.5 }, { transaction })
 
-        console.log("   -> 3 ventas de ejemplo creadas.")
+        // Venta 4
+        const totalUsd4 = parseFloat((Number(products[6].retailPrice) * 2).toFixed(2))
+        const sale4 = await Sale.create({
+          saleNumber: `BODEGA-000004`, userId: adminUser.id, totalUsd: totalUsd4, totalBs: totalUsd4 * 36.5, exchangeRate: 36.5, status: "completada", saleDate: new Date(),
+        }, { transaction })
+        await SaleItem.create({ saleId: sale4.id, productId: products[6].id, quantity: 2, unitPriceUsd: products[6].retailPrice, unitPriceBs: products[6].retailPrice * 36.5, subtotalUsd: products[6].retailPrice * 2, subtotalBs: (products[6].retailPrice * 2) * 36.5, totalUsd: products[6].retailPrice * 2, totalBs: (products[6].retailPrice * 2) * 36.5 }, { transaction })
 
-        // --- 4. Actualizar Stock y Crear Movimientos de Inventario ---
+        // Venta 5
+        const totalUsd5 = parseFloat((Number(products[7].retailPrice) + Number(products[8].retailPrice)).toFixed(2))
+        const sale5 = await Sale.create({
+          saleNumber: `BODEGA-000005`, userId: adminUser.id, totalUsd: totalUsd5, totalBs: totalUsd5 * 36.5, exchangeRate: 36.5, status: "completada", saleDate: new Date(),
+        }, { transaction })
+        await SaleItem.bulkCreate([
+          { saleId: sale5.id, productId: products[7].id, quantity: 1, unitPriceUsd: products[7].retailPrice, unitPriceBs: products[7].retailPrice * 36.5, subtotalUsd: products[7].retailPrice, subtotalBs: products[7].retailPrice * 36.5, totalUsd: products[7].retailPrice, totalBs: products[7].retailPrice * 36.5 },
+          { saleId: sale5.id, productId: products[8].id, quantity: 1, unitPriceUsd: products[8].retailPrice, unitPriceBs: products[8].retailPrice * 36.5, subtotalUsd: products[8].retailPrice, subtotalBs: products[8].retailPrice * 36.5, totalUsd: products[8].retailPrice, totalBs: products[8].retailPrice * 36.5 },
+        ], { transaction })
+
+        console.log("   -> 5 ventas de ejemplo creadas.")
+
+        // --- 5. Actualizar Stock y Crear Movimientos de Inventario para las ventas ---
         const allSaleItems = await SaleItem.findAll({
-          where: { saleId: [sale1.id, sale2.id, sale3.id] },
+          where: { saleId: [sale1.id, sale2.id, sale3.id, sale4.id, sale5.id] },
           include: [{ model: Product, as: "product" }, { model: Sale, as: "sale" }],
           transaction,
         })
@@ -280,15 +475,15 @@ const seedDefaultData = async () => {
         for (const item of allSaleItems) {
           const product = item.product
           const previousStock = product.currentStock
-          const newStock = previousStock - item.quantity
+          const newStock = Math.max(0, previousStock - item.quantity) // Asegurar que el stock no sea negativo
 
           await product.update({ currentStock: newStock }, { transaction })
 
           await InventoryMovement.create({
-            productId: product.id, userId: item.sale.userId, movementType: "salida", reason: "venta", quantity: item.quantity, previousStock: previousStock, newStock: newStock, unitCost: product.costPrice, totalCost: product.costPrice * item.quantity, referenceId: item.saleId, referenceType: "sale", notes: `Venta ${item.sale.saleNumber}`,
+            productId: product.id, userId: item.sale.userId, movementType: "salida", reason: "venta", quantity: item.quantity, previousStock: previousStock, newStock: newStock, unitCost: product.costPrice, totalCost: product.costPrice * item.quantity, referenceId: item.saleId, referenceType: "sale", notes: `Venta ${item.sale.saleNumber}`, movementDate: item.sale.saleDate
           }, { transaction })
         }
-        console.log("   -> Stock actualizado y movimientos de inventario creados.")
+        console.log("   -> Stock actualizado y movimientos de inventario por ventas creados.")
       }
 
       await transaction.commit()
@@ -305,3 +500,16 @@ const seedDefaultData = async () => {
 }
 
 module.exports = { seedDefaultData }
+
+// Ejecutar el seeder si se llama directamente
+if (require.main === module) {
+  seedDefaultData()
+    .then(() => {
+      console.log("✅ Seeder ejecutado exitosamente.")
+      process.exit(0)
+    })
+    .catch((error) => {
+      console.error("❌ Error ejecutando seeder:", error)
+      process.exit(1)
+    })
+}
