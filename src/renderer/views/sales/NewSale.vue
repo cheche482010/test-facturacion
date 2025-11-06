@@ -41,16 +41,19 @@
                       <v-icon v-else icon="mdi-camera-off" size="16" />
                     </v-avatar>
                   </template>
-                  <v-list-item-title :class="item.raw.currentStock <= 0 ? 'text-error' : ''">{{ item.raw.name}}</v-list-item-title>
-                  <v-list-item-subtitle :class="item.raw.currentStock <= 0 ? 'text-error' : ''">
-                    Código: {{ item.raw.internalCode || 'N/A' }} |
-                    Precio: {{ formatCurrency(item.raw.retailPrice, 'USD') }} |
-                    Stock: <span :class="item.raw.currentStock <= 0 ? 'text-error font-weight-bold' : ''">
-                      {{
-                        item.raw.currentStock
-                      }}</span>
-                    <span v-if="item.raw.currentStock <= 0" class="text-error font-weight-bold">(SIN STOCK)</span>
-                  </v-list-item-subtitle>
+                  <template #title>
+                    <span :class="item.raw.currentStock <= 0 ? 'text-error' : ''">{{ item.raw.name}}</span>
+                  </template>
+                  <template #subtitle>
+                    <span :class="item.raw.currentStock <= 0 ? 'text-error' : ''">
+                      Código: {{ item.raw.internalCode || 'N/A' }} |
+                      Precio: {{ formatCurrency(item.raw.retailPrice, 'USD') }} |
+                      Stock: <span :class="item.raw.currentStock <= 0 ? 'text-error font-weight-bold' : ''">
+                        {{ item.raw.currentStock }}
+                      </span>
+                      <span v-if="item.raw.currentStock <= 0" class="text-error font-weight-bold">(SIN STOCK)</span>
+                    </span>
+                  </template>
                 </v-list-item>
                 <v-divider v-if="index < filteredProducts.length - 1"></v-divider>
               </template>
