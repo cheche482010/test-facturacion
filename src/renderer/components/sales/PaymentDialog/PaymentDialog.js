@@ -162,6 +162,18 @@ export default {
       }).format(amount)
     }
 
+    const getIconForMethod = (name) => {
+      const icons = {
+        'Efectivo BS': 'mdi-cash',
+        'Efectivo USD': 'mdi-cash-multiple',
+        'Transferencia': 'mdi-bank-transfer',
+        'POS': 'mdi-credit-card-chip',
+        'Pago Móvil': 'mdi-cellphone',
+        'Crédito': 'mdi-credit-card'
+      }
+      return icons[name] || 'mdi-cash'
+    }
+
     const loadPaymentMethods = async () => {
       try {
         // Use fetch API to get payment methods from backend
@@ -195,6 +207,11 @@ export default {
           { id: 6, name: 'Crédito' }
         ]
       }
+      // Add icons to payment methods
+      availablePaymentMethods.value = availablePaymentMethods.value.map(method => ({
+        ...method,
+        icon: getIconForMethod(method.name)
+      }))
     }
 
     watch(dialog, async (isOpen) => {
@@ -232,7 +249,8 @@ export default {
       removePayment,
       completeSale,
       closeDialog,
-      formatCurrency
+      formatCurrency,
+      getIconForMethod
     }
   }
 }

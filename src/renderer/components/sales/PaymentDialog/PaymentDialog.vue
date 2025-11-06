@@ -28,7 +28,10 @@
           <v-card-text>
             <div v-for="(payment, index) in payments" :key="index" class="d-flex justify-space-between align-center mb-2">
               <div>
-                <div class="font-weight-medium">{{ payment.methodName }}</div>
+                <div class="d-flex align-center">
+                  <v-icon class="mr-2">{{ getIconForMethod(payment.methodName) }}</v-icon>
+                  <span class="font-weight-medium">{{ payment.methodName }}</span>
+                </div>
                 <div class="text-caption text-medium-emphasis">{{ payment.reference || 'Sin referencia' }}</div>
               </div>
               <div class="text-right d-flex align-center">
@@ -80,7 +83,15 @@
                 variant="outlined"
                 density="compact"
                 @update:model-value="onPaymentMethodChange"
-              />
+              >
+                <template #item="{ props, item }">
+                  <v-list-item v-bind="props">
+                    <template #prepend>
+                      <v-icon>{{ item.raw.icon }}</v-icon>
+                    </template>
+                  </v-list-item>
+                </template>
+              </v-select>
             </v-col>
             <v-col cols="12" md="4">
               <v-text-field
@@ -107,7 +118,7 @@
                 placeholder="Número de lote, referencia, etc."
               />
             </v-col>
-            <v-col cols="12" md="6">
+            <v-col cols="12" :md="isCashPayment ? 12 : 6">
               <v-text-field
                 v-model="paymentData.notes"
                 label="Notas (opcional)"
