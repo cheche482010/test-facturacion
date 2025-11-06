@@ -25,13 +25,6 @@ const Product = sequelize.define(
     description: {
       type: DataTypes.TEXT,
     },
-    brand: {
-      type: DataTypes.STRING(100),
-    },
-    unit: {
-      type: DataTypes.ENUM("unidad", "kg", "litros", "metros", "cajas"),
-      defaultValue: "unidad",
-    },
     categoryId: {
       type: DataTypes.INTEGER,
       references: {
@@ -58,46 +51,23 @@ const Product = sequelize.define(
       allowNull: false,
       defaultValue: 0,
     },
-    wholesalePrice: {
-      type: DataTypes.DECIMAL(10, 2),
-      defaultValue: 0,
-    },
     dollarPrice: {
       type: DataTypes.DECIMAL(10, 2),
       defaultValue: 0,
-    },
-    // Impuestos
-    taxRate: {
-      type: DataTypes.DECIMAL(5, 2),
-      defaultValue: 16.0, // IVA 16%
     },
     // Inventario
     currentStock: {
       type: DataTypes.INTEGER,
       defaultValue: 0,
     },
-    minStock: {
-      type: DataTypes.INTEGER,
-      defaultValue: 5,
-    },
-    maxStock: {
-      type: DataTypes.INTEGER,
-      defaultValue: 100,
-    },
-    location: {
-      type: DataTypes.STRING(100),
-    },
     // Estado
     status: {
       type: DataTypes.ENUM("activo", "descontinuado", "agotado"),
       defaultValue: "activo",
     },
-    expirationDate: {
-      type: DataTypes.DATE,
-    },
     // Metadatos
     image: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.STRING(500),
     },
   },
   {
@@ -106,14 +76,12 @@ const Product = sequelize.define(
       beforeSave: (product) => {
         // Calcular precio automático si no se especifica
         if (!product.retailPrice || product.retailPrice === 0) {
-          const profit = product.costPrice * (product.profitPercentage / 100)
-          product.retailPrice = product.costPrice + profit
+          const costPrice = parseFloat(product.costPrice) || 0
+          const profitPercentage = parseFloat(product.profitPercentage) || 30
+          const profit = costPrice * (profitPercentage / 100)
+          product.retailPrice = costPrice + profit
         }
-
-        // Calcular precio mayorista (10% menos que retail)
-        if (!product.wholesalePrice || product.wholesalePrice === 0) {
-          product.wholesalePrice = product.retailPrice * 0.9
-        }
+  
       },
     },
   },

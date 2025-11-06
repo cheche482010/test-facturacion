@@ -33,16 +33,16 @@ const reportsController = {
 
       const lowStockProducts = await Product.findAll({
         where: {
-          [Op.and]: [sequelize.literal("current_stock <= min_stock"), { status: "activo" }],
+          [Op.and]: [sequelize.literal("current_stock <= 5"), { status: "activo" }],
         },
-        attributes: ["id", "name", "current_stock", "min_stock"],
+        attributes: ["id", "name", "current_stock"],
         limit: 5,
       })
 
       const activeProducts = await Product.count({ where: { status: "activo" } })
       const lowStockCount = await Product.count({
         where: {
-          [Op.and]: [sequelize.literal("current_stock <= min_stock"), { status: "activo" }],
+          [Op.and]: [sequelize.literal("current_stock <= 5"), { status: "activo" }],
         },
       })
       const pendingInvoices = await Sale.count({ where: { payment_status: "pendiente" } })
@@ -184,8 +184,6 @@ const reportsController = {
           "name",
           "category_id",
           "current_stock",
-          "min_stock",
-          "max_stock",
           "cost_price",
           "retail_price",
         ],
@@ -194,11 +192,11 @@ const reportsController = {
 
       let filteredProducts = products
       if (status === "low") {
-        filteredProducts = products.filter((p) => p.current_stock <= p.min_stock)
+        filteredProducts = products.filter((p) => p.current_stock <= 5)
       } else if (status === "out") {
         filteredProducts = products.filter((p) => p.current_stock === 0)
       } else if (status === "overstock") {
-        filteredProducts = products.filter((p) => p.current_stock > p.max_stock)
+        filteredProducts = products.filter((p) => p.current_stock > 100)
       }
 
       const inventoryValue = filteredProducts.reduce((total, product) => {

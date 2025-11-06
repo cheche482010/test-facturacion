@@ -68,24 +68,6 @@
               />
             </v-col>
 
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="formData.brand"
-                label="Marca"
-                variant="outlined"
-                density="compact"
-              />
-            </v-col>
-
-            <v-col cols="12" md="6">
-              <v-select
-                v-model="formData.unit"
-                :items="unitOptions"
-                label="Unidad de Medida"
-                variant="outlined"
-                density="compact"
-              />
-            </v-col>
 
             <v-col cols="12" md="6">
               <v-select

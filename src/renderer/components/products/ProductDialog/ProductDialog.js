@@ -21,13 +21,6 @@ export default {
     const imagePreview = ref(null)
     const imageRemoved = ref(false)
 
-    const unitOptions = [
-      { title: 'Unidad', value: 'unidad' },
-      { title: 'Kilogramos', value: 'kg' },
-      { title: 'Litros', value: 'litros' },
-      { title: 'Metros', value: 'metros' },
-      { title: 'Cajas', value: 'cajas' }
-    ]
 
     const statusOptions = [
       { title: 'Activo', value: 'activo' },
@@ -50,8 +43,6 @@ export default {
        barcode: '',
        name: '',
        description: '',
-       brand: '',
-       unit: 'unidad',
        categoryId: null,
        costPrice: 0,
        profitPercentage: 30,
@@ -69,21 +60,19 @@ export default {
     const isEditing = computed(() => !!props.product)
 
     const resetForm = () => {
-       formData.value = {
-         internalCode: '',
-         barcode: '',
-         name: '',
-         description: '',
-         brand: '',
-         unit: 'unidad',
-         categoryId: null,
-         costPrice: 0,
-         profitPercentage: 30,
-         retailPrice: 0,
-         currentStock: 0,
-         status: 'activo',
-         image: null,
-       }
+      formData.value = {
+        internalCode: '',
+        barcode: '',
+        name: '',
+        description: '',
+        categoryId: null,
+        costPrice: 0,
+        profitPercentage: 30,
+        retailPrice: 0,
+        currentStock: 0,
+        status: 'activo',
+        image: null,
+      }
        autoPricing.value = true
        imageFile.value = null
        imagePreview.value = null
@@ -95,10 +84,23 @@ export default {
       () => props.product,
       (newProduct) => {
         if (newProduct) {
-          Object.assign(formData.value, newProduct)
+          // Sanitize numeric fields to prevent NaN
+          formData.value.internalCode = newProduct.internalCode || ''
+          formData.value.barcode = newProduct.barcode || ''
+          formData.value.name = newProduct.name || ''
+          formData.value.description = newProduct.description || ''
+          formData.value.categoryId = newProduct.categoryId || null
+          formData.value.costPrice = isNaN(parseFloat(newProduct.costPrice)) ? 0 : parseFloat(newProduct.costPrice)
+          formData.value.profitPercentage = isNaN(parseFloat(newProduct.profitPercentage)) ? 30 : parseFloat(newProduct.profitPercentage)
+          formData.value.retailPrice = isNaN(parseFloat(newProduct.retailPrice)) ? 0 : parseFloat(newProduct.retailPrice)
+          formData.value.currentStock = isNaN(parseInt(newProduct.currentStock)) ? 0 : parseInt(newProduct.currentStock)
+          formData.value.status = newProduct.status || 'activo'
+          formData.value.image = newProduct.image || null
           autoPricing.value = false
           if (newProduct.image) {
-            imagePreview.value = `http://localhost:3001${newProduct.image}`
+            imagePreview.value = newProduct.image.startsWith('http')
+              ? newProduct.image
+              : `http://localhost:3001${newProduct.image}`
           } else {
             imagePreview.value = null
           }
@@ -197,7 +199,6 @@ export default {
        saving,
        autoPricing,
        form,
-       unitOptions,
        statusOptions,
        rules,
        formData,

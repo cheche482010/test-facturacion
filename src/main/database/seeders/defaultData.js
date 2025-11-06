@@ -1,4 +1,6 @@
 require("dotenv").config()
+const fs = require("fs")
+const path = require("path")
 
 const { User, Category, Settings, Product, Sale, SaleItem, SalePayment, PaymentMethod, InventoryMovement } = require("../models")
 const { sequelize } = require("../connection")
@@ -238,12 +240,26 @@ const seedDefaultData = async () => {
       console.log("   -> Configuraciones por defecto creadas.")
     }
 
-    console.log("🌱 Sembrando datos de prueba (Productos, Ventas)...")
+    console.log("Sembrando datos de prueba (Productos, Ventas)...")
     const transaction = await sequelize.transaction()
     try {
       // --- Obtener datos base ---
       const adminUser = await User.findOne({ where: { username: "admin" }, transaction })
       const categories = await Category.findAll({ transaction })
+
+      // Update existing products with broken external images to null (always run)
+      await Product.update(
+        { image: null },
+        {
+          where: {
+            image: {
+              [Op.like]: 'https://kana.develop.cecosesola.imolko.net%'
+            }
+          },
+          transaction
+        }
+      )
+      console.log("   -> Imágenes externas rotas de productos existentes actualizadas a null.")
 
       // --- 2. Crear Productos ---
       const productCount = await Product.count({ transaction })
@@ -271,41 +287,41 @@ const seedDefaultData = async () => {
           return categoryMap[mappedCategory] || categoryMap["víveres"];
         };
 
-        const productsData = [
-          { name: "Leche la Campesina 400gr", retailPrice: 2.70, tags: ["bebe", "sin_existencia"] },
-          { name: "Leche Pastoreña Completa 1 Lt", retailPrice: 1.40, tags: ["lactios", "prioridad", "sin_existencia"] },
-          { name: "Leche Valle Hondo 400 Grs", retailPrice: 3.14, tags: ["lactios", "prioridad", "sin_existencia"] },
-          { name: "Jabon Pastilla Las Llaves", retailPrice: 0.83, tags: ["jabon", "limpieza", "sin_existencia"] },
-          { name: "Leche Liquida Guaralact 1.8ml", retailPrice: 2.19, tags: ["lactios", "prioridad"] },
-          { name: "Leche Pastoreña Descremada 1 Lt", retailPrice: 1.38, tags: ["prioridad", "sin_existencia"] },
-          { name: "Pañales Pramnpars Talla M", retailPrice: 1.90, tags: ["aseo", "sin_existencia"] },
+        const productsDataPromises = [
+          { name: "Leche la Campesina 400gr", retailPrice: 2.70, tags: ["bebe"] },
+          { name: "Leche Pastoreña Completa 1 Lt", retailPrice: 1.40, tags: ["lactios"] },
+          { name: "Leche Valle Hondo 400 Grs", retailPrice: 3.14, tags: ["lactios"] },
+          { name: "Jabon Pastilla Las Llaves", retailPrice: 0.83, tags: ["jabon", "limpieza"] },
+          { name: "Leche Liquida Guaralact 1.8ml", retailPrice: 2.19, tags: ["lactios"] },
+          { name: "Leche Pastoreña Descremada 1 Lt", retailPrice: 1.38, tags: ["prioridad"] },
+          { name: "Pañales Pramnpars Talla M", retailPrice: 1.90, tags: ["aseo"] },
           { name: "Toalla sanitaria Allison nocturna", retailPrice: 0.63, tags: [] },
           { name: "CREMA DENTAL MAKSIN MULTI ACTION 90gr", retailPrice: 0.74, tags: ["viveres"] },
           { name: "Toallas Almessy", retailPrice: 0.47, tags: ["toallas", "aseo"] },
           { name: "Toallas Allisson Diurno", retailPrice: 0.71, tags: ["aseo"] },
-          { name: "Fideo Nido La Especial 500gr", retailPrice: 0.74, tags: ["viveres", "sin_existencia"] },
-          { name: "LAVAPLATOS CONCORD LIMON 500GR", retailPrice: 1.37, tags: ["viveres", "sin_existencia"] },
+          { name: "Fideo Nido La Especial 500gr", retailPrice: 0.74, tags: ["viveres"] },
+          { name: "LAVAPLATOS CONCORD LIMON 500GR", retailPrice: 1.37, tags: ["viveres"] },
           { name: "arveja amarilla medio kilo", retailPrice: 0.67, tags: ["refuera"] },
-          { name: "Harina de Trigo Doña Maria 1Kg", retailPrice: 1.11, tags: ["viveres", "sin_existencia"] },
+          { name: "Harina de Trigo Doña Maria 1Kg", retailPrice: 1.11, tags: ["viveres"] },
           { name: "fororo valle hondo 250g", retailPrice: 0.30, tags: ["sin_existencia"] },
           { name: "ABONO LIQUIDO", retailPrice: 1.37, tags: ["verdura"] },
-          { name: "Arvejas Verde Partidas Pesada", retailPrice: 0.97, tags: ["arroz", "prioridad", "reguera"] },
-          { name: "Tallarin Capri 500 gr", retailPrice: 1.11, tags: ["sin_existencia", "reguera"] },
+          { name: "Arvejas Verde Partidas Pesada", retailPrice: 0.97, tags: ["arroz"] },
+          { name: "Tallarin Capri 500 gr", retailPrice: 1.11, tags: ["sin_existencia"] },
           { name: "PRECIO SOLIDARIO", retailPrice: 0.33, tags: ["verdura"] },
-          { name: "Harina De Trigo Dulce Mar Leudante 1 Kg", retailPrice: 1.03, tags: ["harina", "prioridad"] },
-          { name: "Harina De Trigo Dulce Mar Todo Uso 1 Kg", retailPrice: 0.95, tags: ["harina", "prioridad"] },
+          { name: "Harina De Trigo Dulce Mar Leudante 1 Kg", retailPrice: 1.03, tags: ["harina"] },
+          { name: "Harina De Trigo Dulce Mar Todo Uso 1 Kg", retailPrice: 0.95, tags: ["harina"] },
           { name: "Sardina El Morro Tomate", retailPrice: 0.48, tags: ["sin_existencia"] },
-          { name: "Sardina El Morro en Aceite", retailPrice: 0.48, tags: ["reguera", "sin_existencia"] },
+          { name: "Sardina El Morro en Aceite", retailPrice: 0.48, tags: ["reguera"] },
           { name: "Papel Luciano Natural 4 Rollos", retailPrice: 0.81, tags: ["aseo", "limpieza"] },
           { name: "jabon especial jirafa limon", retailPrice: 0.70, tags: ["jabon"] },
           { name: "SARDINA PEÑERO EN TOMATE 170G", retailPrice: 0.64, tags: ["sin_existencia"] },
-          { name: "SARDINA PEÑERO EN ACEITE 170G", retailPrice: 0.64, tags: ["reguera", "sin_existencia"] },
+          { name: "SARDINA PEÑERO EN ACEITE 170G", retailPrice: 0.64, tags: ["reguera"] },
           { name: "Jabon Especial jirafa Aloe Vera", retailPrice: 0.66, tags: ["jabon", "limpieza"] },
           { name: "Jabon Especial jirafa Bebe", retailPrice: 0.66, tags: ["jabon", "limpieza"] },
           { name: "Jabon Especial Jirafa Especial Blancura", retailPrice: 0.66, tags: ["jabon", "limpieza"] },
           { name: "Jabon Especial Jirafa limón", retailPrice: 0.66, tags: [] },
           { name: "Bombillo Led 18W", retailPrice: 1.30, tags: ["bombillos"] },
-          { name: "sardina el farallon", retailPrice: 0.60, tags: ["sardina", "enlatado", "sin_existencia"] },
+          { name: "sardina el farallon", retailPrice: 0.60, tags: ["sardina", "enlatado"] },
           { name: "ACEITE MI ACEITE 900 ML", retailPrice: 2.45, tags: ["viveres"] },
           { name: "ACEITE MI ACEITE 830ML", retailPrice: 2.45, tags: ["viveres"] },
           { name: "TOMATE", retailPrice: 1.54, tags: ["verdura"] },
@@ -316,11 +332,11 @@ const seedDefaultData = async () => {
           { name: "Suavitel fresca primavera 180ml", retailPrice: 0.61, tags: ["suavitel"] },
           { name: "Suavitel cuidado superior 180ml", retailPrice: 0.61, tags: [] },
           { name: "Aceituna entera Giralda 500GM", retailPrice: 1.99, tags: [] },
-          { name: "Maiz Kaldini 400gr", retailPrice: 1.52, tags: ["enlatado", "sin_existencia"] },
+          { name: "Maiz Kaldini 400gr", retailPrice: 1.52, tags: ["enlatado"] },
           { name: "Konga De Limon", retailPrice: 0.51, tags: ["jugo", "frutas"] },
           { name: "Konga De Naranja", retailPrice: 0.51, tags: ["jugo", "frutas"] },
           { name: "Konga Sabor Mora", retailPrice: 0.51, tags: ["jugo", "frutas"] },
-          { name: "Azucar Montalban", retailPrice: 1.27, tags: ["azucar", "reguera"] },
+          { name: "Azucar Montalban", retailPrice: 1.27, tags: ["azucar"] },
           { name: "Azucar Montalban blanca 1kg", retailPrice: 1.27, tags: ["reguera"] },
           { name: "konga parchita", retailPrice: 0.51, tags: [] },
           { name: "Konga", retailPrice: 0.51, tags: [] },
@@ -338,7 +354,6 @@ const seedDefaultData = async () => {
           const costPrice = parseFloat((p.retailPrice / (1 + profitPercentage / 100)).toFixed(2));
           const stockOptions = [0, 5, Math.floor(Math.random() * 50) + 20]; // 0, 5 (bajo), o aleatorio > 20
           const currentStock = stockOptions[index % 3];
-          const minStock = Math.max(5, Math.floor(currentStock * 0.2));
 
           return {
             name: p.name.trim(),
@@ -351,12 +366,12 @@ const seedDefaultData = async () => {
             retailPrice: p.retailPrice,
             dollarPrice: p.retailPrice,
             currentStock: currentStock,
-            minStock: minStock,
-            maxStock: minStock * 5,
-            taxRate: 16,
+            image: p.image || null,
             status: currentStock > 0 ? "activo" : "agotado",
           };
         });
+
+        const productsData = productsDataPromises;
 
         await Product.bulkCreate(productsData, { transaction })
         console.log(`   -> ${productsData.length} productos creados.`)

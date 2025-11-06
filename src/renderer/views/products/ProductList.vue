@@ -68,7 +68,7 @@
           >
             <v-img
               v-if="item.image"
-              :src="`http://localhost:3001${item.image}`"
+              :src="item.image.startsWith('http') ? item.image : `http://localhost:3001${item.image}`"
               :alt="item.name"
               cover
             />
@@ -78,7 +78,6 @@
         <template v-slot:item.name="{ item }">
           <div>
             <div class="font-weight-bold">{{ item.name }}</div>
-            <div class="text-caption text-medium-emphasis">{{ item.brand || '' }}</div>
           </div>
         </template>
 
@@ -88,7 +87,7 @@
 
         <template v-slot:item.currentStock="{ item }">
           <div class="d-flex align-center" :class="getStockColor(item)">
-            <v-icon v-if="item.currentStock > 0 && item.currentStock <= item.minStock" size="small"
+            <v-icon v-if="item.currentStock > 0 && item.currentStock <= 5" size="small"
               class="mr-1">mdi-alert</v-icon>
             <span>{{ item.currentStock }}</span>
           </div>
@@ -161,7 +160,7 @@
       <v-card>
         <v-card-text>
           <v-img
-            :src="`http://localhost:3001${selectedProductImage}`"
+            :src="selectedProductImage"
             contain
             max-height="500"
           />
@@ -190,7 +189,7 @@
               >
                 <v-img
                   v-if="selectedProductForDetails.image"
-                  :src="`http://localhost:3001${selectedProductForDetails.image}`"
+                  :src="selectedProductForDetails.image.startsWith('http') ? selectedProductForDetails.image : `http://localhost:3001${selectedProductForDetails.image}`"
                   cover
                 />
                 <v-icon v-else icon="mdi-camera-off" size="64" />
@@ -216,9 +215,6 @@
                 </v-col>
                 <v-col cols="6">
                   <v-list-item :title="selectedProductForDetails.currentStock" subtitle="Stock Actual"></v-list-item>
-                </v-col>
-                <v-col cols="6">
-                  <v-list-item :title="selectedProductForDetails.minStock" subtitle="Stock Mínimo"></v-list-item>
                 </v-col>
                 <v-col cols="6">
                   <v-list-item :title="formatCurrency(selectedProductForDetails.costPrice)" subtitle="Precio Costo"></v-list-item>

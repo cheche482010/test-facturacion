@@ -193,16 +193,16 @@ const inventoryController = {
       if (stockFilter) {
         switch (stockFilter) {
           case "low":
-            products = products.filter((p) => p.currentStock <= p.minStock && p.currentStock > 0)
+            products = products.filter((p) => p.currentStock <= 5 && p.currentStock > 0)
             break
           case "empty":
             products = products.filter((p) => p.currentStock === 0)
             break
           case "normal":
-            products = products.filter((p) => p.currentStock > p.minStock && p.currentStock <= p.maxStock)
+            products = products.filter((p) => p.currentStock > 5 && p.currentStock <= 100)
             break
           case "over":
-            products = products.filter((p) => p.currentStock > p.maxStock)
+            products = products.filter((p) => p.currentStock > 100)
             break
         }
       }
@@ -214,7 +214,7 @@ const inventoryController = {
         totalProducts,
         totalValue,
         inStock: products.filter((p) => p.currentStock > 0).length,
-        lowStock: products.filter((p) => p.currentStock <= p.minStock && p.currentStock > 0).length,
+        lowStock: products.filter((p) => p.currentStock <= 5 && p.currentStock > 0).length,
         outOfStock: products.filter((p) => p.currentStock === 0).length,
       }
 
@@ -241,8 +241,6 @@ const inventoryController = {
         id: product.id,
         name: product.name,
         currentStock: product.currentStock,
-        minStock: product.minStock,
-        unit: product.unit,
         category: product.category?.name,
         type: product.currentStock === 0 ? "out_of_stock" : "low_stock",
         severity: product.currentStock === 0 ? "high" : "medium",

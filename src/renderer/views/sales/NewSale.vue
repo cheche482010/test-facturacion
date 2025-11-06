@@ -37,7 +37,7 @@
                 <v-list-item v-bind="props" :disabled="item.raw.currentStock <= 0">
                   <template v-slot:prepend>
                     <v-avatar size="32" rounded="sm" :color="item.raw.image ? 'transparent' : 'grey-lighten-2'">
-                      <v-img v-if="item.raw.image" :src="`http://localhost:3001${item.raw.image}`" cover />
+                      <v-img v-if="item.raw.image" :src="item.raw.image.startsWith('http') ? item.raw.image : `http://localhost:3001${item.raw.image}`" cover />
                       <v-icon v-else icon="mdi-camera-off" size="16" />
                     </v-avatar>
                   </template>
@@ -68,7 +68,7 @@
             <template v-slot:item.name="{ item }">
               <div class="d-flex align-center">
                 <v-avatar class="mr-3" size="40" rounded="sm" :color="item.image ? 'transparent' : 'grey-lighten-2'">
-                  <v-img v-if="item.image" :src="`http://localhost:3001${item.image}`" :alt="item.name" cover />
+                  <v-img v-if="item.image" :src="item.image.startsWith('http') ? item.image : `http://localhost:3001${item.image}`" :alt="item.name" cover />
                   <v-icon v-else icon="mdi-camera-off" />
                 </v-avatar>
                 <div class="font-weight-bold">{{ item.name }}</div>

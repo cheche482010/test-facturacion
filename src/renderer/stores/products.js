@@ -18,7 +18,7 @@ export const useProductStore = defineStore("products", {
     },
 
     lowStockProducts: (state) => {
-      return state.products.filter((product) => product.currentStock <= product.minStock && product.currentStock > 0)
+      return state.products.filter((product) => product.currentStock <= 5 && product.currentStock > 0)
     },
 
     outOfStockProducts: (state) => {

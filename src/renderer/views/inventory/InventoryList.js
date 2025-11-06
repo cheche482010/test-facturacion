@@ -2,11 +2,8 @@ import { ref, computed, onMounted } from 'vue'
 import { useProductStore } from '../../stores/products'
 import { useInventoryStore } from '../../stores/inventory'
 import { formatCurrency } from '@/utils/formatters'
-// Adjustment dialog will be needed, assuming it exists or will be created
-// import StockAdjustmentDialog from '@/components/inventory/StockAdjustmentDialog/StockAdjustmentDialog.vue'
 
 export default {
-  // components: { StockAdjustmentDialog },
   setup() {
     const productStore = useProductStore()
     const inventoryStore = useInventoryStore()
@@ -18,7 +15,7 @@ export default {
     const statusOptions = ['Todos', 'Normal', 'Stock Bajo', 'Sobre Stock', 'Sin Stock']
     const valueFilter = ref('Cualquiera')
     const valueOptions = ['Cualquiera', 'Con valor', 'Sin valor']
-    const tab = ref('inventory') // Default to inventory tab
+    const tab = ref('inventory') 
     const adjustmentDialog = ref(false)
     const productDetailsDialog = ref(false)
     const movementDetailsDialog = ref(false)
@@ -38,10 +35,9 @@ export default {
     const summaryCards = computed(() => {
       const allProducts = products.value || []
       const totalProducts = allProducts.length
-      const lowStockProducts = allProducts.filter(p => p.currentStock > 0 && p.currentStock <= p.minStock).length
+      const lowStockProducts = allProducts.filter(p => p.currentStock > 0 && p.currentStock <= 5).length
       const inventoryValue = allProducts.reduce((sum, p) => sum + (p.costPrice * p.currentStock), 0)
 
-      // The "Rotación" value is complex. Using a placeholder for now.
       const rotation = '85%'
 
       return [
@@ -208,8 +204,8 @@ export default {
 
     const getStockStatusText = (product) => {
       if (product.currentStock === 0) return 'Sin Stock'
-      if (product.currentStock <= product.minStock) return 'Stock Bajo'
-      if (product.currentStock > product.maxStock) return 'Sobre Stock'
+      if (product.currentStock <= 5) return 'Stock Bajo'
+      if (product.currentStock > 100) return 'Sobre Stock'
       return 'Normal'
     }
 

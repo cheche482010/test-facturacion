@@ -72,7 +72,7 @@ export default {
       const allProducts = products.value || []
       const totalProducts = allProducts.length
       const activeProducts = allProducts.filter(p => p.status === 'activo').length
-      const lowStockProducts = allProducts.filter(p => p.currentStock > 0 && p.currentStock <= p.minStock).length
+      const lowStockProducts = allProducts.filter(p => p.currentStock > 0 && p.currentStock <= 5).length
       const inventoryValue = allProducts.reduce((sum, p) => sum + (p.costPrice * p.currentStock), 0)
 
       return [
@@ -104,7 +104,7 @@ export default {
       }
 
       if (stockFilter.value) {
-        filtered = filtered.filter(p => p.currentStock > 0 && p.currentStock <= p.minStock)
+        filtered = filtered.filter(p => p.currentStock > 0 && p.currentStock <= 5)
       }
 
       return filtered
@@ -184,7 +184,7 @@ export default {
 
     const getStockColor = (product) => {
       if (product.currentStock === 0) return 'error'
-      if (product.currentStock <= product.minStock) return 'warning'
+      if (product.currentStock <= 5) return 'warning'
       return 'success'
     }
 
@@ -222,7 +222,7 @@ export default {
     }
 
     const formatBsEquivalent = (usdAmount) => {
-      if (!currentDolarRate.value || !currentDolarRate.value.rate) return ''
+      if (!currentDolarRate.value || !currentDolarRate.value.rate || !usdAmount || isNaN(usdAmount)) return ''
       const bsAmount = parseFloat(usdAmount) * parseFloat(currentDolarRate.value.rate)
       return formatCurrency(bsAmount)
     }
