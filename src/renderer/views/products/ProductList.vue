@@ -49,14 +49,33 @@
       </v-card-text>
     </v-card>
 
-    <!-- Tabla de productos -->
+    <!-- Botones de vista -->
     <v-card class="mt-4">
+      <v-card-text>
+        <div class="d-flex justify-end">
+          <v-btn-toggle v-model="viewMode" mandatory>
+            <v-btn value="list" prepend-icon="mdi-view-list">Lista</v-btn>
+            <v-btn value="card" prepend-icon="mdi-view-grid">Tarjetas</v-btn>
+          </v-btn-toggle>
+        </div>
+      </v-card-text>
+    </v-card>
+
+    <!-- Tabla de productos -->
+    <template v-if="viewMode === 'list'">
+      <v-card class="mt-4">
       <v-card-item>
         <v-card-title>
           Lista de Productos ({{ filteredProducts.length }})
         </v-card-title>
       </v-card-item>
       <v-data-table :headers="headers" :items="filteredProducts" :loading="loading" item-value="id" hover>
+        <template v-slot:no-data>
+          <div class="text-center py-8">
+            <v-icon size="64" color="grey">mdi-magnify</v-icon>
+            <div class="text-h6 mt-4">No hay resultados</div>
+          </div>
+        </template>
         <template v-slot:item.image="{ item }">
           <v-avatar
             class="ma-2"
@@ -119,6 +138,71 @@
         </template>
       </v-data-table>
     </v-card>
+    </template>
+
+    <!-- Vista de tarjetas -->
+    <template v-else>
+      <v-card class="mt-4">
+        <v-card-item>
+          <v-card-title>
+            Lista de Productos ({{ filteredProducts.length }})
+          </v-card-title>
+        </v-card-item>
+        <v-card-text>
+          <div v-if="paginatedProducts.length === 0" class="text-center py-8">
+            <v-icon size="64" color="grey">mdi-magnify</v-icon>
+            <div class="text-h6 mt-4">No hay resultados</div>
+          </div>
+          <v-row v-else>
+            <v-col v-for="product in paginatedProducts" :key="product.id" cols="12" sm="6" md="2">
+              <v-card class="product-card" hover style="height: 350px; display: flex; flex-direction: column;">
+                <div class="image-container" style="height: 150px; position: relative; cursor: pointer;" @click="product.image && showImage(product)">
+                  <v-img
+                    v-if="product.image"
+                    :src="product.image.startsWith('http') ? product.image : `http://localhost:3001${product.image}`"
+                    height="150"
+                    cover
+                  ></v-img>
+                  <div v-else class="d-flex align-center justify-center fill-height bg-grey-lighten-3">
+                    <v-icon size="64" color="grey-lighten-1">mdi-camera-off</v-icon>
+                  </div>
+                </div>
+                <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                  <v-card-text style="flex: 1; padding-bottom: 0;">
+                    <v-tooltip :text="product.name" location="top">
+                      <template v-slot:activator="{ props }">
+                        <div class="text-h6 font-weight-bold" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" v-bind="props">{{ product.name }}</div>
+                      </template>
+                    </v-tooltip>
+                    <div class="d-flex gap-2 mt-1">
+                      <v-chip size="small" variant="tonal">{{ product.categoryName }}</v-chip>
+                      <v-chip :color="getStatusColor(product.status)" size="small" variant="flat">{{ getStatusText(product.status) }}</v-chip>
+                    </div>
+                    <div class="mt-2">
+                      <div class="text-caption"><strong>Stock:</strong> <span :class="getStockColor(product)">{{ product.currentStock }}</span></div>
+                      <div class="text-caption"><strong>Precio USD:</strong> <span class="text-success">$ {{ product.costPrice }}</span></div>
+                      <div class="text-caption"><strong>Precio BS:</strong> {{ formatBsEquivalent(product.costPrice) }}</div>
+                    </div>
+                    <div v-if="product.description" class="mt-2 text-caption">
+                      {{ product.description }}
+                    </div>
+                  </v-card-text>
+                  <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn v-if="!isCajero" icon="mdi-pencil" size="small" variant="text" @click="openProductDialog(product)"></v-btn>
+                    <v-btn v-if="!isCajero" icon="mdi-delete" size="small" variant="text" color="error" @click="confirmDelete(product)"></v-btn>
+                    <v-btn icon="mdi-eye" size="small" variant="text" color="primary" @click="showProductDetails(product)"></v-btn>
+                  </v-card-actions>
+                </div>
+              </v-card>
+            </v-col>
+          </v-row>
+          <div v-if="paginatedProducts.length > 0" class="d-flex justify-center mt-4">
+            <v-pagination v-model="currentPage" :length="totalPages" />
+          </div>
+        </v-card-text>
+      </v-card>
+    </template>
 
     <!-- Dialog para crear/editar producto -->
     <ProductDialog v-model="productDialog" :product="selectedProduct" :categories="categories"

@@ -1,4 +1,4 @@
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import ProductDialog from '../../components/products/ProductDialog/ProductDialog.vue'
 import { useProductStore } from '../../stores/products'
 import { useCategoryStore } from '../../stores/categories'
@@ -19,6 +19,9 @@ export default {
     const selectedCategory = ref(null)
     const selectedStatus = ref(null)
     const stockFilter = ref(false)
+    const viewMode = ref('list')
+    const currentPage = ref(1)
+    const itemsPerPage = 18
     const productDialog = ref(false)
     const deleteDialog = ref(false)
     const barcodeDialog = ref(false)
@@ -109,6 +112,14 @@ export default {
 
       return filtered
     })
+
+    const paginatedProducts = computed(() => {
+      const start = (currentPage.value - 1) * itemsPerPage
+      const end = start + itemsPerPage
+      return filteredProducts.value.slice(start, end)
+    })
+
+    const totalPages = computed(() => Math.ceil(filteredProducts.value.length / itemsPerPage))
 
     const loadProducts = async () => {
       loading.value = true
@@ -232,6 +243,10 @@ export default {
       fetchCurrentDolarRate()
     })
 
+    watch(filteredProducts, () => {
+      currentPage.value = 1
+    })
+
     const showImage = (product) => {
       if (product.image) {
         selectedProductImage.value = product.image
@@ -250,6 +265,7 @@ export default {
       selectedCategory,
       selectedStatus,
       stockFilter,
+      viewMode,
       productDialog,
       deleteDialog,
       barcodeDialog,
@@ -265,6 +281,10 @@ export default {
       categories,
       summaryCards,
       filteredProducts,
+      paginatedProducts,
+      totalPages,
+      currentPage,
+      itemsPerPage,
       loadProducts,
       openProductDialog,
       onProductSaved,
