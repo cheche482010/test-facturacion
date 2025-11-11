@@ -4,9 +4,17 @@ export default {
   emits: ['result'],
   setup(props, { emit }) {
     const display = ref('0')
+    const expression = ref('')
     const previousValue = ref(null)
     const operation = ref(null)
     const waitingForOperand = ref(false)
+
+    const operationSymbols = {
+      add: '+',
+      subtract: '-',
+      multiply: '×',
+      divide: '÷'
+    }
 
     const buttons = [
       { label: 'C', value: 'clear', color: 'error', variant: 'tonal' },
@@ -62,8 +70,39 @@ export default {
       }
     }
 
+    const handleKeyDown = (event) => {
+      const key = event.key
+      let value = null
+
+      if (key >= '0' && key <= '9') {
+        value = key
+      } else if (key === '+') {
+        value = 'add'
+      } else if (key === '-') {
+        value = 'subtract'
+      } else if (key === '*') {
+        value = 'multiply'
+      } else if (key === '/') {
+        value = 'divide'
+      } else if (key === 'Enter' || key === '=') {
+        value = 'equals'
+      } else if (key === 'Escape' || key === 'c' || key === 'C') {
+        value = 'clear'
+      } else if (key === '.') {
+        value = 'decimal'
+      } else if (key === '%') {
+        value = 'percent'
+      }
+
+      if (value) {
+        event.preventDefault()
+        handleClick(value)
+      }
+    }
+
     const clear = () => {
       display.value = '0'
+      expression.value = ''
       previousValue.value = null
       operation.value = null
       waitingForOperand.value = false
@@ -105,12 +144,14 @@ export default {
 
       if (previousValue.value === null) {
         previousValue.value = inputValue
+        expression.value = display.value + ' ' + operationSymbols[nextOperation] + ' '
       } else if (operation.value) {
         const currentValue = previousValue.value || 0
         const newValue = performCalculation(currentValue, inputValue, operation.value)
 
         display.value = String(newValue)
         previousValue.value = newValue
+        expression.value = display.value + ' ' + operationSymbols[nextOperation] + ' '
       }
 
       waitingForOperand.value = true
@@ -137,10 +178,11 @@ export default {
 
       if (previousValue.value !== null && operation.value) {
         const newValue = performCalculation(previousValue.value, inputValue, operation.value)
+        expression.value = previousValue.value + ' ' + operationSymbols[operation.value] + ' ' + inputValue + ' = ' + newValue
         display.value = String(newValue)
-        
+
         emit('result', newValue)
-        
+
         previousValue.value = null
         operation.value = null
         waitingForOperand.value = true
@@ -149,8 +191,10 @@ export default {
 
     return {
       display,
+      expression,
       buttons,
-      handleClick
+      handleClick,
+      handleKeyDown
     }
   }
 }

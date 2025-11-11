@@ -1,0 +1,26 @@
+.calculator {
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.calculator-expression {
+  font-size: 1.2rem;
+  text-align: right;
+  min-height: 2rem;
+  padding: 8px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  color: #333;
+}
+
+.calculator-display {
+  font-size: 1.2rem;
+  text-align: right;
+}
+
+.calculator-btn {
+  height: 48px;
+  font-size: 1.1rem;
+  font-weight: 500;
+}

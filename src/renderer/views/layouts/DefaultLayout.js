@@ -22,6 +22,7 @@ export default {
         { title: 'Inventario', icon: 'mdi-warehouse', to: '/inventory', permission: 'inventory' },
         { title: 'Arqueo de caja', icon: 'mdi-cash-register', to: '/cash-reconciliation', permission: 'cash_reconciliation' },
         { title: 'Reportes', icon: 'mdi-chart-bar', to: '/reports', permission: 'reports' },
+        { title: 'Calculadora', icon: 'mdi-calculator', to: '/calculator' },
         { title: 'Configuración', icon: 'mdi-cog', to: '/settings', permission: 'settings' },
         { title: 'Usuarios', icon: 'mdi-account-group', to: '/users', permission: 'users' }
       ]

@@ -1,5 +1,6 @@
 <template>
-  <div class="calculator">
+  <div class="calculator" @keydown="handleKeyDown" tabindex="0">
+    <div class="calculator-expression mb-2">{{ expression }}</div>
     <v-text-field
       v-model="display"
       variant="outlined"
@@ -30,20 +31,6 @@ import calculatorLogic from './Calculator.js'
 export default calculatorLogic
 </script>
 
-<style scoped>
-.calculator {
-  max-width: 300px;
-  margin: 0 auto;
-}
-
-.calculator-display {
-  font-size: 1.2rem;
-  text-align: right;
-}
-
-.calculator-btn {
-  height: 48px;
-  font-size: 1.1rem;
-  font-weight: 500;
-}
+<style scoped lang="scss">
+@import './Calculator.scss';
 </style>

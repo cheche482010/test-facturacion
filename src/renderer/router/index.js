@@ -64,6 +64,11 @@ const routes = [
         name: "Users",
         component: () => import("@/views/users/UserManagement.vue"),
       },
+      {
+        path: "calculator",
+        name: "Calculator",
+        component: () => import("@/views/Calculator/CalculatorSection.vue"),
+      },
     ],
   },
 ]
