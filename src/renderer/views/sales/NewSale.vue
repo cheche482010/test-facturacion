@@ -79,9 +79,9 @@
             </template>
             <template v-slot:item.quantity="{ item }">
               <div class="pos__quantity-control">
-                <v-btn icon="mdi-minus" variant="text" size="small" color="primary" @click="decreaseQuantity(item)" :disabled="item.quantity <= 1" />
+                <v-btn icon="mdi-minus-circle-outline" variant="text" size="large" color="primary" @click="decreaseQuantity(item)" :disabled="item.quantity <= 1" />
                 <span class="quantity-value">{{ item.quantity }}</span>
-                <v-btn icon="mdi-plus" variant="text" size="small" color="primary" @click="increaseQuantity(item)" :disabled="item.quantity >= item.stock" />
+                <v-btn icon="mdi-plus-circle-outline" variant="text" size="large" color="primary" @click="increaseQuantity(item)" :disabled="item.quantity >= item.stock" />
               </div>
             </template>
             <template v-slot:item.price="{ item }">
