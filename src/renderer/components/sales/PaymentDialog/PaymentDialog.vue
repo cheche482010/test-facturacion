@@ -12,7 +12,7 @@
             <div class="d-flex justify-space-between align-center">
               <div>
                 <div class="text-h6">Total a Pagar</div>
-                <div class="text-caption">{{ saleData.items.length }} productos</div>
+                <div class="text-caption">{{ saleData.items.reduce((sum, item) => sum + item.quantity, 0) }} productos</div>
               </div>
               <div class="text-right">
                 <div class="text-h5 text-primary">{{ formatCurrency(saleData.totalBs, 'VES') }}</div>
@@ -20,6 +20,90 @@
               </div>
             </div>
           </v-card-text>
+        </v-card>
+
+        <!-- Formulario de pago -->
+        <v-card v-if="remainingAmount > 0" variant="outlined" class="mb-4">
+          <v-card-title class="text-subtitle-1">Agregar Pago</v-card-title>
+          <v-card-text>
+            <v-form ref="form" v-model="valid">
+              <!-- Método de pago -->
+              <v-row>
+                <v-col cols="12" md="8">
+                  <v-select
+                    v-model="paymentData.paymentMethodId"
+                    :items="availablePaymentMethods"
+                    item-title="name"
+                    item-value="id"
+                    label="Método de Pago *"
+                    :rules="[rules.required]"
+                    variant="outlined"
+                    density="compact"
+                    @update:model-value="onPaymentMethodChange"
+                  >
+                    <template #item="{ props, item }">
+                      <v-list-item v-bind="props">
+                        <template #prepend>
+                          <v-icon>{{ item.raw.icon }}</v-icon>
+                        </template>
+                      </v-list-item>
+                    </template>
+                  </v-select>
+                </v-col>
+                <v-col cols="12" md="4">
+                  <v-text-field
+                    v-model.number="paymentData.amount"
+                    label="Monto *"
+                    :rules="[rules.required, rules.positive]"
+                    variant="outlined"
+                    density="compact"
+                    type="number"
+                    step="0.01"
+                    :max="remainingAmount"
+                  />
+                </v-col>
+              </v-row>
+
+              <!-- Campos específicos por método de pago -->
+              <v-row>
+                <v-col cols="12" md="6" v-if="!isCashPayment">
+                  <v-text-field
+                    v-model="paymentData.reference"
+                    label="Referencia (opcional)"
+                    variant="outlined"
+                    density="compact"
+                    placeholder="Número de lote, referencia, etc."
+                  />
+                </v-col>
+                <v-col cols="12" :md="isCashPayment ? 12 : 6">
+                  <v-text-field
+                    v-model="paymentData.notes"
+                    label="Notas (opcional)"
+                    variant="outlined"
+                    density="compact"
+                  />
+                </v-col>
+              </v-row>
+
+              <!-- Calculadora de cambio -->
+              <v-card v-if="showCalculator" variant="outlined" class="mt-4">
+                <v-card-title class="text-subtitle-1">Calculadora de Cambio</v-card-title>
+                <v-card-text>
+                  <Calculator @result="onCalculatorResult" />
+                </v-card-text>
+              </v-card>
+            </v-form>
+          </v-card-text>
+          <v-card-actions class="justify-end">
+            <v-btn
+              color="success"
+              variant="outlined"
+              :disabled="!valid"
+              @click="addPayment"
+            >
+              Agregar Pago
+            </v-btn>
+          </v-card-actions>
         </v-card>
 
         <!-- Pagos existentes -->
@@ -68,87 +152,11 @@
             </div>
           </v-card-text>
         </v-card>
-
-        <v-form ref="form" v-model="valid" v-if="remainingAmount > 0">
-          <!-- Método de pago -->
-          <v-row>
-            <v-col cols="12" md="8">
-              <v-select
-                v-model="paymentData.paymentMethodId"
-                :items="availablePaymentMethods"
-                item-title="name"
-                item-value="id"
-                label="Método de Pago *"
-                :rules="[rules.required]"
-                variant="outlined"
-                density="compact"
-                @update:model-value="onPaymentMethodChange"
-              >
-                <template #item="{ props, item }">
-                  <v-list-item v-bind="props">
-                    <template #prepend>
-                      <v-icon>{{ item.raw.icon }}</v-icon>
-                    </template>
-                  </v-list-item>
-                </template>
-              </v-select>
-            </v-col>
-            <v-col cols="12" md="4">
-              <v-text-field
-                v-model.number="paymentData.amount"
-                label="Monto *"
-                :rules="[rules.required, rules.positive]"
-                variant="outlined"
-                density="compact"
-                type="number"
-                step="0.01"
-                :max="remainingAmount"
-              />
-            </v-col>
-          </v-row>
-
-          <!-- Campos específicos por método de pago -->
-          <v-row>
-            <v-col cols="12" md="6" v-if="!isCashPayment">
-              <v-text-field
-                v-model="paymentData.reference"
-                label="Referencia (opcional)"
-                variant="outlined"
-                density="compact"
-                placeholder="Número de lote, referencia, etc."
-              />
-            </v-col>
-            <v-col cols="12" :md="isCashPayment ? 12 : 6">
-              <v-text-field
-                v-model="paymentData.notes"
-                label="Notas (opcional)"
-                variant="outlined"
-                density="compact"
-              />
-            </v-col>
-          </v-row>
-
-          <!-- Calculadora de cambio -->
-          <v-card v-if="showCalculator" variant="outlined" class="mt-4">
-            <v-card-title class="text-subtitle-1">Calculadora de Cambio</v-card-title>
-            <v-card-text>
-              <Calculator @result="onCalculatorResult" />
-            </v-card-text>
-          </v-card>
-        </v-form>
       </v-card-text>
 
       <v-card-actions>
         <v-spacer />
         <v-btn @click="closeDialog">Cancelar</v-btn>
-        <v-btn
-          color="success"
-          variant="outlined"
-          :disabled="!valid"
-          @click="addPayment"
-        >
-          Agregar Pago
-        </v-btn>
         <v-btn
           color="primary"
           :disabled="remainingAmount > 0 && changeAmount <= 0"

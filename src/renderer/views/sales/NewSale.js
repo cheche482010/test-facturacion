@@ -6,17 +6,6 @@ import { useAppStore } from '../../stores/app'
 import { useCurrencyStore } from '../../stores/currencyStore'
 import { formatCurrency } from '@/utils/formatters'
 
-const getCurrentDolarRate = async () => {
-  try {
-    const result = await window.electronAPI.invoke('get-current-dolar-rate')
-    if (result.success && result.data) {
-      return result.data.dataValues.rate
-    }
-  } catch (error) {
-    console.error('Error fetching current dolar rate:', error)
-  }
-  return null
-}
 
 export default {
   setup() {
@@ -37,7 +26,6 @@ export default {
     const notes = ref('')
     const payments = ref([])
     const showPaymentDialog = ref(false)
-    const currentDolarRate = ref(36.50)
     const isCartModified = ref(false)
     const cartHeaders = [
       { title: 'Producto', key: 'name', width: '40%', sortable: false },
@@ -53,7 +41,7 @@ export default {
 
     const totals = computed(() => {
       const subtotalUsd = cartItems.value.reduce((acc, item) => acc + (item.quantity * item.price), 0)
-      const subtotalBs = subtotalUsd * currentDolarRate.value
+      const subtotalBs = subtotalUsd * exchangeRate.value
       const totalUsd = subtotalUsd
       const totalBs = subtotalBs
       return { subtotalUsd, subtotalBs, totalUsd, totalBs }
@@ -183,7 +171,7 @@ export default {
             quantity: item.quantity,
           })),
           payments: payments.value,
-          exchangeRate: currentDolarRate.value,
+          exchangeRate: exchangeRate.value,
           notes: notes.value,
         }
 
@@ -229,9 +217,6 @@ export default {
         productStore.fetchProducts(),
         currencyStore.fetchExchangeRate()
       ])
-
-      const rate = await getCurrentDolarRate()
-      currentDolarRate.value = rate
 
       saleStore.loadPendingCart()
       if (saleStore.pendingCart.length > 0) {
@@ -281,8 +266,7 @@ export default {
       openPaymentDialog,
       onPaymentCompleted,
       formatCurrency,
-      exchangeRate,
-      currentDolarRate
+      exchangeRate
     }
   }
 }

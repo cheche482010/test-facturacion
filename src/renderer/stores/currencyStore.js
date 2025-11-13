@@ -8,9 +8,9 @@ export const useCurrencyStore = defineStore('currency', {
   actions: {
     async fetchExchangeRate() {
       try {
-        const response = await api.get('/currency/exchange-rate');
-        if (response.data && response.data.value) {
-          this.exchangeRate = parseFloat(response.data.value);
+        const result = await window.electronAPI.invoke('get-current-dolar-rate');
+        if (result.success && result.data) {
+          this.exchangeRate = parseFloat(result.data.dataValues.rate);
         }
       } catch (error) {
         console.error('Error fetching exchange rate:', error);
@@ -18,9 +18,9 @@ export const useCurrencyStore = defineStore('currency', {
     },
     async updateExchangeRate() {
       try {
-        const response = await api.post('/currency/exchange-rate/update');
-        if (response.data && response.data.value) {
-          this.exchangeRate = parseFloat(response.data.value);
+        const result = await window.electronAPI.invoke('update-dolar-rate');
+        if (result.success && result.data) {
+          this.exchangeRate = parseFloat(result.data.dataValues.rate);
         }
       } catch (error) {
         console.error('Error updating exchange rate:', error);

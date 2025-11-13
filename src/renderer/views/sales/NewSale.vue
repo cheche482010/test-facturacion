@@ -87,14 +87,14 @@
             <template v-slot:item.price="{ item }">
               <div>
                 <div>$ {{ formatCurrency(item.price, 'USD').replace('$', '').trim() }}</div>
-                <div class="text-caption text-medium-emphasis">{{ formatCurrency(item.price * currentDolarRate, 'VES')
+                <div class="text-caption text-medium-emphasis">{{ formatCurrency(item.price * exchangeRate, 'VES')
                   }}</div>
               </div>
             </template>
             <template v-slot:item.subtotal="{ item }">
               <div>
                 <div class="font-weight-bold">$ {{ formatCurrency(item.subtotal, 'USD').replace('$', '').trim() }}</div>
-                <div class="text-caption text-medium-emphasis">{{ formatCurrency(item.subtotal * currentDolarRate,
+                <div class="text-caption text-medium-emphasis">{{ formatCurrency(item.subtotal * exchangeRate,
                   'VES') }}</div>
               </div>
             </template>
@@ -114,11 +114,11 @@
           <v-card-text>
             <div class="d-flex justify-space-between mb-2">
               <p>Cantidad de productos</p>
-              <p class="font-weight-bold">{{ cartItems.length }}</p>
+              <p class="font-weight-bold">{{ cartItems.reduce((sum, item) => sum + item.quantity, 0) }}</p>
             </div>
             <div class="d-flex justify-space-between mb-2 text-h5 font-weight-bold text-primary">
               <p>Tasa del día</p>
-              <p>{{ formatCurrency(currentDolarRate, 'VES').replace('Bs.S', '').replace('Bs.', '').trim() }} Bs/USD</p>
+              <p>{{ formatCurrency(exchangeRate, 'VES').replace('Bs.S', '').replace('Bs.', '').trim() }} Bs/USD</p>
             </div>
             <v-divider class="my-2"></v-divider>
             <div class="d-flex justify-space-between text-h6">

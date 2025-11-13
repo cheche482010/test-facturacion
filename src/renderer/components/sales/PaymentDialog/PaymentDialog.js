@@ -42,36 +42,20 @@ export default {
       set: (value) => emit('update:modelValue', value)
     })
 
-    // Get current dolar rate from main process
-    const getCurrentDolarRate = async () => {
-      try {
-        const result = await window.electronAPI.invoke('get-current-dolar-rate')
-        if (result.success && result.data) {
-          return result.data.dataValues.rate
-        }
-      } catch (error) {
-        console.error('Error fetching current dolar rate:', error)
-      }
-      return 36.50 // fallback
-    }
-
-    const exchangeRate = ref(36.50)
-
-    // Load current exchange rate when dialog opens
-    const loadExchangeRate = async () => {
-      exchangeRate.value = await getCurrentDolarRate()
-    }
+    const exchangeRate = computed(() => currencyStore.exchangeRate)
 
     const totalPaid = computed(() => {
       return payments.value.reduce((sum, payment) => sum + payment.amount, 0)
     })
 
     const remainingAmount = computed(() => {
-      return Math.max(0, props.saleData.totalBs - totalPaid.value)
+      const diff = Math.round((props.saleData.totalBs - totalPaid.value) * 100) / 100;
+      return Math.max(0, diff);
     })
 
     const changeAmount = computed(() => {
-      return Math.max(0, totalPaid.value - props.saleData.totalBs)
+      const diff = Math.round((totalPaid.value - props.saleData.totalBs) * 100) / 100;
+      return Math.max(0, diff);
     })
 
     const isCashPayment = computed(() => {
@@ -80,7 +64,6 @@ export default {
     })
 
     const onPaymentMethodChange = () => {
-      // Reset amount when method changes
       paymentData.value.amount = 0
     }
 
@@ -99,7 +82,6 @@ export default {
         notes: paymentData.value.notes
       })
 
-      // Reset form
       paymentData.value = {
         paymentMethodId: null,
         amount: 0,
@@ -223,7 +205,7 @@ export default {
           reference: '',
           notes: ''
         }
-        await loadExchangeRate()
+        await currencyStore.fetchExchangeRate()
         await loadPaymentMethods()
       }
     })
