@@ -1,4 +1,4 @@
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useProductStore } from '../../stores/products'
 import { useSalesStore } from '../../stores/sales'
@@ -6,7 +6,6 @@ import { useAppStore } from '../../stores/app'
 import { useCurrencyStore } from '../../stores/currencyStore'
 import { formatCurrency } from '@/utils/formatters'
 
-// Get current dolar rate from main process
 const getCurrentDolarRate = async () => {
   try {
     const result = await window.electronAPI.invoke('get-current-dolar-rate')
@@ -39,6 +38,7 @@ export default {
     const payments = ref([])
     const showPaymentDialog = ref(false)
     const currentDolarRate = ref(36.50)
+    const isCartModified = ref(false)
     const cartHeaders = [
       { title: 'Producto', key: 'name', width: '40%', sortable: false },
       { title: 'Cantidad', key: 'quantity', sortable: false, width: '150px' },
@@ -72,6 +72,7 @@ export default {
         if (existingItem.quantity < existingItem.stock) {
           existingItem.quantity++
           updateItemSubtotal(existingItem)
+          isCartModified.value = true
         } else {
           console.warn(`Stock limit reached for ${product.name}`)
         }
@@ -90,6 +91,7 @@ export default {
           subtotal: product.retailPrice,
           image: product.image,
         })
+        isCartModified.value = true
       }
     }
 
@@ -149,6 +151,7 @@ export default {
       if (item.quantity < item.stock) {
         item.quantity++
         updateItemSubtotal(item)
+        isCartModified.value = true
       }
     }
 
@@ -156,11 +159,13 @@ export default {
       if (item.quantity > 1) {
         item.quantity--
         updateItemSubtotal(item)
+        isCartModified.value = true
       }
     }
 
     const removeItem = (itemToRemove) => {
       cartItems.value = cartItems.value.filter(item => item.id !== itemToRemove.id)
+      isCartModified.value = true
     }
 
     const processSale = async () => {
@@ -184,6 +189,7 @@ export default {
 
         await saleStore.createSale(saleData)
         resetSale()
+        saleStore.clearPendingCart()
         router.push('/sales')
         console.log('Sale processed successfully!')
       } catch (error) {
@@ -200,6 +206,7 @@ export default {
       filteredProducts.value = []
       payments.value = []
       notes.value = ''
+      isCartModified.value = false
     }
 
     const openPaymentDialog = () => {
@@ -214,21 +221,39 @@ export default {
 
     const cancelSale = () => {
       resetSale()
+      saleStore.clearPendingCart()
     }
 
-    // Lifecycle
     onMounted(async () => {
       await Promise.all([
         productStore.fetchProducts(),
         currencyStore.fetchExchangeRate()
       ])
 
-      // Fetch current dolar rate
       const rate = await getCurrentDolarRate()
       currentDolarRate.value = rate
+
+      saleStore.loadPendingCart()
+      if (saleStore.pendingCart.length > 0) {
+        cartItems.value = [...saleStore.pendingCart]
+        isCartModified.value = false
+      }
     })
 
-    // Watchers
+    onUnmounted(() => {
+      if (cartItems.value.length > 0 && isCartModified.value) {
+        saleStore.updatePendingCart(cartItems.value)
+      } else if (cartItems.value.length === 0) {
+        saleStore.clearPendingCart()
+      }
+    })
+
+    watch(() => router.currentRoute.value.path, (newPath) => {
+      if (newPath !== '/sales/new' && cartItems.value.length > 0 && isCartModified.value) {
+        saleStore.updatePendingCart(cartItems.value)
+      }
+    })
+
 
     return {
       cartItems,

@@ -19,7 +19,17 @@
 
             <v-list dense nav>
                 <v-list-item v-for="item in menuItems" :key="item.title" :to="item.to" link :prepend-icon="item.icon"
-                    :title="item.title" />
+                    :title="item.title">
+                    <template v-if="item.title === 'Ventas'" #append>
+                        <div v-show="salesStore.hasPendingCart" class="ml-1">
+                            <v-tooltip text="Hay una venta sin procesar">
+                                <template v-slot:activator="{ props }">
+                                    <v-icon color="error" size="small" v-bind="props">mdi-alert-box</v-icon>
+                                </template>
+                            </v-tooltip>
+                        </div>
+                    </template>
+                </v-list-item>
             </v-list>
 
             <template v-slot:append>

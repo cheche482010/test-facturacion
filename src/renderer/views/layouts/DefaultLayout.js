@@ -1,8 +1,9 @@
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
 import { useSettingsStore } from '@/stores/settingsStore'
+import { useSalesStore } from '@/stores/sales'
 
 export default {
   setup() {
@@ -11,6 +12,7 @@ export default {
     const authStore = useAuthStore()
     const appStore = useAppStore()
     const settingsStore = useSettingsStore()
+    const salesStore = useSalesStore()
     const currentDolarRate = ref(null)
     const loadingDolarRate = ref(false)
 
@@ -78,8 +80,12 @@ export default {
 
     onMounted(() => {
       fetchCurrentDolarRate()
-      // Actualizar cada 5 minutos
       setInterval(fetchCurrentDolarRate, 5 * 60 * 1000)
+      salesStore.loadPendingCart()
+    })
+
+    router.afterEach(() => {
+      salesStore.loadPendingCart()
     })
 
     return {
@@ -89,7 +95,9 @@ export default {
       settingsStore,
       currentDolarRate,
       formatCurrency,
-      formatDateTime
+      formatDateTime,
+      hasPendingCart: salesStore.hasPendingCart,
+      salesStore 
     }
   }
 }

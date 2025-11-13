@@ -7,19 +7,17 @@ import { watch, onMounted } from 'vue'
 import { useTheme } from 'vuetify'
 import { useAppStore } from '@/stores/app'
 import { useSettingsStore } from '@/stores/settingsStore'
+import { useSalesStore } from '@/stores/sales'
 
 const theme = useTheme()
 const appStore = useAppStore()
 const settingsStore = useSettingsStore()
 
-// Function to update the theme based on store settings
 const updateTheme = () => {
   const settings = settingsStore.settings
 
-  // Set dark/light mode
   theme.change(settings.darkMode ? "dark" : "light")
 
-  // Update theme colors from settings
   if (settings.primaryColor) {
     theme.themes.value.light.colors.primary = settings.primaryColor
     theme.themes.value.dark.colors.primary = settings.primaryColor
@@ -29,7 +27,6 @@ const updateTheme = () => {
     theme.themes.value.dark.colors.secondary = settings.secondaryColor
   }
 
-  // Apply custom fonts
   if (settings.fontsTitle) {
     document.documentElement.style.setProperty('--font-title', settings.fontsTitle.font)
     document.documentElement.style.setProperty('--font-size-title', settings.fontsTitle.size)
@@ -44,7 +41,6 @@ const updateTheme = () => {
   }
 }
 
-// Watch for any changes in the settings object to apply theme changes reactively
 watch(
   () => settingsStore.settings,
   () => {
@@ -53,11 +49,20 @@ watch(
   { deep: true }
 )
 
-// Initial theme setup on component mount
+
 onMounted(async () => {
-  // First, load any saved settings from persistent storage
   await settingsStore.fetchSettings()
-  // Then, apply the theme
   updateTheme()
+
+  sessionStorage.setItem('reloading', 'true')
+
+  const salesStore = useSalesStore()
+  window.addEventListener('beforeunload', () => {
+    if (sessionStorage.getItem('reloading') === 'true') {
+      sessionStorage.removeItem('reloading')
+    } else {
+      salesStore.clearPendingCart()
+    }
+  })
 })
 </script>

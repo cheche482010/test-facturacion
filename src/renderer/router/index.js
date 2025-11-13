@@ -7,17 +7,16 @@ const routes = [
     path: "/login",
     name: "Login",
     component: () => import("@/views/auth/Login.vue"),
-    meta: { requiresAuth: false }, // Marcamos esta ruta como pública
+    meta: { requiresAuth: false }, 
   },
   {
-    // Ruta padre que usa el DefaultLayout
     path: "/",
     component: DefaultLayout,
-    meta: { requiresAuth: true }, // Todas las rutas hijas requerirán autenticación
+    meta: { requiresAuth: true },
     children: [
       {
         path: "",
-        redirect: "/login", // Redirigir la raíz al login
+        redirect: "/login",
       },
       {
         path: "dashboard",
@@ -78,18 +77,16 @@ const router = createRouter({
   routes,
 })
 
-// Guardia de navegación global
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
   const requiresAuth = to.matched.some((record) => record.meta.requiresAuth)
 
-  // Si la ruta requiere autenticación y el usuario no está autenticado
+  
   if (requiresAuth && !authStore.isAuthenticated) {
-    // Verificar si hay un token y intentar autenticar
     if (authStore.token) {
       try {
         await authStore.checkAuth()
-        // Si la autenticación fue exitosa, continuar con la verificación de permisos
+        
         if (authStore.isAuthenticated) {
           const routePermissions = {
             dashboard: 'dashboard',
@@ -105,7 +102,6 @@ router.beforeEach(async (to, from, next) => {
 
           const requiredPermission = routePermissions[to.path.replace('/', '')]
           if (requiredPermission && !authStore.hasPermission(requiredPermission)) {
-            // Redirigir al dashboard si no tiene permisos
             next({ name: "Dashboard" })
             return
           }
@@ -113,17 +109,15 @@ router.beforeEach(async (to, from, next) => {
           return
         }
       } catch (error) {
-        // Si falla la autenticación, redirigir al login
         next({ name: "Login" })
         return
       }
     } else {
-      // No hay token, redirigir al login
       next({ name: "Login" })
       return
     }
   }
-  // Si está autenticado, verificar permisos basados en la ruta
+  
   else if (requiresAuth && authStore.isAuthenticated) {
     const routePermissions = {
       dashboard: 'dashboard',
@@ -139,13 +133,11 @@ router.beforeEach(async (to, from, next) => {
 
     const requiredPermission = routePermissions[to.path.replace('/', '')]
     if (requiredPermission && !authStore.hasPermission(requiredPermission)) {
-      // Redirigir al dashboard si no tiene permisos
       next({ name: "Dashboard" })
       return
     }
   }
 
-  // En cualquier otro caso, permitir la navegación
   next()
 })
 
