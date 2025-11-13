@@ -1,16 +1,14 @@
 import { useAuthStore } from "@/stores/auth.js"
 
-const BASE_URL = "/api" // Vite proxy se encargará de redirigir
+const BASE_URL = "/api" 
 
 async function request(url, options = {}) {
-  // Es importante obtener el store aquí dentro para evitar problemas de ciclo de importación
+  
   const authStore = useAuthStore()
   const token = authStore.token
 
   const headers = { ...options.headers }
 
-  // No establecer Content-Type por defecto si el cuerpo es FormData
-  // El navegador lo hará automáticamente con el boundary correcto
   if (!(options.body instanceof FormData)) {
     headers["Content-Type"] = "application/json"
   }
@@ -25,13 +23,11 @@ async function request(url, options = {}) {
   })
 
   if (!response.ok) {
-    // Si el token es inválido (401 Unauthorized) y hay un token, deslogueamos al usuario.
+    
     if (response.status === 401 && authStore.token) {
       authStore.logout()
     }
 
-    // Para 404 en endpoints específicos que pueden no tener datos, devolver null en lugar de error
-    // Esto evita mostrar errores en consola para estados válidos del negocio
     if (response.status === 404 && url.includes('/cash-reconciliation/today')) {
       return null
     }
@@ -40,13 +36,12 @@ async function request(url, options = {}) {
     throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`)
   }
 
-  // Manejar diferentes tipos de respuesta
   const contentType = response.headers.get("content-type")
   if (contentType && contentType.includes("application/json")) {
     return response.json()
   }
 
-  return response // Devolver la respuesta completa para otros tipos (ej. blob para PDF)
+  return response 
 }
 
 export default {

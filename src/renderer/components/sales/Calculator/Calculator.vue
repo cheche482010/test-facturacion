@@ -32,5 +32,5 @@ export default calculatorLogic
 </script>
 
 <style scoped lang="scss">
-@import './Calculator.scss';
+@use './Calculator.scss';
 </style>

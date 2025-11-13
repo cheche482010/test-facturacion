@@ -73,5 +73,5 @@ export default CurrencyConverter
 </script>
 
 <style scoped lang="scss">
-@import './CurrencyConverter.scss';
+@use './CurrencyConverter.scss';
 </style>
