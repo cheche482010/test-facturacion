@@ -73,10 +73,10 @@
           <v-list-item v-for="item in dashboardData.lowStockProducts" :key="item.id"
             :class="`rounded mx-4 mb-2 ${settingsStore.settings.darkMode ? 'bg-red-darken-4' : 'bg-red-lighten-5'}`">
             <v-list-item-title class="font-weight-bold">{{ item.name }}</v-list-item-title>
-            <v-list-item-subtitle>{{ `Código: ${item.internalCode || 'N/A'}` }}</v-list-item-subtitle>
+            <v-list-item-subtitle>{{ `Código: ${item.internal_code || 'N/A'}` }}</v-list-item-subtitle>
             <template v-slot:append>
               <div class="text-right">
-                <p class="font-weight-bold text-error">{{ item.currentStock }} / {{ item.minStock }}</p>
+                <p class="font-weight-bold text-error">{{ item.current_stock }}</p>
                 <p class="text-caption">Stock</p>
               </div>
             </template>
@@ -99,9 +99,9 @@
               <p class="font-weight-bold">{{ dashboardData.quickSummary?.activeProducts || 0 }}</p>
             </div>
             <v-divider class="my-2"></v-divider>
-            <div class="d-flex justify-space-between">
+            <div class="d-flex justify-space-between align-center">
               <p>Alertas de Stock</p>
-              <v-badge color="error" :content="dashboardData.quickSummary?.lowStockCount || 0" inline></v-badge>
+              <v-badge color="warning" :content="dashboardData.quickSummary?.lowStockCount || 0"></v-badge>
             </div>
             <v-divider class="my-2"></v-divider>
             <div class="d-flex justify-space-between">
@@ -121,22 +121,17 @@
           <v-data-table :headers="recentSalesHeaders" :items="dashboardData.recentSales || []" :loading="loading"
             no-data-text="No hay ventas recientes para mostrar" density="compact">
             <template v-slot:item.saleNumber="{ item }">
-              {{ item.saleNumber }}
+              {{ item.sale_number }}
             </template>
             <template v-slot:item.total="{ item }">
-              {{ formatCurrency(item.total) }}
+              {{ formatCurrency(item.total_bs) }}
             </template>
             <template v-slot:item.saleDate="{ item }">
-              {{ formatDate(item.saleDate) }}
+              {{ formatDate(item.sale_date) }}
             </template>
             <template v-slot:item.status="{ item }">
               <v-chip :color="getStatusColor(item.status)" size="small" variant="flat" label>
                 {{ getStatusText(item.status) }}
-              </v-chip>
-            </template>
-            <template v-slot:item.paymentMethod="{ item }"> <v-chip :color="getPaymentMethodColor(item.paymentMethod)"
-                size="small" variant="tonal" label>
-                {{ item.paymentMethod }}
               </v-chip>
             </template>
           </v-data-table>

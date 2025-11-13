@@ -35,7 +35,7 @@ const reportsController = {
         where: {
           [Op.and]: [sequelize.literal("current_stock <= 5"), { status: "activo" }],
         },
-        attributes: ["id", "name", "current_stock"],
+        attributes: ["id", "name", "current_stock", "internal_code"],
         limit: 5,
       })
 
@@ -137,10 +137,10 @@ const reportsController = {
             where:
               startDate && endDate
                 ? {
-                    sale_date: {
-                      [Op.between]: [startDate, endDate],
-                    },
-                  }
+                  sale_date: {
+                    [Op.between]: [startDate, endDate],
+                  },
+                }
                 : {},
             attributes: [],
           },
@@ -316,10 +316,10 @@ const reportsController = {
         where:
           startDate && endDate
             ? {
-                sale_date: {
-                  [Op.between]: [startDate, endDate],
-                },
-              }
+              sale_date: {
+                [Op.between]: [startDate, endDate],
+              },
+            }
             : {},
         include: [
           {

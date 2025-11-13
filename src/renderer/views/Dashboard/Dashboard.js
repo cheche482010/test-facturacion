@@ -36,20 +36,19 @@ export default {
     })
 
     const recentSalesHeaders = [
-      { title: 'Factura', key: 'saleNumber' },
-      { title: 'Fecha', key: 'saleDate' },
-      { title: 'Pago', key: 'paymentMethod' },
+      { title: 'Factura', key: 'sale_number' },
+      { title: 'Fecha', key: 'sale_date' },
       { title: 'Estado', key: 'status' },
       { title: 'Total', key: 'total', align: 'end' },
     ]
 
     const getStatusColor = (status) => {
-      const colors = { paid: 'success', pending: 'warning', cancelled: 'error' }
+      const colors = { completada: 'success', pendiente: 'warning', cancelada: 'error', anulada: 'error', paid: 'success', pending: 'warning', cancelled: 'error' }
       return colors[status] || 'grey'
     }
 
     const getStatusText = (status) => {
-      const texts = { paid: 'Pagado', pending: 'Pendiente', cancelled: 'Cancelado' }
+      const texts = { completada: 'Completada', pendiente: 'Pendiente', cancelada: 'Cancelada', anulada: 'Anulada', paid: 'Pagado', pending: 'Pendiente', cancelled: 'Cancelado' }
       return texts[status] || status
     }
 
