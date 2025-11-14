@@ -1,4 +1,4 @@
-// NewSale (POS) specific styles
+
 .pos {
   &__header {
     border-bottom: 1px solid #e0e0e0;
@@ -69,3 +69,40 @@
     }
   }
 }
+
+.cart-empty {
+  height: 650px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+
+  span {
+    font-size: 1.2rem;
+    color: #6c757d;
+  }
+}
+
+.scroll-container {
+    height: 650px;
+    overflow-y: auto;
+    padding-bottom: 20px;
+
+    &::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+  }

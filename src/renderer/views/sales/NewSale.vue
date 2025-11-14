@@ -63,11 +63,12 @@
           <v-card-item>
             <v-card-title>Carrito de Compras</v-card-title>
           </v-card-item>
-          <div v-if="cartItems.length === 0" class="text-center py-12 text-medium-emphasis">
+          <div v-if="cartItems.length === 0" class="text-center py-12 text-medium-emphasis cart-empty">
             <v-icon size="48" class="mb-2">mdi-cart-outline</v-icon>
-            <p>El carrito está vacío</p>
+            <span>El carrito está vacío</span>
           </div>
-          <v-data-table v-else :headers="cartHeaders" :items="cartItems" item-key="id">
+          <div v-else class="scroll-container">
+            <v-data-table :headers="cartHeaders" :items="cartItems" item-key="id" hide-default-footer :items-per-page="-1">
             <template v-slot:item.name="{ item }">
               <div class="d-flex align-center">
                 <v-avatar class="mr-3" size="40" rounded="sm" :color="item.image ? 'transparent' : 'grey-lighten-2'">
@@ -102,6 +103,7 @@
               <v-btn icon="mdi-delete" variant="text" color="error" size="small" @click="removeItem(item)" />
             </template>
           </v-data-table>
+          </div>
         </v-card>
       </v-col>
 
@@ -165,5 +167,6 @@ export default {
   }
 }
 </script>
-
-<style scoped src="./NewSale.scss"></style>
+<style scoped lang="scss">
+@use './NewSale.scss';
+</style>
