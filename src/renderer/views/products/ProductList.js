@@ -94,7 +94,10 @@ export default {
         filtered = filtered.filter(p =>
           p.name.toLowerCase().includes(searchTerm) ||
           (p.internalCode && p.internalCode.toLowerCase().includes(searchTerm)) ||
-          (p.barcode && p.barcode.toLowerCase().includes(searchTerm))
+          (p.barcode && p.barcode.toLowerCase().includes(searchTerm)) ||
+          (p.dollarPrice && p.dollarPrice.toString().includes(searchTerm)) ||
+          (p.costPrice && p.costPrice.toString().includes(searchTerm)) ||
+          (p.retailPrice && p.retailPrice.toString().includes(searchTerm))
         )
       }
 

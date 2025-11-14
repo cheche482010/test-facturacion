@@ -31,7 +31,7 @@
       <v-card-text>
         <v-row class="d-flex align-center">
           <v-col cols="12" md="5">
-            <v-text-field v-model="search" label="Buscar por nombre, código o código de barras..."
+            <v-text-field v-model="search" label="Buscar por nombre, código, precio o código de barras..."
               prepend-inner-icon="mdi-magnify" variant="solo-filled" density="compact" flat clearable />
           </v-col>
           <v-col cols="12" md="3">
