@@ -94,17 +94,17 @@
             </v-card-title>
           </v-card-item>
           <v-list-item>
-            <div class="d-flex justify-space-between">
+            <div class="d-flex justify-space-between align-center">
               <p>Productos Activos</p>
               <p class="font-weight-bold">{{ dashboardData.quickSummary?.activeProducts || 0 }}</p>
             </div>
             <v-divider class="my-2"></v-divider>
             <div class="d-flex justify-space-between align-center">
               <p>Alertas de Stock</p>
-              <v-badge color="warning" :content="dashboardData.quickSummary?.lowStockCount || 0"></v-badge>
+              <p class="font-weight-bold text-error">{{ dashboardData.quickSummary?.lowStockCount || 0 }}</p>
             </div>
             <v-divider class="my-2"></v-divider>
-            <div class="d-flex justify-space-between">
+            <div class="d-flex justify-space-between align-center">
               <p>Facturas Pendientes</p>
               <p class="font-weight-bold">{{ dashboardData.quickSummary?.pendingInvoices || 0 }}</p>
             </div>
