@@ -1,5 +1,6 @@
-const { Sale, SaleItem, SalePayment, PaymentMethod, Product, User, InventoryMovement, sequelize } = require("../database/models")
+const { Sale, SaleItem, SalePayment, PaymentMethod, Product, User, InventoryMovement, CashReconciliation, DolarRate } = require("../database/models")
 const { Op } = require("sequelize")
+const CashReconciliationService = require("../services/CashReconciliationService")
 
 const salesController = {
   async getAll(req, res) {
@@ -36,13 +37,13 @@ const salesController = {
   },
 
   async create(req, res) {
-    const transaction = await sequelize.transaction()
+    const transaction = await Sale.sequelize.transaction()
 
     try {
       const {
         items,
         payments,
-        exchangeRate,
+        notes,
       } = req.body
 
       if (!items || items.length === 0) {
@@ -53,9 +54,18 @@ const salesController = {
         return res.status(400).json({ error: "La venta debe tener al menos un método de pago." });
       }
 
-      if (!exchangeRate) {
-        return res.status(400).json({ error: "La tasa de cambio es requerida." });
+      // Obtener la tasa de cambio del día actual
+      const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD
+      const dolarRate = await DolarRate.findOne({
+        where: { date: today },
+        transaction
+      })
+
+      if (!dolarRate) {
+        throw new Error(`No se encontró la tasa de cambio para la fecha ${today}`)
       }
+
+      const exchangeRate = dolarRate.rate
 
       let calculatedSubtotalUsd = 0;
       let calculatedSubtotalBs = 0;
@@ -69,18 +79,12 @@ const salesController = {
         {
           saleNumber,
           userId: req.user?.id || 1,
-          subtotalUsd: 0,
-          subtotalBs: 0,
           totalUsd: 0,
           totalBs: 0,
-          exchangeRate,
+          dolarRateId: dolarRate.id,
           paymentStatus: "pagado",
-          paidAmountBs: 0,
-          paidAmountUsd: 0,
-          changeAmountBs: 0,
-          changeAmountUsd: 0,
           status: "completada",
-          notes: "",
+          notes: notes || "",
         },
         { transaction },
       )
@@ -96,29 +100,21 @@ const salesController = {
           throw new Error(`Stock insuficiente para ${product.name}. Disponible: ${product.currentStock}`)
         }
 
-        const itemUnitPriceUsd = product.retailPrice;
-        const itemUnitPriceBs = itemUnitPriceUsd * exchangeRate;
-        const itemSubtotalUsd = itemUnitPriceUsd * item.quantity;
-        const itemSubtotalBs = itemSubtotalUsd * exchangeRate;
-        const itemTotalUsd = itemSubtotalUsd;
-        const itemTotalBs = itemSubtotalBs;
+        const itemUnitPriceBs = product.retailPrice * exchangeRate;
+        const itemSubtotalBs = itemUnitPriceBs * item.quantity;
 
-        calculatedSubtotalUsd += itemSubtotalUsd;
+        calculatedSubtotalUsd += (itemSubtotalBs / exchangeRate);
         calculatedSubtotalBs += itemSubtotalBs;
-        calculatedTotalUsd += itemTotalUsd;
-        calculatedTotalBs += itemTotalBs;
+        calculatedTotalUsd += (itemSubtotalBs / exchangeRate);
+        calculatedTotalBs += itemSubtotalBs;
 
         await SaleItem.create(
           {
             saleId: sale.id,
             productId: product.id,
             quantity: item.quantity,
-            unitPriceUsd: itemUnitPriceUsd,
             unitPriceBs: itemUnitPriceBs,
-            subtotalUsd: itemSubtotalUsd,
             subtotalBs: itemSubtotalBs,
-            totalUsd: itemTotalUsd,
-            totalBs: itemTotalBs,
           },
           { transaction },
         )
@@ -146,9 +142,6 @@ const salesController = {
       }
 
       // Crear pagos
-      let totalPaidBs = 0;
-      let totalPaidUsd = 0;
-
       for (const payment of payments) {
         const paymentMethod = await PaymentMethod.findByPk(payment.paymentMethodId, { transaction });
         if (!paymentMethod) {
@@ -160,37 +153,39 @@ const salesController = {
             saleId: sale.id,
             paymentMethodId: payment.paymentMethodId,
             amount: payment.amount,
+            reference: payment.reference || null,
+            notes: payment.notes || null,
           },
           { transaction },
         );
-
-        // Asumir que si el método contiene "usd" es en USD, sino en BS
-        if (paymentMethod.name.toLowerCase().includes('usd')) {
-          totalPaidUsd += payment.amount;
-        } else {
-          totalPaidBs += payment.amount;
-        }
       }
 
-      const changeBs = totalPaidBs - calculatedTotalBs;
-      const changeUsd = totalPaidUsd - calculatedTotalUsd;
-
       await sale.update({
-        subtotalUsd: calculatedSubtotalUsd,
-        subtotalBs: calculatedSubtotalBs,
         totalUsd: calculatedTotalUsd,
         totalBs: calculatedTotalBs,
-        paidAmountBs: totalPaidBs,
-        paidAmountUsd: totalPaidUsd,
-        changeAmountBs: Math.max(0, changeBs),
-        changeAmountUsd: Math.max(0, changeUsd),
       }, { transaction });
 
       await transaction.commit()
 
+      try {
+        const todayReconciliation = await CashReconciliationService.getTodayReconciliation()
+        if (todayReconciliation) {
+          const currentTotalSales = todayReconciliation.totalSales || 0
+          const newTotalSales = currentTotalSales + calculatedTotalBs
+
+          await CashReconciliation.update(
+            { totalSales: newTotalSales },
+            { where: { id: todayReconciliation.id } }
+          )
+        }
+      } catch (error) {
+        console.error('Error updating cash reconciliation:', error)
+      }
+
       const completeSale = await Sale.findByPk(sale.id, {
         include: [
           { model: User, as: "user", attributes: ["id", "firstName", "lastName"] },
+          { model: DolarRate, as: "dolarRate" },
           {
             model: SaleItem,
             as: "items",
@@ -216,6 +211,7 @@ const salesController = {
       const sale = await Sale.findByPk(req.params.id, {
         include: [
           { model: User, as: "user", attributes: ["id", "firstName", "lastName"] },
+          { model: DolarRate, as: "dolarRate" },
           {
             model: SaleItem,
             as: "items",
@@ -240,7 +236,7 @@ const salesController = {
   },
 
   async cancel(req, res) {
-    const transaction = await sequelize.transaction()
+    const transaction = await Sale.sequelize.transaction()
 
     try {
       const { reason } = req.body
@@ -294,9 +290,25 @@ const salesController = {
 
       await transaction.commit()
 
+      try {
+        const todayReconciliation = await CashReconciliationService.getTodayReconciliation()
+        if (todayReconciliation) {
+          const currentTotalSales = todayReconciliation.totalSales || 0
+          const newTotalSales = Math.max(0, currentTotalSales - parseFloat(sale.totalBs))
+
+          await CashReconciliation.update(
+            { totalSales: newTotalSales },
+            { where: { id: todayReconciliation.id } }
+          )
+        }
+      } catch (error) {
+        console.error('Error updating cash reconciliation on cancellation:', error)
+      }
+
       const updatedSale = await Sale.findByPk(sale.id, {
         include: [
           { model: User, as: "user", attributes: ["id", "firstName", "lastName"] },
+          { model: DolarRate, as: "dolarRate" },
           {
             model: SaleItem,
             as: "items",
@@ -323,6 +335,7 @@ const salesController = {
       const sale = await Sale.findByPk(req.params.id, {
         include: [
           { model: User, as: "user", attributes: ["id", "firstName", "lastName"] },
+          { model: DolarRate, as: "dolarRate" },
           {
             model: SaleItem,
             as: "items",

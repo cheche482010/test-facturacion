@@ -5,9 +5,9 @@ const models = require("./models")
 
 async function setupDatabase() {
   try {
-    console.log("🔄 Configuración completa de la base de datos...")
+    console.log(" Configuración completa de la base de datos...")
 
-    console.log("🔍 Configuración de conexión:")
+    console.log("Configuración de conexión:")
     console.log(`   Tipo de BD: ${process.env.DB_TYPE || "sqlite"}`)
     if (process.env.DB_TYPE === "mysql") {
       console.log(`   Host: ${process.env.DB_HOST || "localhost"}`)
@@ -17,9 +17,8 @@ async function setupDatabase() {
       console.log(`   Contraseña: ${process.env.DB_PASSWORD ? "***" : "(vacía)"}`)
     }
 
-    // Step 1: Create database (for MySQL)
     if (process.env.DB_TYPE === "mysql") {
-      console.log("🔄 Verificando/creando base de datos MySQL...")
+      console.log(" Verificando/creando base de datos MySQL...")
       const mysql = require("mysql2/promise")
 
       const connectionConfig = {
@@ -33,7 +32,7 @@ async function setupDatabase() {
 
       const dbName = process.env.DB_NAME || "facturacion_db"
       await connection.execute(`CREATE DATABASE IF NOT EXISTS \`${dbName}\``)
-      console.log(`✅ Base de datos '${dbName}' lista.`)
+      console.log(`Base de datos '${dbName}' lista.`)
 
       const [databases] = await connection.execute("SHOW DATABASES")
       const dbExists = databases.some((db) => db.Database === dbName)
@@ -42,24 +41,21 @@ async function setupDatabase() {
       await connection.end()
     }
 
-    // Step 2: Test connection
-    console.log("🔄 Conectando a la base de datos...")
+    console.log(" Conectando a la base de datos...")
     await sequelize.authenticate()
-    console.log("✅ Conexión establecida correctamente.")
+    console.log("Conexión establecida correctamente.")
 
     if (process.env.DB_TYPE === "mysql") {
       const [result] = await sequelize.query("SELECT DATABASE() as current_db")
       console.log(`🔍 Base de datos actual: ${result[0].current_db}`)
     }
 
-    // Step 3: Create tables
-    console.log("🔄 Creando tablas...")
+    console.log(" Creando tablas...")
     await sequelize.sync({ force: false, alter: true })
 
-    // Verify tables were created
     const tables = await sequelize.getQueryInterface().showAllTables()
-    console.log("📋 Tablas creadas:", tables)
-    console.log("✅ Tablas creadas correctamente.")
+    console.log("Tablas creadas:", tables)
+    console.log("Tablas creadas correctamente.")
 
     if (process.env.DB_TYPE === "mysql") {
       const dbName = process.env.DB_NAME || "facturacion_db"
@@ -68,30 +64,29 @@ async function setupDatabase() {
         FROM information_schema.tables 
         WHERE table_schema = '${dbName}'
       `)
-      console.log(`🔍 Total de tablas en '${dbName}': ${tableCount[0].table_count}`)
+      console.log(`Total de tablas en '${dbName}': ${tableCount[0].table_count}`)
     }
 
-    // Step 4: Run seeders
-    console.log("🔄 Ejecutando seeders...")
+    console.log(" Ejecutando seeders...")
     const { seedDefaultData } = require("./seeders/defaultData")
     await seedDefaultData()
-    console.log("✅ Datos iniciales creados correctamente.")
+    console.log("Datos iniciales creados correctamente.")
 
-    console.log("🎉 Base de datos configurada exitosamente!")
-    console.log("📝 Puedes usar los siguientes comandos:")
+    console.log("Base de datos configurada exitosamente!")
+    console.log("Puedes usar los siguientes comandos:")
     console.log("   npm run db:create  - Solo crear la base de datos")
     console.log("   npm run db:migrate - Solo ejecutar migraciones")
     console.log("   npm run db:seed    - Solo ejecutar seeders")
     console.log("   npm run db:reset   - Resetear completamente")
 
-    console.log("\n🔍 Para verificar en MySQL:")
+    console.log("\n Para verificar en MySQL:")
     console.log(`   USE ${process.env.DB_NAME || "facturacion_db"};`)
     console.log("   SHOW TABLES;")
 
     process.exit(0)
   } catch (error) {
-    console.error("❌ Error configurando la base de datos:", error)
-    console.error("💡 Sugerencias:")
+    console.error(" Error configurando la base de datos:", error)
+    console.error(" Sugerencias:")
     console.error("   1. Verifica que MySQL esté ejecutándose")
     console.error("   2. Verifica las credenciales en el archivo .env")
     console.error("   3. Ejecuta 'npm run db:create' primero si es necesario")

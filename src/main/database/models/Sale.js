@@ -22,17 +22,6 @@ const Sale = sequelize.define(
         key: "id",
       },
     },
-    // Montos
-    subtotalUsd: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
-      defaultValue: 0,
-    },
-    subtotalBs: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
-      defaultValue: 0,
-    },
     totalUsd: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
@@ -41,32 +30,18 @@ const Sale = sequelize.define(
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
     },
-    exchangeRate: {
-      type: DataTypes.DECIMAL(10, 4),
+    dolarRateId: {
+      type: DataTypes.INTEGER,
       allowNull: false,
+      references: {
+        model: "dolar_rates",
+        key: "id",
+      },
     },
-    // Pago
     paymentStatus: {
       type: DataTypes.ENUM("pagado", "pendiente", "parcial"),
       defaultValue: "pagado",
     },
-    paidAmountBs: {
-      type: DataTypes.DECIMAL(10, 2),
-      defaultValue: 0,
-    },
-    paidAmountUsd: {
-      type: DataTypes.DECIMAL(10, 2),
-      defaultValue: 0,
-    },
-    changeAmountBs: {
-      type: DataTypes.DECIMAL(10, 2),
-      defaultValue: 0,
-    },
-    changeAmountUsd: {
-      type: DataTypes.DECIMAL(10, 2),
-      defaultValue: 0,
-    },
-    // Estado
     status: {
       type: DataTypes.ENUM("completada", "cancelada", "anulada"),
       defaultValue: "completada",

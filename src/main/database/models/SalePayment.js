@@ -29,6 +29,14 @@ const SalePayment = sequelize.define(
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
     },
+    reference: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    notes: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
   },
   {
     tableName: "sale_payments",

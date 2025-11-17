@@ -75,7 +75,7 @@ export const useSalesStore = defineStore('sales', () => {
       }
 
       const result = await response.json()
-      console.log('Sale created successfully:', result)
+      
       return result
     } catch (error) {
       console.error('Error creating sale:', error)

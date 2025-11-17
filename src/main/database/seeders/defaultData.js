@@ -2,13 +2,13 @@ require("dotenv").config()
 const fs = require("fs")
 const path = require("path")
 
-const { User, Category, Settings, Product, Sale, SaleItem, SalePayment, PaymentMethod, InventoryMovement } = require("../models")
+const { User, Category, Settings, Product, Sale, SaleItem, SalePayment, PaymentMethod, InventoryMovement, DolarRate } = require("../models")
 const { sequelize } = require("../connection")
 const { Op } = require("sequelize")
 
 const seedDefaultData = async () => {
   try {
-    // Crear usuarios por defecto
+    
     const adminExists = await User.findOne({ where: { username: "admin" } })
     if (!adminExists) {
       await User.create({
@@ -48,7 +48,6 @@ const seedDefaultData = async () => {
       console.log("   -> Usuario dev creado.")
     }
 
-    // Crear métodos de pago por defecto
     const paymentMethodsExist = await PaymentMethod.count()
     if (paymentMethodsExist === 0) {
       const paymentMethods = [
@@ -64,10 +63,9 @@ const seedDefaultData = async () => {
       console.log("   -> Métodos de pago por defecto creados.")
     }
 
-    // Crear categorías por defecto
     const categoriesExist = await Category.count()
     if (categoriesExist === 0) {
-      const categories = [ // Categorías extraídas del JSON de productos
+      const categories = [ 
         { name: "Lácteos", description: "Productos derivados de la leche" },
         { name: "Bebés", description: "Productos para el cuidado de bebés" },
         { name: "Limpieza", description: "Productos para la limpieza del hogar" },
@@ -94,7 +92,6 @@ const seedDefaultData = async () => {
       console.log("   -> Categorías por defecto creadas.")
     }
 
-    // Configuraciones por defecto
     const settingsExist = await Settings.count()
     if (settingsExist === 0) {
       const defaultSettings = [
@@ -243,11 +240,10 @@ const seedDefaultData = async () => {
     console.log("Sembrando datos de prueba (Productos, Ventas)...")
     const transaction = await sequelize.transaction()
     try {
-      // --- Obtener datos base ---
+      
       const adminUser = await User.findOne({ where: { username: "admin" }, transaction })
       const categories = await Category.findAll({ transaction })
 
-      // Update existing products with broken external images to null (always run)
       await Product.update(
         { image: null },
         {
@@ -261,7 +257,6 @@ const seedDefaultData = async () => {
       )
       console.log("   -> Imágenes externas rotas de productos existentes actualizadas a null.")
 
-      // --- 2. Crear Productos ---
       const productCount = await Product.count({ transaction })
       if (productCount === 0 && categories.length > 0) {
         const categoryMap = categories.reduce((acc, cat) => {
@@ -350,9 +345,9 @@ const seedDefaultData = async () => {
           { name: "Afrecho 8 de Marzo", retailPrice: 1.70, tags: ["upc"] },
           { name: "Margarina Kemy 400Gr", retailPrice: 1.74, tags: [] },
         ].map((p, index) => {
-          const profitPercentage = Math.floor(Math.random() * (35 - 15 + 1)) + 15; // Ganancia entre 15% y 35%
+          const profitPercentage = Math.floor(Math.random() * (35 - 15 + 1)) + 15; 
           const costPrice = parseFloat((p.retailPrice / (1 + profitPercentage / 100)).toFixed(2));
-          const stockOptions = [0, 5, Math.floor(Math.random() * 50) + 20]; // 0, 5 (bajo), o aleatorio > 20
+          const stockOptions = [0, 5, Math.floor(Math.random() * 50) + 20]; 
           const currentStock = stockOptions[index % 3];
 
           return {
@@ -377,7 +372,17 @@ const seedDefaultData = async () => {
         console.log(`   -> ${productsData.length} productos creados.`)
       }
 
-      // --- 3. Crear Ventas y Movimientos de Inventario ---
+      const today = new Date().toISOString().split('T')[0]
+      let dolarRate = await DolarRate.findOne({ where: { date: today }, transaction })
+      if (!dolarRate) {
+        dolarRate = await DolarRate.create({
+          rate: 36.5,
+          date: today,
+          source: "manual",
+        }, { transaction })
+        console.log("   -> Tasa de dólar creada para hoy.")
+      }
+
       const saleCount = await Sale.count({ transaction })
       if (saleCount === 0 && adminUser) {
         const products = await Product.findAll({ where: { currentStock: { [Op.gt]: 0 } }, transaction }).catch(() => [])
@@ -387,16 +392,12 @@ const seedDefaultData = async () => {
           return
         }
 
-
-
         if (products.length < 10) {
           console.log("   -> No hay suficientes productos con stock para crear ventas de ejemplo.");
           await transaction.commit();
           return;
         }
 
-        // --- 4. Crear Movimientos de Inventario (Ajustes) ---
-        // Ajuste de entrada para simular compra
         const productToAdjustIn = products[0];
         const previousStockIn = productToAdjustIn.currentStock;
         const quantityIn = 50;
@@ -416,7 +417,7 @@ const seedDefaultData = async () => {
           movementDate: new Date(new Date().setDate(new Date().getDate() - 10)),
         }, { transaction });
 
-        // Ajuste de salida por pérdida
+        
         const productToAdjustOut = products[1];
         const previousStockOut = productToAdjustOut.currentStock;
         const quantityOut = 2;
@@ -437,50 +438,51 @@ const seedDefaultData = async () => {
         }, { transaction });
         console.log("   -> 2 ajustes de inventario creados.");
 
-        // Venta 1
         const totalUsd1 = parseFloat((Number(products[2].retailPrice) + Number(products[3].retailPrice)).toFixed(2))
+        const totalBs1 = totalUsd1 * 36.5
         const sale1 = await Sale.create({
-          saleNumber: `BODEGA-000001`, userId: adminUser.id, totalUsd: totalUsd1, totalBs: totalUsd1 * 36.5, exchangeRate: 36.5, status: "completada", saleDate: new Date(new Date().setDate(new Date().getDate() - 5)),
+          saleNumber: `BODEGA-000001`, userId: adminUser.id, totalUsd: totalUsd1, totalBs: totalBs1, dolarRateId: dolarRate.id, status: "completada", saleDate: new Date(new Date().setDate(new Date().getDate() - 5)),
         }, { transaction })
         await SaleItem.bulkCreate([
-          { saleId: sale1.id, productId: products[2].id, quantity: 1, unitPriceUsd: products[2].retailPrice, unitPriceBs: products[2].retailPrice * 36.5, subtotalUsd: products[2].retailPrice, subtotalBs: products[2].retailPrice * 36.5, totalUsd: products[2].retailPrice, totalBs: products[2].retailPrice * 36.5 },
-          { saleId: sale1.id, productId: products[3].id, quantity: 1, unitPriceUsd: products[3].retailPrice, unitPriceBs: products[3].retailPrice * 36.5, subtotalUsd: products[3].retailPrice, subtotalBs: products[3].retailPrice * 36.5, totalUsd: products[3].retailPrice, totalBs: products[3].retailPrice * 36.5 },
+          { saleId: sale1.id, productId: products[2].id, quantity: 1, unitPriceBs: products[2].retailPrice * 36.5, subtotalBs: products[2].retailPrice * 36.5 },
+          { saleId: sale1.id, productId: products[3].id, quantity: 1, unitPriceBs: products[3].retailPrice * 36.5, subtotalBs: products[3].retailPrice * 36.5 },
         ], { transaction })
 
-        // Venta 2
+        
         const totalUsd2 = parseFloat(Number(products[4].retailPrice).toFixed(2))
+        const totalBs2 = totalUsd2 * 36.5
         const sale2 = await Sale.create({
-          saleNumber: `BODEGA-000002`, userId: adminUser.id, totalUsd: totalUsd2, totalBs: totalUsd2 * 36.5, exchangeRate: 36.5, status: "completada", saleDate: new Date(new Date().setDate(new Date().getDate() - 2)),
+          saleNumber: `BODEGA-000002`, userId: adminUser.id, totalUsd: totalUsd2, totalBs: totalBs2, dolarRateId: dolarRate.id, status: "completada", saleDate: new Date(new Date().setDate(new Date().getDate() - 2)),
         }, { transaction })
-        await SaleItem.create({ saleId: sale2.id, productId: products[4].id, quantity: 1, unitPriceUsd: products[4].retailPrice, unitPriceBs: products[4].retailPrice * 36.5, subtotalUsd: products[4].retailPrice, subtotalBs: products[4].retailPrice * 36.5, totalUsd: products[4].retailPrice, totalBs: products[4].retailPrice * 36.5 }, { transaction })
+        await SaleItem.create({ saleId: sale2.id, productId: products[4].id, quantity: 1, unitPriceBs: products[4].retailPrice * 36.5, subtotalBs: products[4].retailPrice * 36.5 }, { transaction })
 
-        // Venta 3 (Hoy)
+        
         const totalUsd3 = parseFloat(Number(products[5].retailPrice).toFixed(2))
+        const totalBs3 = totalUsd3 * 36.5
         const sale3 = await Sale.create({
-          saleNumber: `BODEGA-000003`, userId: adminUser.id, totalUsd: totalUsd3, totalBs: totalUsd3 * 36.5, exchangeRate: 36.5, status: "completada", saleDate: new Date(),
+          saleNumber: `BODEGA-000003`, userId: adminUser.id, totalUsd: totalUsd3, totalBs: totalBs3, dolarRateId: dolarRate.id, status: "completada", saleDate: new Date(),
         }, { transaction })
-        await SaleItem.create({ saleId: sale3.id, productId: products[5].id, quantity: 1, unitPriceUsd: products[5].retailPrice, unitPriceBs: products[5].retailPrice * 36.5, subtotalUsd: products[5].retailPrice, subtotalBs: products[5].retailPrice * 36.5, totalUsd: products[5].retailPrice, totalBs: products[5].retailPrice * 36.5 }, { transaction })
+        await SaleItem.create({ saleId: sale3.id, productId: products[5].id, quantity: 1, unitPriceBs: products[5].retailPrice * 36.5, subtotalBs: products[5].retailPrice * 36.5 }, { transaction })
 
-        // Venta 4
         const totalUsd4 = parseFloat((Number(products[6].retailPrice) * 2).toFixed(2))
+        const totalBs4 = totalUsd4 * 36.5
         const sale4 = await Sale.create({
-          saleNumber: `BODEGA-000004`, userId: adminUser.id, totalUsd: totalUsd4, totalBs: totalUsd4 * 36.5, exchangeRate: 36.5, status: "completada", saleDate: new Date(),
+          saleNumber: `BODEGA-000004`, userId: adminUser.id, totalUsd: totalUsd4, totalBs: totalBs4, dolarRateId: dolarRate.id, status: "completada", saleDate: new Date(),
         }, { transaction })
-        await SaleItem.create({ saleId: sale4.id, productId: products[6].id, quantity: 2, unitPriceUsd: products[6].retailPrice, unitPriceBs: products[6].retailPrice * 36.5, subtotalUsd: products[6].retailPrice * 2, subtotalBs: (products[6].retailPrice * 2) * 36.5, totalUsd: products[6].retailPrice * 2, totalBs: (products[6].retailPrice * 2) * 36.5 }, { transaction })
+        await SaleItem.create({ saleId: sale4.id, productId: products[6].id, quantity: 2, unitPriceBs: products[6].retailPrice * 36.5, subtotalBs: (products[6].retailPrice * 2) * 36.5 }, { transaction })
 
-        // Venta 5
         const totalUsd5 = parseFloat((Number(products[7].retailPrice) + Number(products[8].retailPrice)).toFixed(2))
+        const totalBs5 = totalUsd5 * 36.5
         const sale5 = await Sale.create({
-          saleNumber: `BODEGA-000005`, userId: adminUser.id, totalUsd: totalUsd5, totalBs: totalUsd5 * 36.5, exchangeRate: 36.5, status: "completada", saleDate: new Date(),
+          saleNumber: `BODEGA-000005`, userId: adminUser.id, totalUsd: totalUsd5, totalBs: totalBs5, dolarRateId: dolarRate.id, status: "completada", saleDate: new Date(),
         }, { transaction })
         await SaleItem.bulkCreate([
-          { saleId: sale5.id, productId: products[7].id, quantity: 1, unitPriceUsd: products[7].retailPrice, unitPriceBs: products[7].retailPrice * 36.5, subtotalUsd: products[7].retailPrice, subtotalBs: products[7].retailPrice * 36.5, totalUsd: products[7].retailPrice, totalBs: products[7].retailPrice * 36.5 },
-          { saleId: sale5.id, productId: products[8].id, quantity: 1, unitPriceUsd: products[8].retailPrice, unitPriceBs: products[8].retailPrice * 36.5, subtotalUsd: products[8].retailPrice, subtotalBs: products[8].retailPrice * 36.5, totalUsd: products[8].retailPrice, totalBs: products[8].retailPrice * 36.5 },
+          { saleId: sale5.id, productId: products[7].id, quantity: 1, unitPriceBs: products[7].retailPrice * 36.5, subtotalBs: products[7].retailPrice * 36.5 },
+          { saleId: sale5.id, productId: products[8].id, quantity: 1, unitPriceBs: products[8].retailPrice * 36.5, subtotalBs: products[8].retailPrice * 36.5 },
         ], { transaction })
 
         console.log("   -> 5 ventas de ejemplo creadas.")
 
-        // --- 5. Actualizar Stock y Crear Movimientos de Inventario para las ventas ---
         const allSaleItems = await SaleItem.findAll({
           where: { saleId: [sale1.id, sale2.id, sale3.id, sale4.id, sale5.id] },
           include: [{ model: Product, as: "product" }, { model: Sale, as: "sale" }],
@@ -490,7 +492,7 @@ const seedDefaultData = async () => {
         for (const item of allSaleItems) {
           const product = item.product
           const previousStock = product.currentStock
-          const newStock = Math.max(0, previousStock - item.quantity) // Asegurar que el stock no sea negativo
+          const newStock = Math.max(0, previousStock - item.quantity) 
 
           await product.update({ currentStock: newStock }, { transaction })
 
@@ -502,13 +504,13 @@ const seedDefaultData = async () => {
       }
 
       await transaction.commit()
-      console.log("✅ Datos de prueba sembrados exitosamente.")
+      console.log(" Datos de prueba sembrados exitosamente.")
     } catch (error) {
       await transaction.rollback()
-      console.error("❌ Error sembrando datos de prueba:", error)
+      console.error(" Error sembrando datos de prueba:", error)
     }
 
-    console.log("✅ Datos por defecto y de prueba inicializados correctamente.")
+    console.log("Datos por defecto y de prueba inicializados correctamente.")
   } catch (error) {
     console.error("Error al inicializar datos por defecto:", error)
   }
@@ -516,15 +518,14 @@ const seedDefaultData = async () => {
 
 module.exports = { seedDefaultData }
 
-// Ejecutar el seeder si se llama directamente
 if (require.main === module) {
   seedDefaultData()
     .then(() => {
-      console.log("✅ Seeder ejecutado exitosamente.")
+      console.log(" Seeder ejecutado exitosamente.")
       process.exit(0)
     })
     .catch((error) => {
-      console.error("❌ Error ejecutando seeder:", error)
+      console.error("Error ejecutando seeder:", error)
       process.exit(1)
     })
 }

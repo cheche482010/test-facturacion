@@ -29,29 +29,15 @@ const SaleItem = sequelize.define(
       type: DataTypes.DECIMAL(8, 2),
       allowNull: false,
     },
-    unitPriceUsd: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
-    },
     unitPriceBs: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
-    },
-    subtotalUsd: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
+      comment: 'Precio unitario en Bs al momento de la venta'
     },
     subtotalBs: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
-    },
-    totalUsd: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
-    },
-    totalBs: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
+      comment: 'Subtotal en Bs (quantity * unitPriceBs)'
     },
   },
   {

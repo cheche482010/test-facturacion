@@ -138,7 +138,14 @@
               items: cartItems,
               totalUsd: totals.totalUsd,
               totalBs: totals.totalBs
-            }" @payment-completed="onPaymentCompleted" />
+            }" :notes="notes" @payment-completed="onPaymentCompleted" />
+
+            <SaleReceiptDialog
+              v-model="showReceiptDialog"
+              :sale="completedSale"
+              :exchange-rate="exchangeRate"
+              @sale-completed="onSaleCompleted"
+            />
 
             <v-textarea v-model="notes" label="Añadir notas a la factura..." rows="3" variant="outlined"
               density="compact" class="mt-4"></v-textarea>
@@ -159,11 +166,13 @@
 <script>
 import newSaleLogic from './NewSale.js'
 import PaymentDialog from '../../components/sales/PaymentDialog/PaymentDialog.vue'
+import SaleReceiptDialog from '../../components/sales/SaleReceiptDialog/SaleReceiptDialog.vue'
 
 export default {
   ...newSaleLogic,
   components: {
-    PaymentDialog
+    PaymentDialog,
+    SaleReceiptDialog
   }
 }
 </script>

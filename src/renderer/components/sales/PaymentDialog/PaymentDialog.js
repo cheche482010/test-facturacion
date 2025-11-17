@@ -10,7 +10,11 @@ export default {
   },
   props: {
     modelValue: Boolean,
-    saleData: Object
+    saleData: Object,
+    notes: {
+      type: String,
+      default: ''
+    }
   },
   emits: ['update:modelValue', 'payment-completed'],
   setup(props, { emit }) {
@@ -103,13 +107,15 @@ export default {
           })),
           payments: payments.value.map(p => ({
             paymentMethodId: p.paymentMethodId,
-            amount: p.amount
+            amount: p.amount,
+            reference: p.reference,
+            notes: p.notes
           })),
           exchangeRate: exchangeRate.value,
-          notes: ''
+          notes: props.notes
         })
         emit('payment-completed', result)
-        dialog.value = false
+        // No cerrar el diálogo aquí, se cerrará desde el componente padre
       } catch (error) {
         console.error('Error procesando venta:', error)
       } finally {

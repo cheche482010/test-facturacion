@@ -26,6 +26,8 @@ export default {
     const notes = ref('')
     const payments = ref([])
     const showPaymentDialog = ref(false)
+    const showReceiptDialog = ref(false)
+    const completedSale = ref(null)
     const isCartModified = ref(false)
     const cartHeaders = [
       { title: 'Producto', key: 'name', width: '40%', sortable: false },
@@ -203,8 +205,15 @@ export default {
 
     const onPaymentCompleted = (result) => {
       console.log('Payment completed:', result)
+      completedSale.value = result
+      showPaymentDialog.value = false
+      showReceiptDialog.value = true
+    }
+
+    const onSaleCompleted = () => {
+      showReceiptDialog.value = false
+      completedSale.value = null
       resetSale()
-      router.push('/sales')
     }
 
     const cancelSale = () => {
@@ -251,6 +260,8 @@ export default {
       notes,
       payments,
       showPaymentDialog,
+      showReceiptDialog,
+      completedSale,
       cartHeaders,
       products,
       totals,
@@ -265,6 +276,7 @@ export default {
       cancelSale,
       openPaymentDialog,
       onPaymentCompleted,
+      onSaleCompleted,
       formatCurrency,
       exchangeRate
     }

@@ -39,7 +39,6 @@ export default {
 
       try {
         await this.authStore.login(this.credentials)
-        // Redirigir basado en el rol del usuario
         const redirectPath = this.authStore.user.role === 'cajero' ? '/sales/new' : '/dashboard'
         this.$router.push(redirectPath)
       } catch (error) {
