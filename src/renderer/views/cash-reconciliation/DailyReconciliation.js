@@ -20,8 +20,8 @@ const componentLogic = {
 
   data() {
     return {
-      openForm: { openingBalance: 0, notes: '' },
-      closeForm: { closingBalance: 0, notes: '' },
+      openForm: { openingBalanceBs: 0, openingBalanceUsd: 0, notes: '' },
+      closeForm: { closingBalanceBs: 0, closingBalanceUsd: 0, notes: '' },
       showReportDialog: false,
       showAdminPasswordDialog: false,
       showConfirmationDialog: false,
@@ -33,11 +33,15 @@ const componentLogic = {
   computed: {
     expectedBalance() {
       if (!this.reconciliation) return 0
-      const openingBalance = parseFloat(this.reconciliation.openingBalance || 0)
+      const openingBalanceBs = parseFloat(this.reconciliation.openingBalanceBs || 0)
+      const openingBalanceUsd = parseFloat(this.reconciliation.openingBalanceUsd || 0)
       const totalSales = parseFloat(this.reconciliation.totalSales || 0)
+      // Convertir USD a BS usando la tasa actual (asumiendo que tenemos una tasa)
+      const exchangeRate = this.reconciliation.exchangeRate || 1
+      const openingBalanceTotalBs = openingBalanceBs + (openingBalanceUsd * exchangeRate)
       // El saldo esperado debe considerar el vuelto dado que reduce el efectivo en caja
       // Pero como no tenemos el total de vuelto en tiempo real, usamos la fórmula simplificada
-      return openingBalance + totalSales
+      return openingBalanceTotalBs + totalSales
     }
   },
 
@@ -49,7 +53,7 @@ const componentLogic = {
     async handleOpenReconciliation() {
       try {
         await this.store.openReconciliation(this.openForm)
-        this.openForm = { openingBalance: 0, notes: '' }
+        this.openForm = { openingBalanceBs: 0, openingBalanceUsd: 0, notes: '' }
       } catch (e) {
         console.error('Failed to open reconciliation:', e)
       }
@@ -95,7 +99,7 @@ const componentLogic = {
         await this.store.closeReconciliation(closeData)
         this.showAdminPasswordDialog = false
         this.adminPassword = ''
-        this.closeForm = { closingBalance: 0, notes: '' }
+        this.closeForm = { closingBalanceBs: 0, closingBalanceUsd: 0, notes: '' }
       } catch (e) {
         console.error('Failed to close reconciliation:', e)
         this.adminPasswordError = e.message || 'Error al cerrar la caja'

@@ -22,13 +22,38 @@ const CashReconciliation = sequelize.define(
       type: DataTypes.DATE,
       allowNull: true,
     },
-    openingBalance: {
+    openingBalanceBs: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
+      defaultValue: 0,
+      comment: 'Saldo inicial en Bolívares',
+    },
+    openingBalanceUsd: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false,
+      defaultValue: 0,
+      comment: 'Saldo inicial en Dólares',
+    },
+    closingBalanceBs: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+      comment: 'Saldo final en Bolívares',
+    },
+    closingBalanceUsd: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+      comment: 'Saldo final en Dólares',
+    },
+    // Campo legacy para compatibilidad
+    openingBalance: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+      comment: 'Campo legacy - usar openingBalanceBs y openingBalanceUsd',
     },
     closingBalance: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: true,
+      comment: 'Campo legacy - usar closingBalanceBs y closingBalanceUsd',
     },
     totalSales: {
       type: DataTypes.DECIMAL(10, 2),

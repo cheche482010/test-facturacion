@@ -3,9 +3,9 @@ const CashReconciliationService = require("../services/CashReconciliationService
 class CashReconciliationController {
   async create(req, res) {
     try {
-      const { openingBalance, notes } = req.body
+      const { openingBalanceBs, openingBalanceUsd, notes } = req.body
       const userId = req.user.id
-      const reconciliation = await CashReconciliationService.createReconciliation(userId, openingBalance, notes)
+      const reconciliation = await CashReconciliationService.createReconciliation(userId, openingBalanceBs, openingBalanceUsd, notes)
       res.status(201).json(reconciliation)
     } catch (error) {
       res.status(500).json({ message: "Error creating reconciliation", error: error.message })
@@ -26,7 +26,7 @@ class CashReconciliationController {
   async close(req, res) {
     try {
       const { id } = req.params
-      const { closingBalance, notes, adminPassword } = req.body
+      const { closingBalanceBs, closingBalanceUsd, notes, adminPassword } = req.body
       const userRole = req.user.role
 
       // If user is cajero, require admin password for closure
@@ -42,7 +42,7 @@ class CashReconciliationController {
         }
       }
 
-      const reconciliation = await CashReconciliationService.closeReconciliation(id, closingBalance, notes)
+      const reconciliation = await CashReconciliationService.closeReconciliation(id, closingBalanceBs, closingBalanceUsd, notes)
       res.json(reconciliation)
     } catch (error) {
       res.status(500).json({ message: "Error closing reconciliation", error: error.message })

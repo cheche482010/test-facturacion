@@ -47,7 +47,8 @@ export const useCashReconciliationStore = defineStore('cashReconciliation', () =
   /**
    * Abre una nueva caja con un saldo inicial.
    * @param {object} data - Datos para la apertura.
-   * @param {number} data.openingBalance - El saldo inicial.
+   * @param {number} data.openingBalanceBs - El saldo inicial en Bolívares.
+   * @param {number} data.openingBalanceUsd - El saldo inicial en Dólares.
    * @param {string} [data.notes] - Notas opcionales.
    */
   async function openReconciliation(data) {
@@ -69,7 +70,8 @@ export const useCashReconciliationStore = defineStore('cashReconciliation', () =
   /**
    * Cierra la caja del día.
    * @param {object} data - Datos para el cierre.
-   * @param {number} data.closingBalance - El saldo final contado.
+   * @param {number} data.closingBalanceBs - El saldo final contado en Bolívares.
+   * @param {number} data.closingBalanceUsd - El saldo final contado en Dólares.
    * @param {string} [data.notes] - Notas de cierre opcionales.
    */
   async function closeReconciliation(data) {

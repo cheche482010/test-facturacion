@@ -34,11 +34,12 @@ class CashReconciliationService {
   /**
    * Crea una nueva apertura de caja (reconciliación).
    * @param {number} userId - ID del usuario que realiza la apertura.
-   * @param {number} openingBalance - Saldo inicial en caja.
+   * @param {number} openingBalanceBs - Saldo inicial en Bolívares.
+   * @param {number} openingBalanceUsd - Saldo inicial en Dólares.
    * @param {string} [notes] - Notas adicionales.
    * @returns {Promise<CashReconciliation>} La reconciliación creada.
    */
-  async createReconciliation(userId, openingBalance, notes = "") {
+  async createReconciliation(userId, openingBalanceBs = 0, openingBalanceUsd = 0, notes = "") {
     const todayStart = await this.getStartOfBusinessDay()
 
     const existingReconciliation = await CashReconciliation.findOne({
@@ -63,7 +64,9 @@ class CashReconciliationService {
 
     const reconciliation = await CashReconciliation.create({
       userId,
-      openingBalance,
+      openingBalanceBs,
+      openingBalanceUsd,
+      openingBalance: openingBalanceBs, // Para compatibilidad
       openingDate: new Date(),
       notes,
       lote,
@@ -117,11 +120,12 @@ class CashReconciliationService {
   /**
    * Cierra la caja del día.
    * @param {number} reconciliationId - ID de la reconciliación a cerrar.
-   * @param {number} closingBalance - Monto contado al cerrar.
+   * @param {number} closingBalanceBs - Saldo final contado en Bolívares.
+   * @param {number} closingBalanceUsd - Saldo final contado en Dólares.
    * @param {string} [notes] - Notas de cierre.
    * @returns {Promise<CashReconciliation>}
    */
-  async closeReconciliation(reconciliationId, closingBalance, notes = "") {
+  async closeReconciliation(reconciliationId, closingBalanceBs, closingBalanceUsd, notes = "") {
     const reconciliation = await CashReconciliation.findByPk(reconciliationId)
     if (!reconciliation) {
       throw new Error("Reconciliación no encontrada.")
@@ -147,7 +151,9 @@ class CashReconciliationService {
     const totalSalesUsd = totalSalesBs / dolarRate.rate
 
     reconciliation.closingDate = closingDate
-    reconciliation.closingBalance = closingBalance
+    reconciliation.closingBalanceBs = closingBalanceBs
+    reconciliation.closingBalanceUsd = closingBalanceUsd
+    reconciliation.closingBalance = closingBalanceBs // Para compatibilidad
     reconciliation.notes = `${reconciliation.notes || ""}\nCierre: ${notes}`.trim()
     reconciliation.totalSales = totalSalesBs
     reconciliation.totalSalesUsd = totalSalesUsd

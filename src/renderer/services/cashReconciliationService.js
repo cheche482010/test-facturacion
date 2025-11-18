@@ -12,7 +12,8 @@ const cashReconciliationService = {
   /**
    * Crea una nueva apertura de caja.
    * @param {object} data - Datos para la apertura.
-   * @param {number} data.openingBalance - El saldo inicial.
+   * @param {number} data.openingBalanceBs - El saldo inicial en Bolívares.
+   * @param {number} data.openingBalanceUsd - El saldo inicial en Dólares.
    * @param {string} [data.notes] - Notas opcionales.
    */
   open(data) {
@@ -23,7 +24,8 @@ const cashReconciliationService = {
    * Cierra el arqueo de caja actual.
    * @param {number} id - El ID del arqueo a cerrar.
    * @param {object} data - Datos para el cierre.
-   * @param {number} data.closingBalance - El saldo final contado.
+   * @param {number} data.closingBalanceBs - El saldo final contado en Bolívares.
+   * @param {number} data.closingBalanceUsd - El saldo final contado en Dólares.
    * @param {string} [data.notes] - Notas de cierre opcionales.
    */
   close(id, data) {

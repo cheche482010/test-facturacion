@@ -20,29 +20,38 @@
             La caja está cerrada. Ingrese el saldo inicial para comenzar.
           </v-alert>
           <v-row>
-            <v-col cols="12" md="4">
+            <v-col cols="12" md="3">
              <v-text-field
-               v-model.number="openForm.openingBalance"
-               label="Saldo Inicial"
+               v-model.number="openForm.openingBalanceBs"
+               label="Saldo Inicial BS"
+               type="number"
+               prefix="Bs"
+               variant="outlined"
+             ></v-text-field>
+           </v-col>
+           <v-col cols="12" md="3">
+             <v-text-field
+               v-model.number="openForm.openingBalanceUsd"
+               label="Saldo Inicial USD"
                type="number"
                prefix="$"
                variant="outlined"
              ></v-text-field>
            </v-col>
-            <v-col cols="12" md="6">
-              <v-textarea
-                v-model="openForm.notes"
-                label="Notas de Apertura (Opcional)"
-                rows="1"
-                variant="outlined"
-              ></v-textarea>
-            </v-col>
-            <v-col cols="12" md="2" class="d-flex align-center">
-              <v-btn color="primary" @click="handleOpenReconciliation" :loading="isLoading" block>
-                Abrir Caja
-              </v-btn>
-            </v-col>
-          </v-row>
+           <v-col cols="12" md="4">
+             <v-textarea
+               v-model="openForm.notes"
+               label="Notas de Apertura (Opcional)"
+               rows="1"
+               variant="outlined"
+             ></v-textarea>
+           </v-col>
+           <v-col cols="12" md="2" class="d-flex align-center">
+             <v-btn color="primary" @click="handleOpenReconciliation" :loading="isLoading" block>
+               Abrir Caja
+             </v-btn>
+           </v-col>
+         </v-row>
         </div>
 
         <!-- State: Reconciliation is open -> Show Details and Close Form -->
@@ -52,7 +61,8 @@
             <v-col cols="12" md="4">
               <v-card variant="tonal">
                 <v-list-item :title="reconciliation.user.username" subtitle="Abierta por"></v-list-item>
-                <v-list-item :title="formatCurrency(reconciliation.openingBalance)" subtitle="Saldo Inicial"></v-list-item>
+                <v-list-item :title="formatCurrency(reconciliation.openingBalanceBs, 'VES')" subtitle="Saldo Inicial BS"></v-list-item>
+                <v-list-item :title="formatCurrency(reconciliation.openingBalanceUsd, 'USD')" subtitle="Saldo Inicial USD"></v-list-item>
               </v-card>
             </v-col>
             <!-- Sales -->
@@ -74,16 +84,25 @@
           <v-divider class="my-4"></v-divider>
 
           <v-row>
-             <v-col cols="12" md="4">
+             <v-col cols="12" md="3">
               <v-text-field
-                v-model.number="closeForm.closingBalance"
-                label="Saldo Final en Caja"
+                v-model.number="closeForm.closingBalanceBs"
+                label="Saldo Final BS"
+                type="number"
+                prefix="Bs"
+                variant="outlined"
+              ></v-text-field>
+            </v-col>
+            <v-col cols="12" md="3">
+              <v-text-field
+                v-model.number="closeForm.closingBalanceUsd"
+                label="Saldo Final USD"
                 type="number"
                 prefix="$"
                 variant="outlined"
               ></v-text-field>
             </v-col>
-            <v-col cols="12" md="6">
+            <v-col cols="12" md="4">
               <v-textarea
                 v-model="closeForm.notes"
                 label="Notas de Cierre (Opcional)"
@@ -173,7 +192,10 @@
                                     <strong>Fecha de Cierre:</strong> {{ new Date().toLocaleString() }}
                                 </v-col>
                                 <v-col cols="6">
-                                    <strong>Saldo Inicial:</strong> {{ formatCurrency(dailyReport.reconciliation.openingBalance, 'VES') }}
+                                    <strong>Saldo Inicial BS:</strong> {{ formatCurrency(dailyReport.reconciliation.openingBalanceBs, 'VES') }}
+                                </v-col>
+                                <v-col cols="6">
+                                    <strong>Saldo Inicial USD:</strong> {{ formatCurrency(dailyReport.reconciliation.openingBalanceUsd, 'USD') }}
                                 </v-col>
                             </v-row>
                         </div>
