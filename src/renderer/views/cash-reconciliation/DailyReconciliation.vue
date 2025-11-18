@@ -15,7 +15,6 @@
 
       <!-- Main Content -->
       <div v-if="!isLoading">
-        <!-- State: No reconciliation open -> Show Open Form -->
         <div v-if="!reconciliation">
           <v-alert type="info" variant="tonal" class="mb-4">
             La caja está cerrada. Ingrese el saldo inicial para comenzar.
@@ -149,74 +148,92 @@
         </v-dialog>
 
         <!-- Report Preview Dialog -->
-        <v-dialog v-model="showReportDialog" persistent max-width="800px">
+        <v-dialog v-model="showReportDialog" persistent max-width="900px">
             <v-card v-if="dailyReport">
                 <v-card-title class="d-flex justify-space-between">
                     <span class="text-h5">Reporte de Cierre de Caja</span>
                     <v-btn icon="mdi-close" variant="text" @click="showReportDialog = false"></v-btn>
                 </v-card-title>
                 <v-card-text>
-                    <v-row>
-                        <v-col cols="6">
-                            <v-list-item :title="dailyReport.reconciliation.user.username" subtitle="Usuario"></v-list-item>
-                        </v-col>
-                        <v-col cols="6">
-                            <v-list-item :title="new Date(dailyReport.reconciliation.openingDate).toLocaleString()" subtitle="Fecha de Apertura"></v-list-item>
-                        </v-col>
-                        <v-col cols="6">
-                            <v-list-item :title="dailyReport.reconciliation.lote" subtitle="Lote"></v-list-item>
-                        </v-col>
-                        <v-col cols="6">
-                            <v-list-item :title="formatCurrency(dailyReport.reconciliation.openingBalance)" subtitle="Saldo Inicial"></v-list-item>
-                        </v-col>
-                    </v-row>
-                    <v-divider class="my-2"></v-divider>
-                    <v-row>
-                        <v-col cols="4"><v-list-item :title="formatCurrency(dailyReport.summary.totalSalesBs, 'VES')" subtitle="Total Ventas BS"></v-list-item></v-col>
-                        <v-col cols="4"><v-list-item :title="formatCurrency(dailyReport.summary.totalSalesUsd, 'USD')" subtitle="Total Ventas USD"></v-list-item></v-col>
-                        <v-col cols="2"><v-list-item :title="dailyReport.summary.salesCount" subtitle="Nº Ventas"></v-list-item></v-col>
-                        <v-col cols="3"><v-list-item :title="formatCurrency(dailyReport.summary.totalChangeGivenBs, 'VES')" subtitle="Vuelto BS"></v-list-item></v-col>
-                        <v-col cols="3"><v-list-item :title="formatCurrency(dailyReport.summary.totalChangeGivenUsd, 'USD')" subtitle="Vuelto USD"></v-list-item></v-col>
-                    </v-row>
-                     <v-divider class="my-2"></v-divider>
-                     <h3 class="mb-2">Desglose por Método de Pago</h3>
-                    <v-row>
-                        <v-col v-for="(amount, method) in dailyReport.summary.paymentMethodBreakdown" :key="method" cols="4">
-                           <v-list-item :title="formatCurrency(amount, 'VES')" :subtitle="method"></v-list-item>
-                        </v-col>
-                    </v-row>
-                    <v-divider class="my-2"></v-divider>
-                    <h3 class="mb-2">Listado de Ventas</h3>
-                    <v-data-table
-                        :headers="[
-                          { title: 'Nº Venta', key: 'saleNumber' },
-                          { title: 'Monto BS', key: 'totalBs' },
-                          { title: 'Monto USD', key: 'totalUsd' },
-                          { title: 'Método', key: 'paymentMethod' },
-                          { title: 'Vuelto BS', key: 'changeGivenBs' },
-                          { title: 'Vuelto USD', key: 'changeGivenUsd' }
-                        ]"
-                        :items="dailyReport.sales"
-                        dense
-                    >
-                      <template v-slot:item.totalBs="{ item }">
-                        {{ formatCurrency(item.totalBs, 'VES') }}
-                      </template>
-                      <template v-slot:item.totalUsd="{ item }">
-                        {{ formatCurrency(item.totalUsd, 'USD') }}
-                      </template>
-                      <template v-slot:item.changeGivenBs="{ item }">
-                        {{ formatCurrency(item.changeGivenBs, 'VES') }}
-                      </template>
-                      <template v-slot:item.changeGivenUsd="{ item }">
-                        {{ formatCurrency(item.changeGivenUsd, 'USD') }}
-                      </template>
-                    </v-data-table>
+                    <div id="printable-report" class="printable-report">
+                        <div class="report-header text-center mb-4">
+                            <h2>REPORTE DE CIERRE DE CAJA</h2>
+                            <p>Lote: {{ dailyReport.reconciliation.lote }}</p>
+                        </div>
+
+                        <div class="report-info mb-4">
+                            <v-row>
+                                <v-col cols="6">
+                                    <strong>Usuario:</strong> {{ dailyReport.reconciliation.user.username }}
+                                </v-col>
+                                <v-col cols="6">
+                                    <strong>Fecha de Apertura:</strong> {{ new Date(dailyReport.reconciliation.openingDate).toLocaleString() }}
+                                </v-col>
+                                <v-col cols="6">
+                                    <strong>Fecha de Cierre:</strong> {{ new Date().toLocaleString() }}
+                                </v-col>
+                                <v-col cols="6">
+                                    <strong>Saldo Inicial:</strong> {{ formatCurrency(dailyReport.reconciliation.openingBalance, 'VES') }}
+                                </v-col>
+                            </v-row>
+                        </div>
+
+                        <div class="report-summary mb-4">
+                            <h3>RESUMEN FINANCIERO</h3>
+                            <v-row>
+                                <v-col cols="4"><strong>Total Ventas BS:</strong> {{ formatCurrency(dailyReport.summary.totalSalesBs, 'VES') }}</v-col>
+                                <v-col cols="4"><strong>Total Ventas USD:</strong> {{ formatCurrency(dailyReport.summary.totalSalesUsd, 'USD') }}</v-col>
+                                <v-col cols="4"><strong>Número de Ventas:</strong> {{ dailyReport.summary.salesCount }}</v-col>
+                                <v-col cols="4"><strong>Vuelto Total BS:</strong> {{ formatCurrency(dailyReport.summary.totalChangeGivenBs, 'VES') }}</v-col>
+                                <v-col cols="4"><strong>Vuelto Total USD:</strong> {{ formatCurrency(dailyReport.summary.totalChangeGivenUsd, 'USD') }}</v-col>
+                                <v-col cols="4"><strong>Saldo Esperado:</strong> {{ formatCurrency(parseFloat(dailyReport.reconciliation.openingBalance) + parseFloat(dailyReport.summary.totalSalesBs) - parseFloat(dailyReport.summary.totalChangeGivenBs || 0), 'VES') }}</v-col>
+                            </v-row>
+                        </div>
+
+                        <div class="report-breakdown mb-4">
+                            <h3>DESGLOSE POR MÉTODO DE PAGO</h3>
+                            <v-row>
+                                <v-col v-for="(amount, method) in dailyReport.summary.paymentMethodBreakdown" :key="method" cols="6">
+                                    <strong>{{ method }}:</strong> {{ formatCurrency(amount, 'VES') }}
+                                </v-col>
+                            </v-row>
+                        </div>
+
+                        <div class="report-sales">
+                            <h3>LISTADO DE VENTAS</h3>
+                            <table class="sales-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nº Venta</th>
+                                        <th>Monto BS</th>
+                                        <th>Monto USD</th>
+                                        <th>Método</th>
+                                        <th>Vuelto BS</th>
+                                        <th>Vuelto USD</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="sale in dailyReport.sales" :key="sale.id">
+                                        <td>{{ sale.saleNumber }}</td>
+                                        <td>{{ formatCurrency(sale.totalBs, 'VES') }}</td>
+                                        <td>{{ formatCurrency(sale.totalUsd, 'USD') }}</td>
+                                        <td>{{ sale.paymentMethod }}</td>
+                                        <td>{{ formatCurrency(sale.changeGivenBs, 'VES') }}</td>
+                                        <td>{{ formatCurrency(sale.changeGivenUsd, 'USD') }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </v-card-text>
                 <v-card-actions>
                     <v-spacer></v-spacer>
                     <v-btn text @click="showReportDialog = false">Cancelar</v-btn>
-                    <v-btn color="primary" @click="handleConfirmAndPrint" :loading="isLoading">
+                    <v-btn color="primary" @click="printReport" :loading="isLoading">
+                        <v-icon left>mdi-printer</v-icon>
+                        Imprimir Reporte
+                    </v-btn>
+                    <v-btn color="success" @click="handleConfirmAndPrint" :loading="isLoading">
                         Confirmar e Imprimir
                     </v-btn>
                 </v-card-actions>
@@ -227,158 +244,12 @@
   </v-card>
 </template>
 
-<script setup>
-import { ref, onMounted, computed } from 'vue'
-import { useCashReconciliationStore } from '@/stores/cashReconciliation'
-import { storeToRefs } from 'pinia'
+<script>
+import componentLogic from './DailyReconciliation.js'
 
-// --- Store ---
-const store = useCashReconciliationStore()
-const { todayReconciliation: reconciliation, dailyReport, isLoading, isReportLoading, error } = storeToRefs(store)
-
-// --- Local State ---
-const openForm = ref({ openingBalance: 0, notes: '' })
-const closeForm = ref({ closingBalance: 0, notes: '' })
-const showReportDialog = ref(false)
-const showAdminPasswordDialog = ref(false)
-const showConfirmationDialog = ref(false)
-const adminPassword = ref('')
-const adminPasswordError = ref('')
-
-// --- Computed ---
-const expectedBalance = computed(() => {
-  if (!reconciliation.value) return 0
-  const openingBalance = parseFloat(reconciliation.value.openingBalance || 0)
-  const totalSales = parseFloat(reconciliation.value.totalSales || 0)
-  // El saldo esperado debe considerar el vuelto dado que reduce el efectivo en caja
-  // Pero como no tenemos el total de vuelto en tiempo real, usamos la fórmula simplificada
-  return openingBalance + totalSales
-})
-
-// --- Methods ---
-const formatCurrency = (value, currency = 'VES') => {
-  return new Intl.NumberFormat('es-VE', { style: 'currency', currency }).format(value || 0)
-}
-
-const handleOpenReconciliation = async () => {
-  try {
-    await store.openReconciliation(openForm.value)
-    openForm.value = { openingBalance: 0, notes: '' }
-  } catch (e) {
-    console.error('Failed to open reconciliation:', e)
-  }
-}
-
-const initiateClose = async () => {
-  if (!reconciliation.value) return;
-  await store.fetchDailyReport(reconciliation.value.id);
-  if (store.dailyReport) {
-    showReportDialog.value = true;
-  }
-}
-
-const handleConfirmAndPrint = async () => {
-  // Import auth store to check user role
-  const { useAuthStore } = await import('@/stores/auth')
-  const authStore = useAuthStore()
-
-  if (authStore.user.role === 'cajero') {
-    // For cajeros, show admin password dialog
-    showReportDialog.value = false
-    showAdminPasswordDialog.value = true
-  } else {
-    // For admin/dev, show confirmation dialog
-    showReportDialog.value = false
-    showConfirmationDialog.value = true
-  }
-}
-
-const confirmCloseWithAdminPassword = async () => {
-  if (!adminPassword.value.trim()) {
-    adminPasswordError.value = 'La contraseña es requerida'
-    return
-  }
-
-  adminPasswordError.value = ''
-
-  try {
-    const closeData = {
-      ...closeForm.value,
-      adminPassword: adminPassword.value
-    }
-    await store.closeReconciliation(closeData)
-    showAdminPasswordDialog.value = false
-    adminPassword.value = ''
-    closeForm.value = { closingBalance: 0, notes: '' }
-  } catch (e) {
-    console.error('Failed to close reconciliation:', e)
-    adminPasswordError.value = e.message || 'Error al cerrar la caja'
-  }
-}
-
-const confirmClose = async () => {
-  try {
-    await store.closeReconciliation(closeForm.value)
-    showConfirmationDialog.value = false
-    closeForm.value = { closingBalance: 0, notes: '' }
-  } catch (e) {
-    console.error('Failed to close reconciliation:', e)
-  }
-}
-
-const confirmAndPrint = async () => {
-  if (!dailyReport.value) return;
-
-  const { reconciliation: recon, summary, sales } = dailyReport.value;
-  let reportText = `
-    ======================================
-    REPORTE DE CIERRE DE CAJA
-    ======================================
-    Usuario: ${recon.user.username}
-    Fecha de Apertura: ${new Date(recon.openingDate).toLocaleString()}
-    Fecha de Cierre:   ${new Date().toLocaleString()}
-    Lote: ${recon.lote}
-    --------------------------------------
-    RESUMEN FINANCIERO
-    --------------------------------------
-    Saldo Inicial:      ${formatCurrency(recon.openingBalance, 'VES')}
-    Total Ventas BS:    ${formatCurrency(summary.totalSalesBs, 'VES')}
-    Total Ventas USD:   ${formatCurrency(summary.totalSalesUsd, 'USD')}
-    Vuelto Total BS:    ${formatCurrency(summary.totalChangeGivenBs, 'VES')}
-    Vuelto Total USD:   ${formatCurrency(summary.totalChangeGivenUsd, 'USD')}
-    Número de Ventas:   ${summary.salesCount}
-    --------------------------------------
-    Saldo Esperado:     ${formatCurrency(parseFloat(recon.openingBalance) + parseFloat(summary.totalSalesBs) - parseFloat(summary.totalChangeGivenBs || 0), 'VES')}
-    Saldo Final (Contado): ${formatCurrency(closeForm.value.closingBalance, 'VES')}
-    Diferencia:         ${formatCurrency(closeForm.value.closingBalance - (parseFloat(recon.openingBalance) + parseFloat(summary.totalSalesBs) - parseFloat(summary.totalChangeGivenBs || 0)), 'VES')}
-    --------------------------------------
-    DESGLOSE POR MÉTODO DE PAGO
-    --------------------------------------
-  `;
-
-  for (const [method, amount] of Object.entries(summary.paymentMethodBreakdown)) {
-    reportText += `${method.padEnd(20)}: ${formatCurrency(amount, 'VES')}\n`;
-  }
-
-  reportText += `
-    --------------------------------------
-    LISTADO DE VENTAS
-    --------------------------------------
-    Nº Venta     | Monto BS     | Monto USD    | Método         | Vuelto BS    | Vuelto USD
-    -----------------------------------------------------------------------------------
-  `;
-  sales.forEach(sale => {
-    const paymentMethod = sale.paymentMethod || 'Efectivo BS';
-    reportText += `${sale.saleNumber.padEnd(12)} | ${formatCurrency(sale.totalBs, 'VES').padEnd(12)} | ${formatCurrency(sale.totalUsd, 'USD').padEnd(12)} | ${paymentMethod.padEnd(15)} | ${formatCurrency(sale.changeGivenBs, 'VES').padEnd(12)} | ${formatCurrency(sale.changeGivenUsd, 'USD')}\n`;
-  });
-  reportText += "======================================";
-
-  console.log(reportText);
-
-  await confirmClose()
-}
-
-onMounted(() => {
-  store.fetchTodayReconciliation()
-})
+export default componentLogic
 </script>
+
+<style lang="scss" scoped>
+@use './DailyReconciliation.scss';
+</style>

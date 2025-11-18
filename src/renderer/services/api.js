@@ -1,6 +1,6 @@
 import { useAuthStore } from "@/stores/auth.js"
 
-const BASE_URL = "/api" 
+const BASE_URL = "http://localhost:3001/api"
 
 async function request(url, options = {}) {
   
@@ -23,13 +23,9 @@ async function request(url, options = {}) {
   })
 
   if (!response.ok) {
-    
+
     if (response.status === 401 && authStore.token) {
       authStore.logout()
-    }
-
-    if (response.status === 404 && url.includes('/cash-reconciliation/today')) {
-      return null
     }
 
     const errorData = await response.json().catch(() => ({}))

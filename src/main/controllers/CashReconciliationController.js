@@ -15,9 +15,7 @@ class CashReconciliationController {
   async getToday(req, res) {
     try {
       const reconciliation = await CashReconciliationService.getTodayReconciliation()
-      if (!reconciliation) {
-        return res.status(404).json({ message: "No reconciliation found for today" })
-      }
+      // Devolver null en lugar de 404 cuando no hay reconciliación abierta
       res.json(reconciliation)
     } catch (error) {
       res.status(500).json({ message: "Error fetching today's reconciliation", error: error.message })
