@@ -5,8 +5,6 @@ import cashReconciliationService from '@/services/cashReconciliationService'
 export const useCashReconciliationStore = defineStore('cashReconciliation', () => {
   // --- STATE ---
   const todayReconciliation = ref(null)
-  const weeklyReport = ref([])
-  const monthlyReport = ref([])
   const isLoading = ref(false)
   const isReportLoading = ref(false)
   const error = ref(null)
@@ -99,48 +97,9 @@ export const useCashReconciliationStore = defineStore('cashReconciliation', () =
     }
   }
 
-  async function fetchWeeklyReport() {
-    isReportLoading.value = true
-    reportError.value = null
-    try {
-      const today = new Date()
-      const dayOfWeek = today.getDay() // Sunday - 0, Monday - 1, ...
-      const startDate = new Date(today)
-      startDate.setDate(today.getDate() - dayOfWeek) // Start of the week (Sunday)
-
-      weeklyReport.value = await cashReconciliationService.getReport({
-        startDate: formatDate(startDate),
-        endDate: formatDate(today),
-      })
-    } catch (e) {
-      reportError.value = e.message
-    } finally {
-      isReportLoading.value = false
-    }
-  }
-
-  async function fetchMonthlyReport() {
-    isReportLoading.value = true
-    reportError.value = null
-    try {
-      const today = new Date()
-      const startDate = new Date(today.getFullYear(), today.getMonth(), 1) // First day of the month
-
-      monthlyReport.value = await cashReconciliationService.getReport({
-        startDate: formatDate(startDate),
-        endDate: formatDate(today),
-      })
-    } catch (e) {
-      reportError.value = e.message
-    } finally {
-      isReportLoading.value = false
-    }
-  }
 
   return {
     todayReconciliation,
-    weeklyReport,
-    monthlyReport,
     dailyReport,
     isLoading,
     isReportLoading,
@@ -149,8 +108,6 @@ export const useCashReconciliationStore = defineStore('cashReconciliation', () =
     fetchTodayReconciliation,
     openReconciliation,
     closeReconciliation,
-    fetchWeeklyReport,
-    fetchMonthlyReport,
     fetchDailyReport,
   }
 })

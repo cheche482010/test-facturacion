@@ -198,13 +198,10 @@ export default {
       return this.sale.payments.reduce((sum, payment) => sum + parseFloat(payment.amount), 0)
     },
     changeAmount() {
-      return this.totalPaid - parseFloat(this.sale?.totalBs || 0)
+      return parseFloat(this.sale?.changeGivenBs || 0)
     },
     changeCurrency() {
-      if (this.changeAmount <= 0) return null
-      // Asumir que el cambio se da en la moneda del último pago
-      const lastPayment = this.sale.payments[this.sale.payments.length - 1]
-      return lastPayment?.paymentMethod?.name?.toLowerCase().includes('usd') ? 'USD' : 'VES'
+      return this.changeAmount > 0 ? 'VES' : null
     }
   },
   methods: {

@@ -24,15 +24,6 @@ class CashReconciliationController {
     }
   }
 
-  async getReport(req, res) {
-    try {
-      const { startDate, endDate } = req.query
-      const report = await CashReconciliationService.getReconciliationReport(startDate, endDate)
-      res.json(report)
-    } catch (error) {
-      res.status(500).json({ message: "Error fetching reconciliation report", error: error.message })
-    }
-  }
 
   async close(req, res) {
     try {

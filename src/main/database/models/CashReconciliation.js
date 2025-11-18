@@ -9,6 +9,11 @@ const CashReconciliation = sequelize.define(
       primaryKey: true,
       autoIncrement: true,
     },
+    lote: {
+      type: DataTypes.STRING(10),
+      allowNull: true,
+      unique: true,
+    },
     openingDate: {
       type: DataTypes.DATE,
       allowNull: false,
@@ -28,10 +33,12 @@ const CashReconciliation = sequelize.define(
     totalSales: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: true,
+      comment: 'Total de ventas en BS (suma de total_bs de las ventas del día)',
     },
-    totalExpenses: {
+    totalSalesUsd: {
       type: DataTypes.DECIMAL(10, 2),
-      defaultValue: 0,
+      allowNull: true,
+      comment: 'Total de ventas en USD (totalSales / tasa_dolar_del_día_de_cierre)',
     },
     notes: {
       type: DataTypes.TEXT,

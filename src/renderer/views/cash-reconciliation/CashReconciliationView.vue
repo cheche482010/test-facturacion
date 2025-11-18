@@ -14,17 +14,6 @@
       </v-col>
     </v-row>
 
-    <v-row>
-      <!-- Weekly Summary -->
-      <v-col cols="12" md="6">
-        <WeeklyReconciliation />
-      </v-col>
-
-      <!-- Monthly Summary -->
-      <v-col cols="12" md="6">
-        <MonthlyReconciliation />
-      </v-col>
-    </v-row>
 
     <v-row>
       <!-- Daily Reconciliation -->
@@ -37,10 +26,4 @@
 
 <script setup>
 import DailyReconciliation from './DailyReconciliation.vue'
-import WeeklyReconciliation from './WeeklyReconciliation.vue'
-import MonthlyReconciliation from './MonthlyReconciliation.vue'
 </script>
-
-<style scoped>
-/* Add any specific styles for this view here */
-</style>

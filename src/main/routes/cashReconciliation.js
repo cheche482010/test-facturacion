@@ -13,8 +13,6 @@ router.post("/", requirePermission("cash_reconciliation"), CashReconciliationCon
 // GET /api/cash-reconciliation/today - Obtener la caja del día (abierta o para abrir)
 router.get("/today", requirePermission("cash_reconciliation"), CashReconciliationController.getToday)
 
-// GET /api/cash-reconciliation/report - Obtener reporte de cierres de caja
-router.get("/report", requirePermission("cash_reconciliation"), CashReconciliationController.getReport)
 
 // PUT /api/cash-reconciliation/:id/close - Cerrar la caja (cajeros necesitan contraseña admin)
 router.put("/:id/close", requirePermission("cash_reconciliation"), requireAdminForCashClosure, CashReconciliationController.close)

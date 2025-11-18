@@ -1,6 +1,6 @@
 const { Sale, SaleItem, SalePayment, PaymentMethod, Product, User, InventoryMovement, CashReconciliation, DolarRate } = require("../database/models")
-const { Op } = require("sequelize")
 const CashReconciliationService = require("../services/CashReconciliationService")
+const { Op } = require("sequelize")
 
 const salesController = {
   async getAll(req, res) {
@@ -142,6 +142,7 @@ const salesController = {
       }
 
       // Crear pagos
+      let totalPaidBs = 0;
       for (const payment of payments) {
         const paymentMethod = await PaymentMethod.findByPk(payment.paymentMethodId, { transaction });
         if (!paymentMethod) {
@@ -158,12 +159,30 @@ const salesController = {
           },
           { transaction },
         );
+
+        totalPaidBs += parseFloat(payment.amount);
       }
+
+      // Calcular cambio dado
+      const changeGivenBs = Math.max(0, totalPaidBs - calculatedTotalBs);
+      const changeGivenUsd = changeGivenBs / exchangeRate;
 
       await sale.update({
         totalUsd: calculatedTotalUsd,
         totalBs: calculatedTotalBs,
+        changeGivenBs,
+        changeGivenUsd,
       }, { transaction });
+
+      // Asignar reconciliationId si hay una caja abierta
+      try {
+        const todayReconciliation = await CashReconciliationService.getTodayReconciliation()
+        if (todayReconciliation) {
+          await sale.update({ reconciliationId: todayReconciliation.id }, { transaction })
+        }
+      } catch (error) {
+        console.error('Error asignando reconciliationId:', error)
+      }
 
       await transaction.commit()
 
@@ -171,7 +190,9 @@ const salesController = {
         const todayReconciliation = await CashReconciliationService.getTodayReconciliation()
         if (todayReconciliation) {
           const currentTotalSales = todayReconciliation.totalSales || 0
-          const newTotalSales = currentTotalSales + calculatedTotalBs
+          // El efectivo neto en caja es el total vendido menos el cambio dado
+          const netCashFromSale = calculatedTotalBs - changeGivenBs
+          const newTotalSales = currentTotalSales + netCashFromSale
 
           await CashReconciliation.update(
             { totalSales: newTotalSales },
@@ -294,7 +315,9 @@ const salesController = {
         const todayReconciliation = await CashReconciliationService.getTodayReconciliation()
         if (todayReconciliation) {
           const currentTotalSales = todayReconciliation.totalSales || 0
-          const newTotalSales = Math.max(0, currentTotalSales - parseFloat(sale.totalBs))
+          // Revertir el efectivo neto: total vendido menos cambio dado
+          const netCashFromSale = parseFloat(sale.totalBs) - parseFloat(sale.changeGivenBs || 0)
+          const newTotalSales = Math.max(0, currentTotalSales - netCashFromSale)
 
           await CashReconciliation.update(
             { totalSales: newTotalSales },

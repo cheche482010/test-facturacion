@@ -30,16 +30,6 @@ const cashReconciliationService = {
     return api.put(`/cash-reconciliation/${id}/close`, data)
   },
 
-  /**
-   * Obtiene un reporte de arqueos cerrados en un rango de fechas.
-   * @param {object} params - Parámetros de la consulta.
-   * @param {string} params.startDate - Fecha de inicio (YYYY-MM-DD).
-   * @param {string} params.endDate - Fecha de fin (YYYY-MM-DD).
-   */
-  getReport({ startDate, endDate }) {
-    const query = new URLSearchParams({ startDate, endDate }).toString()
-    return api.get(`/cash-reconciliation/report?${query}`)
-  },
 
   /**
    * Obtiene el reporte detallado de ventas para un arqueo específico.

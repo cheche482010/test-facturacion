@@ -46,8 +46,26 @@ const Sale = sequelize.define(
       type: DataTypes.ENUM("completada", "cancelada", "anulada"),
       defaultValue: "completada",
     },
+    reconciliationId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: "cash_reconciliations",
+        key: "id",
+      },
+    },
     notes: {
       type: DataTypes.TEXT,
+    },
+    changeGivenBs: {
+      type: DataTypes.DECIMAL(10, 2),
+      defaultValue: 0,
+      comment: 'Cambio/vuelto dado en BS al cliente',
+    },
+    changeGivenUsd: {
+      type: DataTypes.DECIMAL(10, 2),
+      defaultValue: 0,
+      comment: 'Cambio/vuelto dado en USD al cliente (equivalente)',
     },
     sale_date: {
       type: DataTypes.DATE,

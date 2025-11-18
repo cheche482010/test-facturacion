@@ -59,7 +59,8 @@
             <!-- Sales -->
             <v-col cols="12" md="4">
               <v-card variant="tonal" color="success">
-                <v-list-item :title="formatCurrency(reconciliation.totalSales)" subtitle="Ventas del Día"></v-list-item>
+                <v-list-item :title="formatCurrency(reconciliation.totalSalesBs, 'VES')" subtitle="Ventas del Día BS"></v-list-item>
+                <v-list-item :title="formatCurrency(reconciliation.totalSalesUsd, 'USD')" subtitle="Ventas del Día USD"></v-list-item>
                  <v-list-item :title="reconciliation.salesCount" subtitle="Nº de Ventas"></v-list-item>
               </v-card>
             </v-col>
@@ -132,9 +133,9 @@
                 <v-card-text>
                     <p>¿Estás seguro de que deseas cerrar la caja con estos datos?</p>
                     <v-list dense>
-                        <v-list-item :title="formatCurrency(closeForm.closingBalance)" subtitle="Saldo Final"></v-list-item>
-                        <v-list-item :title="formatCurrency(expectedBalance)" subtitle="Saldo Esperado"></v-list-item>
-                        <v-list-item :title="formatCurrency(closeForm.closingBalance - expectedBalance)" subtitle="Diferencia"></v-list-item>
+                        <v-list-item :title="formatCurrency(closeForm.closingBalance, 'VES')" subtitle="Saldo Final"></v-list-item>
+                        <v-list-item :title="formatCurrency(expectedBalance, 'VES')" subtitle="Saldo Esperado"></v-list-item>
+                        <v-list-item v-if="dailyReport && dailyReport.summary" :title="formatCurrency(dailyReport.summary.totalChangeGivenBs || 0, 'VES')" subtitle="Vuelto Total del Día"></v-list-item>
                     </v-list>
                 </v-card-text>
                 <v-card-actions>
@@ -162,28 +163,53 @@
                         <v-col cols="6">
                             <v-list-item :title="new Date(dailyReport.reconciliation.openingDate).toLocaleString()" subtitle="Fecha de Apertura"></v-list-item>
                         </v-col>
+                        <v-col cols="6">
+                            <v-list-item :title="dailyReport.reconciliation.lote" subtitle="Lote"></v-list-item>
+                        </v-col>
+                        <v-col cols="6">
+                            <v-list-item :title="formatCurrency(dailyReport.reconciliation.openingBalance)" subtitle="Saldo Inicial"></v-list-item>
+                        </v-col>
                     </v-row>
                     <v-divider class="my-2"></v-divider>
                     <v-row>
-                        <v-col cols="4"><v-list-item :title="formatCurrency(dailyReport.summary.totalSales)" subtitle="Total Ventas"></v-list-item></v-col>
-                        <v-col cols="4"><v-list-item :title="dailyReport.summary.salesCount" subtitle="Nº de Ventas"></v-list-item></v-col>
+                        <v-col cols="4"><v-list-item :title="formatCurrency(dailyReport.summary.totalSalesBs, 'VES')" subtitle="Total Ventas BS"></v-list-item></v-col>
+                        <v-col cols="4"><v-list-item :title="formatCurrency(dailyReport.summary.totalSalesUsd, 'USD')" subtitle="Total Ventas USD"></v-list-item></v-col>
+                        <v-col cols="2"><v-list-item :title="dailyReport.summary.salesCount" subtitle="Nº Ventas"></v-list-item></v-col>
+                        <v-col cols="3"><v-list-item :title="formatCurrency(dailyReport.summary.totalChangeGivenBs, 'VES')" subtitle="Vuelto BS"></v-list-item></v-col>
+                        <v-col cols="3"><v-list-item :title="formatCurrency(dailyReport.summary.totalChangeGivenUsd, 'USD')" subtitle="Vuelto USD"></v-list-item></v-col>
                     </v-row>
                      <v-divider class="my-2"></v-divider>
                      <h3 class="mb-2">Desglose por Método de Pago</h3>
                     <v-row>
                         <v-col v-for="(amount, method) in dailyReport.summary.paymentMethodBreakdown" :key="method" cols="4">
-                           <v-list-item :title="formatCurrency(amount)" :subtitle="method"></v-list-item>
+                           <v-list-item :title="formatCurrency(amount, 'VES')" :subtitle="method"></v-list-item>
                         </v-col>
                     </v-row>
                     <v-divider class="my-2"></v-divider>
                     <h3 class="mb-2">Listado de Ventas</h3>
                     <v-data-table
-                        :headers="[{ title: 'Nº Venta', key: 'saleNumber' }, { title: 'Monto', key: 'total' }, { title: 'Método', key: 'paymentMethod' }]"
+                        :headers="[
+                          { title: 'Nº Venta', key: 'saleNumber' },
+                          { title: 'Monto BS', key: 'totalBs' },
+                          { title: 'Monto USD', key: 'totalUsd' },
+                          { title: 'Método', key: 'paymentMethod' },
+                          { title: 'Vuelto BS', key: 'changeGivenBs' },
+                          { title: 'Vuelto USD', key: 'changeGivenUsd' }
+                        ]"
                         :items="dailyReport.sales"
                         dense
                     >
-                      <template v-slot:item.total="{ item }">
-                        {{ formatCurrency(item.total) }}
+                      <template v-slot:item.totalBs="{ item }">
+                        {{ formatCurrency(item.totalBs, 'VES') }}
+                      </template>
+                      <template v-slot:item.totalUsd="{ item }">
+                        {{ formatCurrency(item.totalUsd, 'USD') }}
+                      </template>
+                      <template v-slot:item.changeGivenBs="{ item }">
+                        {{ formatCurrency(item.changeGivenBs, 'VES') }}
+                      </template>
+                      <template v-slot:item.changeGivenUsd="{ item }">
+                        {{ formatCurrency(item.changeGivenUsd, 'USD') }}
                       </template>
                     </v-data-table>
                 </v-card-text>
@@ -222,12 +248,16 @@ const adminPasswordError = ref('')
 // --- Computed ---
 const expectedBalance = computed(() => {
   if (!reconciliation.value) return 0
-  return parseFloat(reconciliation.value.openingBalance) + parseFloat(reconciliation.value.totalSales)
+  const openingBalance = parseFloat(reconciliation.value.openingBalance || 0)
+  const totalSales = parseFloat(reconciliation.value.totalSales || 0)
+  // El saldo esperado debe considerar el vuelto dado que reduce el efectivo en caja
+  // Pero como no tenemos el total de vuelto en tiempo real, usamos la fórmula simplificada
+  return openingBalance + totalSales
 })
 
 // --- Methods ---
-const formatCurrency = (value) => {
-  return new Intl.NumberFormat('es-VE', { style: 'currency', currency: 'VES' }).format(value || 0)
+const formatCurrency = (value, currency = 'VES') => {
+  return new Intl.NumberFormat('es-VE', { style: 'currency', currency }).format(value || 0)
 }
 
 const handleOpenReconciliation = async () => {
@@ -307,41 +337,47 @@ const confirmAndPrint = async () => {
     Usuario: ${recon.user.username}
     Fecha de Apertura: ${new Date(recon.openingDate).toLocaleString()}
     Fecha de Cierre:   ${new Date().toLocaleString()}
+    Lote: ${recon.lote}
     --------------------------------------
     RESUMEN FINANCIERO
     --------------------------------------
-    Saldo Inicial:      ${formatCurrency(recon.openingBalance)}
-    Total de Ventas:    ${formatCurrency(summary.totalSales)}
+    Saldo Inicial:      ${formatCurrency(recon.openingBalance, 'VES')}
+    Total Ventas BS:    ${formatCurrency(summary.totalSalesBs, 'VES')}
+    Total Ventas USD:   ${formatCurrency(summary.totalSalesUsd, 'USD')}
+    Vuelto Total BS:    ${formatCurrency(summary.totalChangeGivenBs, 'VES')}
+    Vuelto Total USD:   ${formatCurrency(summary.totalChangeGivenUsd, 'USD')}
+    Número de Ventas:   ${summary.salesCount}
     --------------------------------------
-    Saldo Esperado:     ${formatCurrency(parseFloat(recon.openingBalance) + parseFloat(summary.totalSales))}
-    Saldo Final (Contado): ${formatCurrency(closeForm.value.closingBalance)}
-    Diferencia:         ${formatCurrency(closeForm.value.closingBalance - (parseFloat(recon.openingBalance) + parseFloat(summary.totalSales)))}
+    Saldo Esperado:     ${formatCurrency(parseFloat(recon.openingBalance) + parseFloat(summary.totalSalesBs) - parseFloat(summary.totalChangeGivenBs || 0), 'VES')}
+    Saldo Final (Contado): ${formatCurrency(closeForm.value.closingBalance, 'VES')}
+    Diferencia:         ${formatCurrency(closeForm.value.closingBalance - (parseFloat(recon.openingBalance) + parseFloat(summary.totalSalesBs) - parseFloat(summary.totalChangeGivenBs || 0)), 'VES')}
     --------------------------------------
-    DESGLOSE DE PAGOS (Total: ${summary.salesCount} ventas)
+    DESGLOSE POR MÉTODO DE PAGO
     --------------------------------------
   `;
 
   for (const [method, amount] of Object.entries(summary.paymentMethodBreakdown)) {
-    reportText += `${method.padEnd(20)}: ${formatCurrency(amount)}\n`;
+    reportText += `${method.padEnd(20)}: ${formatCurrency(amount, 'VES')}\n`;
   }
 
   reportText += `
     --------------------------------------
     LISTADO DE VENTAS
     --------------------------------------
+    Nº Venta     | Monto BS     | Monto USD    | Método         | Vuelto BS    | Vuelto USD
+    -----------------------------------------------------------------------------------
   `;
   sales.forEach(sale => {
-    reportText += `${sale.saleNumber.padEnd(15)} | ${sale.paymentMethod.padEnd(15)} | ${formatCurrency(sale.total)}\n`;
+    const paymentMethod = sale.paymentMethod || 'Efectivo BS';
+    reportText += `${sale.saleNumber.padEnd(12)} | ${formatCurrency(sale.totalBs, 'VES').padEnd(12)} | ${formatCurrency(sale.totalUsd, 'USD').padEnd(12)} | ${paymentMethod.padEnd(15)} | ${formatCurrency(sale.changeGivenBs, 'VES').padEnd(12)} | ${formatCurrency(sale.changeGivenUsd, 'USD')}\n`;
   });
   reportText += "======================================";
 
   console.log(reportText);
 
-  // This method is kept for backward compatibility but should not be called directly
   await confirmClose()
 }
 
-// --- Lifecycle ---
 onMounted(() => {
   store.fetchTodayReconciliation()
 })

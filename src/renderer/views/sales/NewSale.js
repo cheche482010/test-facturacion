@@ -204,7 +204,6 @@ export default {
     }
 
     const onPaymentCompleted = (result) => {
-      console.log('Payment completed:', result)
       completedSale.value = result
       showPaymentDialog.value = false
       showReceiptDialog.value = true
