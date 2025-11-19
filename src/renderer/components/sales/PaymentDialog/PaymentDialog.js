@@ -49,7 +49,13 @@ export default {
     const exchangeRate = computed(() => currencyStore.exchangeRate)
 
     const totalPaid = computed(() => {
-      return payments.value.reduce((sum, payment) => sum + payment.amount, 0)
+      return payments.value.reduce((sum, payment) => {
+        if (payment.currency === 'USD') {
+          return sum + (payment.amount * exchangeRate.value)
+        } else {
+          return sum + payment.amount
+        }
+      }, 0)
     })
 
     const remainingAmount = computed(() => {
@@ -107,7 +113,7 @@ export default {
           })),
           payments: payments.value.map(p => ({
             paymentMethodId: p.paymentMethodId,
-            amount: p.amount,
+            amount: p.currency === 'USD' ? p.amount * exchangeRate.value : p.amount,
             reference: p.reference,
             notes: p.notes
           })),
