@@ -1,284 +1,467 @@
-# Sistema de Facturación Electron
+# Sistema de Facturación Electrónica
 
-Sistema completo de facturación y gestión de inventario desarrollado con Electron.js, Vue.js 3, y soporte para MySQL/SQLite. Diseñado para funcionar como aplicación de escritorio.
+Sistema completo de facturación y gestión de inventario desarrollado con **Electron.js**, **Vue.js 3**, **Sequelize ORM** y **SQLite/MySQL**. Diseñado como aplicación de escritorio nativa con interfaz moderna y funcionalidades completas para la gestión de pequeños y medianos negocios.
 
 ## 🚀 Características Principales
 
-- **Gestión de Productos**: Catálogo completo con códigos de barras, precios automáticos y control de inventario
-- **Ventas Inteligentes**: Procesamiento rápido con múltiples métodos de pago
-- **Control de Inventario**: Seguimiento en tiempo real con alertas de stock bajo
-- **Reportes y Analytics**: Dashboard completo con gráficos y estadísticas
-- **Autenticación**: Sistema de usuarios con roles (Administrador, Cajero)
-- **Base de Datos Flexible**: Soporte para MySQL y SQLite
+### 💰 Gestión de Ventas
+- **Punto de Venta (POS)**: Interfaz intuitiva para procesamiento rápido de ventas
+- **Múltiples Métodos de Pago**: Efectivo (VES/USD), Transferencia, POS, Pago Móvil, Crédito
+- **Cálculo Automático**: Conversión automática entre bolívares y dólares
+- **Recibos y Facturas**: Generación automática de comprobantes
+- **Historial de Ventas**: Seguimiento completo de todas las transacciones
+
+### 📦 Control de Inventario
+- **Catálogo de Productos**: Gestión completa con códigos internos, códigos de barras, colores y categorías
+- **Control de Stock**: Seguimiento en tiempo real con alertas de stock bajo
+- **Movimientos de Inventario**: Registro de entradas, salidas, ajustes y devoluciones
+- **Precios Dinámicos**: Costo, precio de venta y precio en dólares
+- **Imágenes de Productos**: Soporte para subir y gestionar imágenes
+
+### 👥 Gestión de Usuarios
+- **Sistema de Roles**: Administrador, Cajero y Desarrollador
+- **Autenticación JWT**: Seguridad robusta con tokens de acceso
+- **Control de Acceso**: Permisos granulares por rol
+- **Auditoría**: Registro de actividades y cambios
+
+### 📊 Reportes y Analytics
+- **Dashboard Ejecutivo**: Métricas en tiempo real y gráficos interactivos
+- **Reportes de Ventas**: Por período, producto, categoría y método de pago
+- **Reportes de Inventario**: Movimientos, stock actual y ajustes
+- **Conciliación de Caja**: Control diario de ingresos y egresos
+- **Exportación**: Reportes en PDF y Excel
+
+### ⚙️ Configuración Avanzada
+- **Tasa de Cambio**: Actualización automática del dólar (cada 6 horas)
+- **Configuración del Sistema**: Personalización completa de colores, fuentes y branding
+- **Métodos de Pago**: Configuración flexible de opciones de pago
+- **Categorías**: Estructura jerárquica de categorías de productos
 
 ## 📋 Requisitos del Sistema
 
-- **Node.js** v16 o superior
-- **MySQL** v8.0 o superior (opcional, puede usar SQLite)
-- **Windows** 10/11 (para generar .exe)
-- **RAM**: Mínimo 4GB recomendado
-- **Espacio**: 500MB libres
+- **Node.js**: v16.0.0 o superior
+- **Base de Datos**: SQLite (incluido) o MySQL v8.0+
+- **Sistema Operativo**: Windows 10/11, macOS, Linux
+- **Memoria RAM**: Mínimo 4GB recomendado
+- **Espacio en Disco**: 500MB libres
 
-## 🛠️ Instalación
+## 🛠️ Tecnologías Utilizadas
 
-### 1. Clonar el Repositorio
-\`\`\`bash
-git clone <url-del-repositorio>
-cd electron-billing-system
-\`\`\`
+### Backend (Electron Main Process)
+- **Node.js** - Runtime de JavaScript
+- **Express.js** - Framework web para APIs REST
+- **Sequelize ORM** - Mapeo objeto-relacional para bases de datos
+- **SQLite3** - Base de datos embebida (por defecto)
+- **MySQL2** - Driver para MySQL
+- **JWT** - Autenticación basada en tokens
+- **bcryptjs** - Encriptación de contraseñas
 
-### 2. Instalar Dependencias
-\`\`\`bash
-npm install
-\`\`\`
+### Frontend (Electron Renderer Process)
+- **Vue.js 3** - Framework progresivo de JavaScript
+- **Vite** - Build tool y dev server ultrarrápido
+- **Vuetify 3** - Framework de componentes Material Design
+- **Pinia** - State management para Vue
+- **Vue Router** - Enrutamiento oficial para Vue
+- **TailwindCSS** - Framework CSS utility-first
+- **Sass/SCSS** - Preprocesador CSS
 
-### 3. Configurar Base de Datos
-
-El sistema soporta dos tipos de base de datos que puedes configurar mediante variables de entorno:
-
-#### Opción A: MySQL (Recomendado para Producción)
-
-**Crear Base de Datos MySQL:**
-\`\`\`sql
-CREATE DATABASE facturacion_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'billing_user'@'localhost' IDENTIFIED BY 'tu_password_seguro';
-GRANT ALL PRIVILEGES ON facturacion_db.* TO 'billing_user'@'localhost';
-FLUSH PRIVILEGES;
-\`\`\`
-
-#### Opción B: SQLite (Más Simple, para Desarrollo)
-
-No requiere instalación adicional. La base de datos se creará automáticamente en `data/database.sqlite`.
-
-### 4. Variables de Entorno
-
-Crear archivo `.env` en la raíz del proyecto:
-
-#### Para MySQL:
-\`\`\`env
-# Tipo de Base de Datos (mysql o sqlite)
-DB_TYPE=mysql
-
-# Configuración MySQL
-DB_HOST=localhost
-DB_PORT=3306
-DB_NAME=facturacion_db
-DB_USER=billing_user
-DB_PASSWORD=tu_password_seguro
-
-# Autenticación
-JWT_SECRET=tu_jwt_secret_muy_seguro_aqui
-
-# Servidor
-PORT=3001
-NODE_ENV=development
-\`\`\`
-
-#### Para SQLite:
-\`\`\`env
-# Tipo de Base de Datos (mysql o sqlite)
-DB_TYPE=sqlite
-
-# Autenticación
-JWT_SECRET=tu_jwt_secret_muy_seguro_aqui
-
-# Servidor
-PORT=3001
-NODE_ENV=development
-\`\`\`
-
-### 5. Inicializar Base de Datos
-\`\`\`bash
-npm run db:setup
-\`\`\`
-
-Este comando creará las tablas y datos iniciales incluyendo:
-- Usuario administrador por defecto: `admin@sistema.com` / `admin123`
-- Categorías básicas de productos
-- Configuración inicial del sistema
-
-## 🚀 Ejecución
-
-### Modo Desarrollo
-\`\`\`bash
-# Iniciar en modo desarrollo (con hot reload)
-npm run dev
-\`\`\`
-
-### Modo Producción
-\`\`\`bash
-# Construir la aplicación
-npm run build
-
-# Ejecutar aplicación construida
-npm start
-\`\`\`
-
-### Generar Ejecutable (.exe)
-\`\`\`bash
-# Generar instalador para Windows
-npm run build:win
-
-# El archivo .exe se generará en la carpeta /dist
-\`\`\`
-
-## 📱 Uso del Sistema
-
-### Primer Inicio
-
-1. **Login Inicial**:
-   - Usuario: `admin@sistema.com`
-   - Contraseña: `admin123`
-
-2. **Configuración Inicial**:
-   - Ir a **Configuración** → **Sistema**
-   - Configurar datos de la empresa
-   - Seleccionar modo de operación (Bodega/Tienda)
-   - Configurar impresoras y hardware
-
-### Flujo de Trabajo Típico
-
-#### Modo Bodega (Ventas Rápidas)
-1. **Productos** → Agregar productos al catálogo
-2. **Ventas** → Procesar ventas sin registro de clientes
-3. **Inventario** → Monitorear stock y movimientos
-
-#### Modo Tienda (Completo)
-1. **Clientes** → Registrar base de clientes
-2. **Productos** → Gestión completa con precios diferenciados
-3. **Ventas** → Facturación con IVA y documentos fiscales
-4. **Reportes** → Analytics completos y reportes fiscales
-
-## 🔧 Comandos Disponibles
-
-\`\`\`bash
-# Desarrollo
-npm run dev              # Modo desarrollo con hot reload
-npm run dev:vue          # Solo frontend (Vue.js)
-npm run dev:electron     # Solo backend (Electron main)
-
-# Construcción
-npm run build            # Construir aplicación completa
-npm run build:vue        # Construir solo frontend
-npm run build:electron   # Construir solo backend
-
-# Base de Datos
-npm run db:setup         # Configurar BD y datos iniciales
-npm run db:seed          # Insertar datos de prueba
-npm run db:reset         # Resetear base de datos completamente
-
-# Distribución
-npm run build            # Generar ejecutable
-\`\`\`
-
-## 🗄️ Configuración de Base de Datos
-
-### Cambiar Tipo de Base de Datos
-
-Para cambiar entre MySQL y SQLite, simplemente modifica la variable `DB_TYPE` en tu archivo `.env`:
-
-\`\`\`env
-# Para usar MySQL
-DB_TYPE=mysql
-
-# Para usar SQLite
-DB_TYPE=sqlite
-\`\`\`
-
-### Ventajas de Cada Opción
-
-**MySQL:**
-- ✅ Mejor rendimiento con grandes volúmenes de datos
-- ✅ Soporte para múltiples usuarios concurrentes
-- ✅ Funciones avanzadas de base de datos
-- ❌ Requiere instalación y configuración adicional
-
-**SQLite:**
-- ✅ Configuración cero, funciona inmediatamente
-- ✅ Archivo único, fácil de respaldar
-- ✅ Ideal para desarrollo y pruebas
-- ❌ Limitado para uso concurrente intensivo
+### Librerías Adicionales
+- **Electron** - Framework para aplicaciones de escritorio
+- **jspdf** - Generación de PDFs
+- **xlsx** - Manejo de archivos Excel
+- **multer** - Upload de archivos
+- **cors** - Middleware para CORS
+- **concurrently** - Ejecución de comandos en paralelo
 
 ## 📁 Estructura del Proyecto
 
-\`\`\`
-electron-billing-system/
+```
+test-facturacion/
+├── data/                          # Base de datos SQLite
+│   └── database.sqlite
+├── uploads/                       # Archivos subidos
+│   └── products/                  # Imágenes de productos
 ├── src/
-│   ├── main/                 # Proceso principal Electron
-│   │   ├── database/         # Modelos y configuración BD
-│   │   ├── routes/           # API REST endpoints
-│   │   ├── middleware/       # Middleware de autenticación
-│   │   └── main.js           # Punto de entrada Electron
-│   └── renderer/             # Frontend Vue.js
-│       ├── components/       # Componentes reutilizables
-│       ├── views/            # Vistas principales
-│       ├── stores/           # Estado global (Pinia)
-│       └── router/           # Configuración de rutas
-├── public/                   # Archivos estáticos
-├── dist/                     # Aplicación construida
-└── build/                    # Configuración de construcción
-\`\`\`
+│   ├── main/                      # Proceso principal Electron
+│   │   ├── controllers/           # Controladores de la API
+│   │   │   ├── authController.js
+│   │   │   ├── cashReconciliationController.js
+│   │   │   ├── categoriesController.js
+│   │   │   ├── currencyController.js
+│   │   │   ├── inventoryController.js
+│   │   │   ├── productsController.js
+│   │   │   ├── reportsController.js
+│   │   │   ├── salesController.js
+│   │   │   ├── settingsController.js
+│   │   │   └── usersController.js
+│   │   ├── database/              # Configuración de BD
+│   │   │   ├── connection.js      # Conexión Sequelize
+│   │   │   ├── create.js          # Creación de BD
+│   │   │   ├── migrate.js         # Migraciones
+│   │   │   ├── reset.js           # Reset de BD
+│   │   │   ├── setup.js           # Configuración inicial
+│   │   │   ├── verify.js          # Verificación de BD
+│   │   │   ├── models/            # Modelos Sequelize
+│   │   │   │   ├── index.js        # Registro de modelos
+│   │   │   │   ├── User.js
+│   │   │   │   ├── Category.js
+│   │   │   │   ├── Product.js
+│   │   │   │   ├── Sale.js
+│   │   │   │   ├── SaleItem.js
+│   │   │   │   ├── SalePayment.js
+│   │   │   │   ├── PaymentMethod.js
+│   │   │   │   ├── InventoryMovement.js
+│   │   │   │   ├── CashReconciliation.js
+│   │   │   │   ├── DolarRate.js
+│   │   │   │   └── Settings.js
+│   │   │   └── seeders/           # Datos de prueba
+│   │   │       ├── index.js        # Ejecutor de seeders
+│   │   │       ├── userSeeder.js
+│   │   │       ├── categorySeeder.js
+│   │   │       ├── productSeeder.js
+│   │   │       ├── paymentMethodSeeder.js
+│   │   │       ├── settingsSeeder.js
+│   │   │       ├── dolarRateSeeder.js
+│   │   │       ├── saleSeeder.js
+│   │   │       └── cashReconciliationSeeder.js
+│   │   ├── middleware/            # Middleware
+│   │   │   └── auth.js            # Autenticación JWT
+│   │   ├── routes/                # Endpoints de la API
+│   │   │   ├── auth.js
+│   │   │   ├── cashReconciliation.js
+│   │   │   ├── categories.js
+│   │   │   ├── currency.js
+│   │   │   ├── inventory.js
+│   │   │   ├── paymentMethods.js
+│   │   │   ├── products.js
+│   │   │   ├── reports.js
+│   │   │   ├── sales.js
+│   │   │   ├── settings.js
+│   │   │   └── users.js
+│   │   ├── services/              # Servicios de negocio
+│   │   │   ├── CashReconciliationService.js
+│   │   │   ├── currencyService.js
+│   │   │   └── dolarService.js
+│   │   ├── main.js                # Punto de entrada Electron
+│   │   ├── preload.js             # Puente entre main y renderer
+│   │   └── server.js              # Servidor Express
+│   └── renderer/                  # Frontend Vue.js
+│       ├── App.vue                # Componente raíz
+│       ├── main.js                # Punto de entrada Vue
+│       ├── assets/                # Recursos estáticos
+│       │   ├── styles/            # Estilos globales
+│       │   │   ├── main.scss
+│       │   │   ├── _variables.scss
+│       │   │   └── _mixins.scss
+│       ├── components/            # Componentes reutilizables
+│       │   ├── inventory/
+│       │   ├── products/
+│       │   └── sales/
+│       ├── router/                # Configuración de rutas
+│       │   └── index.js
+│       ├── services/              # Servicios frontend
+│       │   ├── api.js             # Cliente HTTP
+│       │   └── cashReconciliationService.js
+│       ├── stores/                # Estado global (Pinia)
+│       │   ├── app.js
+│       │   ├── auth.js
+│       │   ├── cashReconciliation.js
+│       │   ├── categories.js
+│       │   ├── currencyStore.js
+│       │   ├── inventory.js
+│       │   ├── products.js
+│       │   ├── reports.js
+│       │   ├── sales.js
+│       │   ├── settingsStore.js
+│       │   └── users.js
+│       ├── utils/                 # Utilidades
+│       │   └── formatters.js
+│       └── views/                 # Vistas principales
+│           ├── auth/
+│           │   ├── Login.vue
+│           │   ├── Login.js
+│           │   └── Login.scss
+│           ├── Calculator/
+│           ├── Dashboard/
+│           ├── cash-count/
+│           ├── cash-reconciliation/
+│           ├── inventory/
+│           ├── products/
+│           ├── reports/
+│           ├── sales/
+│           ├── settings/
+│           └── users/
+├── .env                           # Variables de entorno
+├── .gitignore                     # Archivos ignorados por Git
+├── index.html                     # Template HTML principal
+├── package.json                   # Dependencias y scripts
+├── package-lock.json              # Lock de dependencias
+├── README.md                      # Este archivo
+└── vite.config.js                 # Configuración de Vite
+```
+
+## 🚀 Instalación y Configuración
+
+### 1. Clonar el Repositorio
+```bash
+git clone <url-del-repositorio>
+cd test-facturacion
+```
+
+### 2. Instalar Dependencias
+```bash
+npm install
+```
+
+### 3. Configurar Variables de Entorno
+
+Crear archivo `.env` en la raíz del proyecto:
+
+```env
+# Base de Datos (SQLite por defecto)
+DB_TYPE=sqlite
+
+# Autenticación
+JWT_SECRET=tu_jwt_secret_muy_seguro_aqui
+
+# Servidor
+PORT=3001
+NODE_ENV=development
+
+# Opcional: Configuración MySQL (si se usa DB_TYPE=mysql)
+# DB_HOST=localhost
+# DB_PORT=3306
+# DB_NAME=facturacion
+# DB_USER=tu_usuario
+# DB_PASSWORD=tu_password
+```
+
+### 4. Instalar el Sistema (Opción Recomendada)
+
+Esta opción instala todo el sistema desde cero automáticamente:
+
+```bash
+# Instalar completamente desde cero
+npm run db:reset
+```
+
+Este comando:
+- Borra la base de datos existente
+- Crea una nueva base de datos
+- Ejecuta todas las migraciones
+- Inserta datos de prueba
+- Verifica la instalación
+
+### 5. Instalación Paso a Paso (Opcional)
+
+Si prefieres controlar cada paso:
+
+```bash
+# 1. Crear base de datos
+npm run db:create
+
+# 2. Ejecutar migraciones
+npm run db:migrate
+
+# 3. Ejecutar seeders (datos de prueba)
+npm run db:seed
+
+# 4. Verificar instalación
+npm run db:verify
+```
+
+## 🎯 Uso del Sistema
+
+### Inicio del Sistema
+
+```bash
+# Modo desarrollo (recomendado para desarrollo)
+npm run dev
+
+# Modo producción
+npm run build
+npm start
+```
+
+### Usuarios de Prueba
+
+Después de la instalación, puedes acceder con estos usuarios:
+
+| Usuario | Contraseña | Rol |
+|---------|------------|-----|
+| admin | admin123 | Administrador |
+| cajero | cajero123 | Cajero |
+| dev | dev123 | Desarrollador |
+
+### Funcionalidades Principales
+
+#### 🏪 Punto de Venta
+- **Nueva Venta**: `Ctrl+N` o menú Archivo → Nueva Venta
+- **Escáner de Códigos**: Soporte para lectores de códigos de barras
+- **Cálculo Automático**: Conversión VES/USD en tiempo real
+- **Múltiples Pagos**: Combinar diferentes métodos de pago
+
+#### 📦 Gestión de Productos
+- **Catálogo**: Agregar, editar y eliminar productos
+- **Categorías**: Organización jerárquica de productos
+- **Códigos de Barras**: Generación automática
+- **Imágenes**: Upload de fotos de productos
+
+#### 📊 Reportes
+- **Dashboard**: Vista general con métricas clave
+- **Ventas**: Reportes por fecha, producto y método de pago
+- **Inventario**: Movimientos y niveles de stock
+- **Finanzas**: Análisis de ingresos y conciliación
+
+## 🔧 Comandos Disponibles
+
+### Desarrollo
+```bash
+npm run dev              # Inicia modo desarrollo (Vue + Electron)
+npm run dev:vue          # Solo servidor de desarrollo Vue
+npm run dev:electron     # Solo proceso Electron
+npm run preview          # Vista previa de producción
+```
+
+### Base de Datos
+```bash
+npm run db:create        # Crear base de datos
+npm run db:migrate       # Ejecutar migraciones
+npm run db:seed          # Insertar datos de prueba
+npm run db:seed:users    # Solo usuarios de prueba
+npm run db:seed:categories    # Solo categorías
+npm run db:seed:products      # Solo productos
+npm run db:seed:payment-methods  # Solo métodos de pago
+npm run db:seed:settings       # Solo configuración
+npm run db:seed:dolar-rates    # Solo tasas de cambio
+npm run db:seed:sales          # Solo ventas de prueba
+npm run db:seed:cash-reconciliations  # Solo conciliaciones
+npm run db:reset         # Reset completo (borrar todo y recrear)
+npm run db:setup         # Configuración inicial
+npm run db:verify        # Verificar estado de BD
+```
+
+### Construcción y Distribución
+```bash
+npm run build            # Construir aplicación completa
+npm run build:vue        # Construir solo frontend
+npm run build:electron   # Construir solo backend
+npm run build:win        # Generar instalador Windows (.exe)
+npm run build:linux      # Generar AppImage Linux
+npm run build:mac        # Generar .dmg macOS
+```
 
 ## 🔒 Seguridad
 
-- **Autenticación JWT**: Tokens seguros con expiración
-- **Roles de Usuario**: Control de acceso granular
+- **Autenticación JWT**: Tokens seguros con expiración automática
+- **Encriptación de Contraseñas**: bcryptjs para hash seguro
 - **Validación de Datos**: Sanitización en frontend y backend
-- **Backup Automático**: Respaldos programados de la BD
-- **Logs de Auditoría**: Registro completo de operaciones
+- **Control de Acceso**: Roles y permisos granulares
+- **Auditoría**: Logs completos de todas las operaciones
+- **CORS**: Configuración segura para APIs
 
-## 🛠️ Solución de Problemas
+## 🌐 API REST
 
-### Error de Conexión a Base de Datos
-\`\`\`bash
-# Verificar que MySQL esté ejecutándose
-mysql -u billing_user -p facturacion_db
+El sistema incluye una API REST completa accesible en `http://localhost:3001/api`:
 
+### Endpoints Principales
+- `POST /api/auth/login` - Autenticación de usuarios
+- `GET /api/products` - Listar productos
+- `POST /api/sales` - Crear nueva venta
+- `GET /api/reports/sales` - Reportes de ventas
+- `GET /api/inventory` - Estado del inventario
+
+### Documentación API
+La API incluye documentación automática y puede ser probada con herramientas como Postman o Insomnia.
+
+## 🐛 Solución de Problemas
+
+### Problemas Comunes
+
+#### Error de Conexión a Base de Datos
+```bash
 # Verificar variables de entorno
 cat .env
-\`\`\`
 
-### Problemas de Permisos
-\`\`\`bash
-# Ejecutar como administrador en Windows
-# Verificar permisos de carpeta de instalación
-\`\`\`
+# Para MySQL: verificar que el servicio esté ejecutándose
+# Windows: services.msc → MySQL
+# Linux/Mac: sudo systemctl status mysql
+```
 
-### Error al Generar .exe
-\`\`\`bash
-# Limpiar cache y reconstruir
+#### Error al Iniciar en Modo Desarrollo
+```bash
+# Limpiar cache de node_modules
+rm -rf node_modules package-lock.json
+npm install
+
+# Verificar puerto 5173 (Vue) y 3001 (API)
+netstat -an | grep :5173
+netstat -an | grep :3001
+```
+
+#### Problemas con Seeders
+```bash
+# Reset completo de base de datos
+npm run db:reset
+
+# Ejecutar seeders individuales si es necesario
+npm run db:seed:users
+npm run db:seed:categories
+# ... etc
+```
+
+#### Error de Build
+```bash
+# Limpiar cache de build
 npm run clean
 npm install
-npm run build:win
-\`\`\`
+npm run build
+```
 
-### Rendimiento Lento
-- Verificar que la BD tenga índices apropiados
-- Revisar logs en `logs/application.log`
-- Monitorear uso de memoria en Task Manager
+### Logs y Debugging
+- **Logs de Aplicación**: Consola del terminal en modo desarrollo
+- **Logs de Base de Datos**: Configurados en `src/main/database/connection.js`
+- **DevTools**: `F12` o `Ctrl+Shift+I` en la aplicación
 
-## 📞 Soporte
+## 📊 Rendimiento
 
-Para soporte técnico o reportar bugs:
+### Optimizaciones Implementadas
+- **Lazy Loading**: Componentes cargados bajo demanda
+- **Virtual Scrolling**: Para listas grandes
+- **Caching**: Consultas frecuentes cacheadas
+- **Compresión**: Assets optimizados
+- **Tree Shaking**: Eliminación de código no usado
 
-1. **Logs del Sistema**: Ubicados en `logs/`
-2. **Base de Datos**: Backup automático en `backups/`
-3. **Configuración**: Archivo `.env` y `config/`
+### Recomendaciones
+- **Base de Datos**: Usar índices en consultas frecuentes
+- **Memoria**: Monitorear uso con Task Manager
+- **Archivos**: Limpiar carpeta `uploads/` periódicamente
+
+## 🤝 Contribución
+
+1. Fork el proyecto
+2. Crear rama para feature (`git checkout -b feature/nueva-funcionalidad`)
+3. Commit cambios (`git commit -am 'Agrega nueva funcionalidad'`)
+4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
+5. Crear Pull Request
+
+### Estándares de Código
+- **ESLint**: Configurado para JavaScript/Vue
+- **Prettier**: Formateo automático de código
+- **Conventional Commits**: Formato estándar para commits
 
 ## 📄 Licencia
 
 Este proyecto está bajo la Licencia MIT. Ver archivo `LICENSE` para más detalles.
 
-## 🔄 Actualizaciones
+## 🙏 Agradecimientos
 
-Para actualizar el sistema:
-
-1. Hacer backup de la base de datos
-2. Descargar nueva versión
-3. Ejecutar `npm install`
-4. Ejecutar `npm run db:migrate`
-5. Reiniciar la aplicación
+- **Electron**: Framework para aplicaciones de escritorio
+- **Vue.js**: Framework progresivo de JavaScript
+- **Vuetify**: Componentes Material Design
+- **Sequelize**: ORM poderoso y flexible
+- **Comunidad Open Source**: Por todas las librerías utilizadas
 
 ---
 
-**Desarrollado con ❤️ usando Electron.js + Vue.js + MySQL/SQLite**
+**Desarrollado con ❤️ usando Electron.js + Vue.js 3 + Sequelize ORM**

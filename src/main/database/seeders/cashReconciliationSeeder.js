@@ -31,7 +31,7 @@ const seedCashReconciliations = async () => {
         // Obtener ventas del día
         const daySales = await Sale.findAll({
           where: {
-            saleDate: { [Op.between]: [startOfDay, endOfDay] },
+            sale_date: { [Op.between]: [startOfDay, endOfDay] },
             status: "completada"
           },
           include: [{
