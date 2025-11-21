@@ -3,7 +3,7 @@ import { useReportsStore } from '@/stores/reports'
 import { formatCurrency } from '@/utils/formatters'
 import * as XLSX from 'xlsx'
 import jsPDF from 'jspdf'
-import 'jspdf-autotable'
+import autoTable from 'jspdf-autotable'
 
 export default {
   name: 'AdjustmentsReport',
@@ -120,7 +120,7 @@ export default {
         })
       )
 
-      doc.autoTable({
+      autoTable(doc, {
         head: [headers.map(h => h.title)],
         body: tableData,
         startY: 45,

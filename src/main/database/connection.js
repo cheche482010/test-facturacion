@@ -59,8 +59,8 @@ const initializeDatabase = async () => {
     console.log("Modelos sincronizados correctamente.")
 
     // Ejecutar seeders
-    const { seedDefaultData } = require("./seeders/defaultData")
-    await seedDefaultData()
+    const { runAllSeeders } = require("./seeders/index")
+    await runAllSeeders()
   } catch (error) {
     console.error("Error al conectar con la base de datos:", error)
     throw error
