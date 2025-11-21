@@ -1,7 +1,7 @@
-const { app, BrowserWindow, Menu, ipcMain } = require("electron")
+const { app, BrowserWindow, Menu, ipcMain, screen } = require("electron")
 const path = require("path")
 const fs = require("fs")
-// Explicitly specify the path to the .env file for robustness
+
 require("dotenv").config({ path: path.resolve(__dirname, "../../.env") })
 const isDev = process.env.NODE_ENV === "development"
 
@@ -9,7 +9,6 @@ if (app && typeof app.disableHardwareAcceleration === 'function') {
   app.disableHardwareAcceleration()
 }
 
-// Importar el servidor Express
 const { startServer } = require("./server")
 const currencyController = require("./controllers/currencyController")
 const DolarService = require("./services/dolarService")
@@ -17,9 +16,12 @@ const DolarService = require("./services/dolarService")
 let mainWindow
 
 function createWindow() {
+  const primaryDisplay = screen.getPrimaryDisplay()
+  const { width, height } = primaryDisplay.workAreaSize
+
   mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
+    width: width,
+    height: height,
     minWidth: 1000,
     minHeight: 600,
     webPreferences: {
@@ -31,7 +33,6 @@ function createWindow() {
     show: false,
   })
 
-  // Cargar la aplicación Vue
   if (isDev) {
     mainWindow.loadURL("http://localhost:5173")
     mainWindow.webContents.openDevTools()
@@ -48,80 +49,9 @@ function createWindow() {
   })
 }
 
-// Configurar menú de la aplicación
-function createMenu() {
-  const template = [
-    {
-      label: "Archivo",
-      submenu: [
-        {
-          label: "Nueva Venta",
-          accelerator: "CmdOrCtrl+N",
-          click: () => {
-            mainWindow.webContents.send("menu-action", "new-sale")
-          },
-        },
-        { type: "separator" },
-        {
-          label: "Configuración",
-          click: () => {
-            mainWindow.webContents.send("menu-action", "settings")
-          },
-        },
-        { type: "separator" },
-        {
-          label: "Salir",
-          accelerator: process.platform === "darwin" ? "Cmd+Q" : "Ctrl+Q",
-          click: () => {
-            app.quit()
-          },
-        },
-      ],
-    },
-    {
-      label: "Inventario",
-      submenu: [
-        {
-          label: "Productos",
-          click: () => {
-            mainWindow.webContents.send("menu-action", "products")
-          },
-        },
-        {
-          label: "Stock",
-          click: () => {
-            mainWindow.webContents.send("menu-action", "inventory")
-          },
-        },
-      ],
-    },
-    {
-      label: "Reportes",
-      submenu: [
-        {
-          label: "Ventas",
-          click: () => {
-            mainWindow.webContents.send("menu-action", "sales-report")
-          },
-        },
-        {
-          label: "Inventario",
-          click: () => {
-            mainWindow.webContents.send("menu-action", "inventory-report")
-          },
-        },
-      ],
-    },
-  ]
-
-  const menu = Menu.buildFromTemplate(template)
-  Menu.setApplicationMenu(menu)
-}
 
 if (app && typeof app.whenReady === 'function') {
   app.whenReady().then(async () => {
-    // Iniciar servidor Express
-    // --- INICIO: Crear directorio de subidas ---
     const uploadsDir = path.join(app.getPath("userData"), "uploads", "products")
     if (!fs.existsSync(uploadsDir)) {
       fs.mkdirSync(uploadsDir, { recursive: true })
@@ -131,11 +61,9 @@ if (app && typeof app.whenReady === 'function') {
 
     await startServer()
 
-    // Actualizar la tasa de cambio al inicio y luego periódicamente
     await currencyController.updateExchangeRate()
-    setInterval(currencyController.updateExchangeRate, 6 * 60 * 60 * 1000) // Cada 6 horas
+    setInterval(currencyController.updateExchangeRate, 6 * 60 * 60 * 1000) 
 
-    // Actualizar la tasa del dólar al inicio y luego diariamente
     try {
       await DolarService.fetchDolarRate()
     } catch (error) {
@@ -148,18 +76,17 @@ if (app && typeof app.whenReady === 'function') {
       } catch (error) {
         console.error('Error actualizando tasa del dólar automáticamente:', error.message)
       }
-    }, 24 * 60 * 60 * 1000) // Cada 24 horas
+    }, 24 * 60 * 60 * 1000) 
 
     createWindow()
-    createMenu()
-
-    app.on("activate", () => {
-      if (BrowserWindow.getAllWindows().length === 0) {
-        createWindow()
-      }
-    })
+    Menu.setApplicationMenu(null)
   })
 }
+app.on("activate", () => {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow()
+  }
+})
 
 if (app && typeof app.on === 'function') {
   app.on("window-all-closed", () => {
@@ -169,7 +96,6 @@ if (app && typeof app.on === 'function') {
   })
 }
 
-// IPC handlers
 if (ipcMain && typeof ipcMain.handle === 'function') {
   ipcMain.handle("get-app-version", () => {
     return app.getVersion()
@@ -180,5 +106,4 @@ if (ipcMain && typeof ipcMain.handle === 'function') {
   })
 }
 
-// Import other IPC handlers
 require("./routes/settings")
