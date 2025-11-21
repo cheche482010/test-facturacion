@@ -43,7 +43,6 @@ export const useAppStore = defineStore("app", {
         const settingsFromDB = await window.electronAPI.invoke('get-settings');
         if (settingsFromDB && settingsFromDB.length > 0) {
           const settingsObject = settingsFromDB.reduce((obj, item) => {
-            // Attempt to parse boolean/number strings
             let value = item.value;
             if (value === 'true') value = true;
             else if (value === 'false') value = false;
@@ -60,19 +59,17 @@ export const useAppStore = defineStore("app", {
 
     async saveSettings(settingsToSave) {
       try {
-        // Transform the settings object into an array of key-value pairs
+        
         const settingsArray = Object.entries(settingsToSave).map(([key, value]) => ({
           key,
-          // Convert value to string for consistent storage, except for objects (like logo)
           value: typeof value === 'object' && value !== null ? JSON.stringify(value) : String(value),
         }));
 
         await window.electronAPI.invoke('save-settings', settingsArray);
-        // After saving, update the local state
         this.settings = { ...this.settings, ...settingsToSave };
       } catch (error) {
         console.error("Error saving settings to backend:", error);
-        throw error; // Re-throw to be caught in the component
+        throw error; 
       }
     },
 

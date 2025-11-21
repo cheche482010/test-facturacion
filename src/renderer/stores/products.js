@@ -92,7 +92,6 @@ export const useProductStore = defineStore("products", {
       try {
         const formData = new FormData()
         formData.append("image", imageFile)
-        // Deja que el navegador establezca el Content-Type correcto con el boundary
         const updatedProduct = await api.post(`/products/${productId}/upload-image`, formData)
         const index = this.products.findIndex((p) => p.id === productId)
         if (index !== -1) {

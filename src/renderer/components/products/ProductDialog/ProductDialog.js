@@ -84,7 +84,6 @@ export default {
       () => props.product,
       (newProduct) => {
         if (newProduct) {
-          // Sanitize numeric fields to prevent NaN
           formData.value.internalCode = newProduct.internalCode || ''
           formData.value.barcode = newProduct.barcode || ''
           formData.value.name = newProduct.name || ''
@@ -162,7 +161,7 @@ export default {
       try {
         let savedProduct
         if (isEditing.value) {
-          // Si se eliminó la imagen, formData.image ya es null
+          
           if (imageRemoved.value) {
             formData.value.image = null
           }
@@ -177,7 +176,6 @@ export default {
           savedProduct = await productStore.createProduct(formData.value)
         }
 
-        // Si hay un archivo de imagen, subirlo
         if (imageFile.value) {
           await productStore.uploadProductImage(savedProduct.id, imageFile.value)
         }

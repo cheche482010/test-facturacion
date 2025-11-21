@@ -18,12 +18,10 @@ export default {
     const loading = ref(false)
     const data = ref([])
 
-    // Filtros locales
     const filters = ref({
       date: ''
     })
 
-    // Headers de la tabla
     const headers = [
       { title: 'Producto', key: 'productName' },
       { title: 'Código', key: 'productCode' },
@@ -37,7 +35,6 @@ export default {
       { title: 'Fecha Venta', key: 'saleDate' }
     ]
 
-    // Métodos
     const loadReport = async () => {
       loading.value = true
       try {
@@ -110,7 +107,6 @@ export default {
       doc.save('reporte-financiero-ventas.pdf')
     }
 
-    // Lifecycle
     onMounted(() => {
       loadReport()
     })

@@ -30,14 +30,12 @@ export default {
     const loading = ref(false)
     const data = ref([])
 
-    // Filtros locales
     const filters = ref({
       startDate: props.startDate,
       endDate: props.endDate,
       batch: ''
     })
 
-    // Headers de la tabla
     const headers = [
       { title: 'Número de Venta', key: 'saleNumber' },
       { title: 'Fecha', key: 'saleDate' },
@@ -48,7 +46,6 @@ export default {
       { title: 'Estado', key: 'paymentStatus' }
     ]
 
-    // Métodos
     const loadReport = async () => {
       loading.value = true
       try {
@@ -134,7 +131,6 @@ export default {
       doc.save('reporte-ventas.pdf')
     }
 
-    // Lifecycle
     onMounted(() => {
       loadReport()
     })

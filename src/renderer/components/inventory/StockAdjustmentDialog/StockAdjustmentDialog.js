@@ -14,7 +14,6 @@ export default {
     const categoryStore = useCategoryStore()
     const productStore = useProductStore()
 
-    // Load categories and products when component is created
     categoryStore.fetchCategories()
     if (!productStore.products || productStore.products.length === 0) {
       productStore.fetchProducts()

@@ -3,22 +3,15 @@ import { ref } from 'vue'
 import cashReconciliationService from '@/services/cashReconciliationService'
 
 export const useCashReconciliationStore = defineStore('cashReconciliation', () => {
-  // --- STATE ---
+
   const todayReconciliation = ref(null)
   const isLoading = ref(false)
   const isReportLoading = ref(false)
   const error = ref(null)
   const reportError = ref(null)
   const dailyReport = ref(null)
-
-  // --- HELPERS ---
   const formatDate = (date) => date.toISOString().split('T')[0]
 
-  // --- ACTIONS ---
-
-  /**
-   * Carga el estado del arqueo del día actual desde el backend.
-   */
   async function fetchTodayReconciliation() {
     isLoading.value = true
     error.value = null
@@ -44,36 +37,21 @@ export const useCashReconciliationStore = defineStore('cashReconciliation', () =
     }
   }
 
-  /**
-   * Abre una nueva caja con un saldo inicial.
-   * @param {object} data - Datos para la apertura.
-   * @param {number} data.openingBalanceBs - El saldo inicial en Bolívares.
-   * @param {number} data.openingBalanceUsd - El saldo inicial en Dólares.
-   * @param {string} [data.notes] - Notas opcionales.
-   */
   async function openReconciliation(data) {
     isLoading.value = true
     error.value = null
     try {
       const newReconciliation = await cashReconciliationService.open(data)
       todayReconciliation.value = newReconciliation
-      // Después de abrir, volvemos a cargar los datos para obtener el estado completo
       await fetchTodayReconciliation()
     } catch (e) {
       error.value = e.message
-      throw e // Relanzar para que el componente pueda manejarlo si es necesario
+      throw e 
     } finally {
       isLoading.value = false
     }
   }
 
-  /**
-   * Cierra la caja del día.
-   * @param {object} data - Datos para el cierre.
-   * @param {number} data.closingBalanceBs - El saldo final contado en Bolívares.
-   * @param {number} data.closingBalanceUsd - El saldo final contado en Dólares.
-   * @param {string} [data.notes] - Notas de cierre opcionales.
-   */
   async function closeReconciliation(data) {
     if (!todayReconciliation.value) {
       const err = new Error('No hay un arqueo abierto para cerrar.')
@@ -84,7 +62,7 @@ export const useCashReconciliationStore = defineStore('cashReconciliation', () =
     error.value = null
     try {
       const closedReconciliation = await cashReconciliationService.close(todayReconciliation.value.id, data)
-      todayReconciliation.value = null // La caja está cerrada, ya no hay arqueo "de hoy"
+      todayReconciliation.value = null 
       return closedReconciliation
     } catch (e) {
       error.value = e.message
@@ -93,7 +71,6 @@ export const useCashReconciliationStore = defineStore('cashReconciliation', () =
       isLoading.value = false
     }
   }
-
 
   return {
     todayReconciliation,

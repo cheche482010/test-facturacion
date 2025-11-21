@@ -18,19 +18,16 @@ export default {
     const loading = ref(false)
     const data = ref([])
 
-    // Filtros locales
     const filters = ref({
       status: 'all'
     })
 
-    // Opciones para filtros
     const statusOptions = [
       { title: 'Todos', value: 'all' },
       { title: 'Stock Bajo', value: 'low' },
       { title: 'Agotado', value: 'out' }
     ]
 
-    // Headers de la tabla
     const headers = [
       { title: 'Código', key: 'internalCode' },
       { title: 'Producto', key: 'name' },
@@ -40,7 +37,6 @@ export default {
       { title: 'Estado', key: 'status' }
     ]
 
-    // Métodos
     const loadReport = async () => {
       loading.value = true
       try {
@@ -107,7 +103,6 @@ export default {
       doc.save('reporte-inventario.pdf')
     }
 
-    // Lifecycle
     onMounted(() => {
       loadReport()
     })

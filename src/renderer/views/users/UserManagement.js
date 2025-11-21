@@ -121,7 +121,7 @@ export default {
         this.loading = false
       }
     },
-    
+
     openUserDialog(user = null) {
       this.editingUser = user
       if (user) {
@@ -147,7 +147,7 @@ export default {
       }
       this.userDialog = true
     },
-    
+
     closeUserDialog() {
       this.userDialog = false
       this.editingUser = null
@@ -186,10 +186,10 @@ export default {
         minute: '2-digit'
       })
     },
-    
+
     async saveUser() {
       if (!this.$refs.userForm.validate()) return
-      
+
       this.saving = true
       try {
         if (this.editingUser) {
@@ -206,7 +206,7 @@ export default {
         this.saving = false
       }
     },
-    
+
     async toggleUserStatus(user) {
       try {
         const newStatus = user.isActive ? false : true
@@ -216,7 +216,7 @@ export default {
         this.$toast.error('Error al cambiar estado del usuario')
       }
     },
-    
+
     getRoleColor(role) {
       const colors = {
         cajero: 'blue',

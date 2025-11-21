@@ -13,7 +13,6 @@ export default {
     const saving = ref(false)
     const isUpdatingRate = ref(false)
 
-    // Dolar rate variables
     const currentDolarRate = ref({ rate: null, date: null })
     const loadingDolarRate = ref(false)
     const updatingDolarRate = ref(false)
@@ -25,21 +24,17 @@ export default {
 
     const exchangeRate = computed(() => currencyStore.exchangeRate)
 
-    // Create a local ref for settings to avoid direct mutation of the store.
     const settings = ref({})
 
-    // Watch for the store to be populated and then create a local copy
     watch(() => settingsStore.settings, (newSettings) => {
       if (newSettings) {
         settings.value = JSON.parse(JSON.stringify(newSettings))
-        // Ensure font objects exist
         if (!settings.value.fontsTitle) settings.value.fontsTitle = { font: 'Arial', size: '24px' }
         if (!settings.value.fontsSubtitle) settings.value.fontsSubtitle = { font: 'Arial', size: '18px' }
         if (!settings.value.fontsText) settings.value.fontsText = { font: 'Arial', size: '14px' }
       }
     }, { immediate: true, deep: true })
 
-    // Watch for changes in local settings and update store immediately for darkMode
     watch(() => settings.value.darkMode, (newDarkMode) => {
       if (settingsStore.settings.darkMode !== newDarkMode) {
         settingsStore.settings.darkMode = newDarkMode
@@ -49,12 +44,9 @@ export default {
     const saveSettings = async () => {
       saving.value = true
       try {
-        // Update the store with local changes before saving
         settingsStore.settings = { ...settingsStore.settings, ...settings.value }
         await settingsStore.saveSettings()
-        // Force reload of settings store to apply changes
         await settingsStore.fetchSettings()
-        // Optionally show a success message
       } catch (error) {
         console.error('Error saving settings:', error)
       } finally {
@@ -134,7 +126,6 @@ export default {
       }
     }
 
-    // Dolar rate functions
     const fetchCurrentDolarRate = async () => {
       loadingDolarRate.value = true
       try {
@@ -180,7 +171,6 @@ export default {
         if (result.success) {
           await fetchCurrentDolarRate()
           await fetchDolarHistory()
-          // Show success message
         } else {
           console.error('Error fetching dolar rate:', result.error)
         }
@@ -202,7 +192,6 @@ export default {
           await fetchDolarHistory()
           manualRate.value = ''
           manualDate.value = ''
-          // Show success message
         } else {
           console.error('Error updating manual rate:', result.error)
         }
@@ -257,7 +246,6 @@ export default {
       isUpdatingRate,
       updateExchangeRate,
       fontOptions,
-      // Dolar rate
       currentDolarRate,
       loadingDolarRate,
       updatingDolarRate,

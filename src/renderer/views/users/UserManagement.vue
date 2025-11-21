@@ -64,41 +64,16 @@
       <v-card-text>
         <v-row class="d-flex align-center">
           <v-col cols="12" md="4">
-            <v-text-field
-              v-model="search"
-              label="Buscar por usuario o nombre..."
-              prepend-inner-icon="mdi-magnify"
-              variant="solo-filled"
-              density="compact"
-              flat
-              clearable
-            />
+            <v-text-field v-model="search" label="Buscar por usuario o nombre..." prepend-inner-icon="mdi-magnify"
+              variant="solo-filled" density="compact" flat clearable />
           </v-col>
           <v-col cols="12" md="3">
-            <v-select
-              v-model="selectedRole"
-              :items="roleOptions"
-              item-title="text"
-              item-value="value"
-              label="Filtrar por rol"
-              variant="solo-filled"
-              density="compact"
-              flat
-              clearable
-            />
+            <v-select v-model="selectedRole" :items="roleOptions" item-title="text" item-value="value"
+              label="Filtrar por rol" variant="solo-filled" density="compact" flat clearable />
           </v-col>
           <v-col cols="12" md="3">
-            <v-select
-              v-model="selectedStatus"
-              :items="statusFilterOptions"
-              item-title="text"
-              item-value="value"
-              label="Filtrar por estado"
-              variant="solo-filled"
-              density="compact"
-              flat
-              clearable
-            />
+            <v-select v-model="selectedStatus" :items="statusFilterOptions" item-title="text" item-value="value"
+              label="Filtrar por estado" variant="solo-filled" density="compact" flat clearable />
           </v-col>
           <v-col cols="12" md="2">
             <v-btn color="primary" variant="outlined" @click="clearFilters">
@@ -116,15 +91,8 @@
           Lista de Usuarios ({{ filteredUsers.length }})
         </v-card-title>
       </v-card-item>
-      <v-data-table
-        :headers="headers"
-        :items="filteredUsers"
-        :search="search"
-        :loading="loading"
-        item-value="id"
-        hover
-        class="user-management__table"
-      >
+      <v-data-table :headers="headers" :items="filteredUsers" :search="search" :loading="loading" item-value="id" hover
+        class="user-management__table">
         <template v-slot:headers>
           <tr>
             <th class="text-left">Usuario</th>
@@ -168,13 +136,9 @@
         <template v-slot:item.actions="{ item }">
           <div class="user-management__actions">
             <v-btn icon="mdi-pencil" size="small" variant="text" @click="openUserDialog(item)"></v-btn>
-            <v-btn
-              :icon="item.status === 'active' ? 'mdi-account-off' : 'mdi-account-check'"
-              size="small"
-              variant="text"
-              :color="item.status === 'active' ? 'warning' : 'success'"
-              @click="toggleUserStatus(item)"
-            ></v-btn>
+            <v-btn :icon="item.status === 'active' ? 'mdi-account-off' : 'mdi-account-check'" size="small"
+              variant="text" :color="item.status === 'active' ? 'warning' : 'success'"
+              @click="toggleUserStatus(item)"></v-btn>
             <v-btn icon="mdi-delete" size="small" variant="text" color="error" @click="confirmDelete(item)"></v-btn>
           </div>
         </template>
@@ -192,83 +156,38 @@
           <v-form ref="userForm" v-model="userFormValid">
             <v-row>
               <v-col cols="12" md="6">
-                <v-text-field
-                  v-model="userForm.username"
-                  :rules="usernameRules"
-                  label="Usuario"
-                  required
-                  variant="outlined"
-                  density="compact"
-                ></v-text-field>
+                <v-text-field v-model="userForm.username" :rules="usernameRules" label="Usuario" required
+                  variant="outlined" density="compact"></v-text-field>
               </v-col>
 
               <v-col cols="12" md="6">
-                <v-text-field
-                  v-model="userForm.firstName"
-                  :rules="nameRules"
-                  label="Nombre"
-                  required
-                  variant="outlined"
-                  density="compact"
-                ></v-text-field>
+                <v-text-field v-model="userForm.firstName" :rules="nameRules" label="Nombre" required variant="outlined"
+                  density="compact"></v-text-field>
               </v-col>
 
               <v-col cols="12" md="6">
-                <v-text-field
-                  v-model="userForm.lastName"
-                  :rules="nameRules"
-                  label="Apellido"
-                  required
-                  variant="outlined"
-                  density="compact"
-                ></v-text-field>
+                <v-text-field v-model="userForm.lastName" :rules="nameRules" label="Apellido" required
+                  variant="outlined" density="compact"></v-text-field>
               </v-col>
 
               <v-col cols="12" md="6">
-                <v-text-field
-                  v-model="userForm.email"
-                  :rules="emailRules"
-                  label="Email"
-                  type="email"
-                  required
-                  variant="outlined"
-                  density="compact"
-                ></v-text-field>
+                <v-text-field v-model="userForm.email" :rules="emailRules" label="Email" type="email" required
+                  variant="outlined" density="compact"></v-text-field>
               </v-col>
 
               <v-col cols="12" md="6">
-                <v-select
-                  v-model="userForm.role"
-                  :items="roleOptions"
-                  :rules="roleRules"
-                  label="Rol"
-                  required
-                  variant="outlined"
-                  density="compact"
-                ></v-select>
+                <v-select v-model="userForm.role" :items="roleOptions" :rules="roleRules" label="Rol" required
+                  variant="outlined" density="compact"></v-select>
               </v-col>
 
               <v-col cols="12" md="6">
-                <v-select
-                  v-model="userForm.isActive"
-                  :items="statusOptions"
-                  label="Estado"
-                  required
-                  variant="outlined"
-                  density="compact"
-                ></v-select>
+                <v-select v-model="userForm.isActive" :items="statusOptions" label="Estado" required variant="outlined"
+                  density="compact"></v-select>
               </v-col>
 
               <v-col cols="12" v-if="!editingUser">
-                <v-text-field
-                  v-model="userForm.password"
-                  :rules="passwordRules"
-                  type="password"
-                  label="Contraseña"
-                  required
-                  variant="outlined"
-                  density="compact"
-                ></v-text-field>
+                <v-text-field v-model="userForm.password" :rules="passwordRules" type="password" label="Contraseña"
+                  required variant="outlined" density="compact"></v-text-field>
               </v-col>
             </v-row>
           </v-form>

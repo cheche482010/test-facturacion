@@ -36,11 +36,8 @@ const componentLogic = {
       const openingBalanceBs = parseFloat(this.reconciliation.openingBalanceBs || 0)
       const openingBalanceUsd = parseFloat(this.reconciliation.openingBalanceUsd || 0)
       const totalSales = parseFloat(this.reconciliation.totalSales || 0)
-      // Convertir USD a BS usando la tasa actual (asumiendo que tenemos una tasa)
       const exchangeRate = this.reconciliation.exchangeRate || 1
       const openingBalanceTotalBs = openingBalanceBs + (openingBalanceUsd * exchangeRate)
-      // El saldo esperado debe considerar el vuelto dado que reduce el efectivo en caja
-      // Pero como no tenemos el total de vuelto en tiempo real, usamos la fórmula simplificada
       return openingBalanceTotalBs + totalSales
     }
   },
@@ -68,16 +65,13 @@ const componentLogic = {
     },
 
     async handleConfirmAndPrint() {
-      // Import auth store to check user role
       const { useAuthStore } = await import('@/stores/auth')
       const authStore = useAuthStore()
 
       if (authStore.user.role === 'cajero') {
-        // For cajeros, show admin password dialog
         this.showReportDialog = false
         this.showAdminPasswordDialog = true
       } else {
-        // For admin/dev, show confirmation dialog
         this.showReportDialog = false
         this.showConfirmationDialog = true
       }
@@ -144,16 +138,12 @@ const componentLogic = {
 
       window.print();
       document.body.innerHTML = originalContent;
-      window.location.reload(); // Recargar para restaurar la funcionalidad de Vue
+      window.location.reload(); 
     },
 
     async confirmAndPrint() {
       if (!this.dailyReport) return;
-
-      // Primero imprimir el reporte
       this.printReport();
-
-      // Luego confirmar el cierre
       await this.confirmClose()
     }
   },

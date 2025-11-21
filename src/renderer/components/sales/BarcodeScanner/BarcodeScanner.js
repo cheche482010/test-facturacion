@@ -74,7 +74,6 @@ export default {
 
     const startBarcodeDetection = () => {
       scannerInterval = setInterval(() => {
-        // Aquí iría la lógica real de detección
       }, 100)
     }
 

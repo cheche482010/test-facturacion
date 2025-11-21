@@ -20,7 +20,6 @@ export default {
     const loading = ref(false)
     const data = ref([])
 
-    // Filtros locales
     const filters = ref({
       complete: 'true',
       category: null,
@@ -28,7 +27,6 @@ export default {
       stockFilter: 'all'
     })
 
-    // Opciones para filtros
     const completeOptions = [
       { title: 'Completo', value: 'true' },
       { title: 'Detallado', value: 'false' }
@@ -57,7 +55,6 @@ export default {
       }))
     ])
 
-    // Headers de la tabla
     const headers = [
       { title: 'Código Interno', key: 'internalCode' },
       { title: 'Producto', key: 'name' },
@@ -69,7 +66,6 @@ export default {
       { title: 'Valor Total BS', key: 'totalValueBs', align: 'end' }
     ]
 
-    // Funciones helper
     const getStatusColor = (status) => {
       switch (status) {
         case 'activo': return 'success'
@@ -103,11 +99,9 @@ export default {
       return activeFilters.length > 0 ? activeFilters.join(', ') : 'Ninguno'
     }
 
-    // Métodos
     const loadReport = async () => {
       loading.value = true
       try {
-        // Temporalmente quitar el filtro de precio para mostrar todos los productos
         const params = { ...filters.value, showAll: 'true' }
         const result = await reportsStore.fetchProductInventoryReport(params)
         data.value = result.products
@@ -172,7 +166,6 @@ export default {
       doc.save('reporte-productos-inventario.pdf')
     }
 
-    // Lifecycle
     onMounted(async () => {
       await categoryStore.fetchCategories()
       loadReport()

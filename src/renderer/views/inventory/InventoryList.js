@@ -8,14 +8,13 @@ export default {
     const productStore = useProductStore()
     const inventoryStore = useInventoryStore()
 
-    // State
     const loading = ref(false)
     const search = ref('')
     const statusFilter = ref('Todos')
     const statusOptions = ['Todos', 'Normal', 'Stock Bajo', 'Sobre Stock', 'Sin Stock']
     const valueFilter = ref('Cualquiera')
     const valueOptions = ['Cualquiera', 'Con valor', 'Sin valor']
-    const tab = ref('inventory') 
+    const tab = ref('inventory')
     const adjustmentDialog = ref(false)
     const productDetailsDialog = ref(false)
     const movementDetailsDialog = ref(false)
@@ -29,7 +28,6 @@ export default {
     const endDate = ref('')
     const movements = ref([])
 
-    // Computed Properties
     const products = computed(() => productStore.products)
 
     const summaryCards = computed(() => {
@@ -112,7 +110,6 @@ export default {
       { title: 'Acciones', key: 'actions', sortable: false, align: 'center' }
     ]
 
-    // Methods
     const loadInventory = async () => {
       loading.value = true
       try {
@@ -220,7 +217,6 @@ export default {
       return colors[status]
     }
 
-    // Lifecycle
     onMounted(async () => {
       await loadInventory()
       await loadMovements()

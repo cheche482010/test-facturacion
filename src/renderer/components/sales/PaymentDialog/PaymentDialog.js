@@ -121,7 +121,6 @@ export default {
           notes: props.notes
         })
         emit('payment-completed', result)
-        // No cerrar el diálogo aquí, se cerrará desde el componente padre
       } catch (error) {
         console.error('Error procesando venta:', error)
       } finally {

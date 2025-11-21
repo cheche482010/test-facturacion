@@ -3,7 +3,7 @@ import api from '../services/api';
 
 export const useCurrencyStore = defineStore('currency', {
   state: () => ({
-    exchangeRate: 36.50, // Default fallback rate
+    exchangeRate: 230.10, 
   }),
   actions: {
     async fetchExchangeRate() {

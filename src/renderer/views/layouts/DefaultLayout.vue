@@ -1,11 +1,13 @@
 <template>
     <v-app>
-        <v-navigation-drawer v-model="drawer" app :color="settingsStore.settings.darkMode ? 'grey-darken-4' : 'grey-lighten-4'">
+        <v-navigation-drawer v-model="drawer" app
+            :color="settingsStore.settings.darkMode ? 'grey-darken-4' : 'grey-lighten-4'">
             <v-list-item>
                 <div class="d-flex align-center justify-center mb-2">
                     <v-img v-if="settingsStore.settings.systemLogo" :src="settingsStore.settings.systemLogo"
                         max-height="60" max-width="60" contain></v-img>
-                    <v-icon v-else size="60" :color="settingsStore.settings.darkMode ? 'white' : 'primary'">mdi-store-outline</v-icon>
+                    <v-icon v-else size="60"
+                        :color="settingsStore.settings.darkMode ? 'white' : 'primary'">mdi-store-outline</v-icon>
                 </div>
                 <v-list-item-title class="text-h6 text-center">
                     {{ settingsStore.settings.systemTitle || 'Facturación' }}
@@ -48,33 +50,20 @@
             <v-spacer></v-spacer>
 
             <!-- Dólar del Día -->
-            <v-chip
-                v-if="currentDolarRate && currentDolarRate.dataValues && currentDolarRate.dataValues.rate"
-                color="success"
-                variant="flat"
-                prepend-icon="mdi-currency-usd"
-                class="mr-2"
-                size="small"
-            >
+            <v-chip v-if="currentDolarRate && currentDolarRate.dataValues && currentDolarRate.dataValues.rate"
+                color="success" variant="flat" prepend-icon="mdi-currency-usd" class="mr-2" size="small">
                 Bs {{ formatCurrency(currentDolarRate.dataValues.rate) }}
                 <v-tooltip activator="parent" location="bottom">
                     Última actualización: {{ formatDateTime(currentDolarRate.dataValues.updatedAt) }}
                 </v-tooltip>
             </v-chip>
-            <v-chip
-                v-else
-                color="warning"
-                variant="flat"
-                prepend-icon="mdi-currency-usd-off"
-                size="small"
-            >
+            <v-chip v-else color="warning" variant="flat" prepend-icon="mdi-currency-usd-off" size="small">
                 Dólar no disponible
             </v-chip>
         </v-app-bar>
 
         <v-main>
             <v-container fluid>
-                <!-- El contenido de cada vista se renderizará aquí -->
                 <router-view />
             </v-container>
         </v-main>

@@ -44,7 +44,6 @@
             </div>
             <div v-else style="height: 300px;"
               :class="`d-flex align-end justify-center text-medium-emphasis rounded pa-4 ${settingsStore.settings.darkMode ? 'bg-grey-darken-3' : 'bg-grey-lighten-4'}`">
-              <!-- This is a simplified static representation of the bar chart -->
               <div class="d-flex align-end" style="width: 100%; height: 100%;">
                 <div v-for="(sale, index) in salesChartData.values" :key="index"
                   class="d-flex flex-column align-center flex-grow-1">

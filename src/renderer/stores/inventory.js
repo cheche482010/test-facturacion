@@ -46,8 +46,6 @@ export const useInventoryStore = defineStore("inventory", {
     async fetchMovementsByProduct(productId) {
       try {
         const productMovements = await api.get(`/inventory/movements/product/${productId}`)
-
-        // Actualizar movimientos del producto en el estado
         this.movements = this.movements.filter((m) => m.productId !== productId)
         this.movements.push(...productMovements)
       } catch (error) {
@@ -64,10 +62,7 @@ export const useInventoryStore = defineStore("inventory", {
           reason,
           notes,
         })
-
-        // Actualizar movimientos
         this.movements.push(result.movement)
-
         return result
       } catch (error) {
         this.error = error.message
@@ -78,10 +73,7 @@ export const useInventoryStore = defineStore("inventory", {
     async massAdjustment(adjustmentData) {
       try {
         const result = await api.post(`/inventory/mass-adjustment`, adjustmentData)
-
-        // Actualizar movimientos
         this.movements.push(...result.movements)
-
         return result
       } catch (error) {
         this.error = error.message

@@ -30,21 +30,18 @@ export default {
     const loading = ref(false)
     const data = ref([])
 
-    // Filtros locales
     const filters = ref({
       startDate: props.startDate,
       endDate: props.endDate,
       type: ''
     })
 
-    // Opciones para filtros
     const typeOptions = [
       { title: 'Todos', value: '' },
       { title: 'Ventas', value: 'sales' },
       { title: 'Ajustes', value: 'adjustments' }
     ]
 
-    // Headers de la tabla
     const headers = [
       { title: 'Producto', key: 'productName' },
       { title: 'Tipo', key: 'movementType' },
@@ -58,7 +55,6 @@ export default {
       { title: 'Usuario', key: 'userName' }
     ]
 
-    // Métodos
     const loadReport = async () => {
       loading.value = true
       try {
@@ -131,7 +127,6 @@ export default {
       doc.save('reporte-ajustes-inventario.pdf')
     }
 
-    // Lifecycle
     onMounted(() => {
       loadReport()
     })

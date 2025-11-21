@@ -22,12 +22,8 @@
         <!-- Product Search & Cart -->
         <v-card>
           <v-card-text>
-            <v-autocomplete
-              v-model="selectedProduct"
-              :items="filteredProducts"
-              :loading="searchLoading"
-              v-model:search="productSearch"
-              item-title="name" item-value="id"
+            <v-autocomplete v-model="selectedProduct" :items="filteredProducts" :loading="searchLoading"
+              v-model:search="productSearch" item-title="name" item-value="id"
               label="Buscar producto por nombre, código o escanear..." variant="solo-filled" flat
               prepend-inner-icon="mdi-barcode-scan" clearable return-object
               :no-data-text="productSearch && productSearch.trim() !== '' ? 'No se encontraron productos' : 'Escribe para buscar productos...'"
@@ -37,12 +33,14 @@
                 <v-list-item v-bind="props" :disabled="item.raw.currentStock <= 0">
                   <template v-slot:prepend>
                     <v-avatar size="32" rounded="sm" :color="item.raw.image ? 'transparent' : 'grey-lighten-2'">
-                      <v-img v-if="item.raw.image" :src="item.raw.image.startsWith('http') ? item.raw.image : `http://localhost:3001${item.raw.image}`" cover />
+                      <v-img v-if="item.raw.image"
+                        :src="item.raw.image.startsWith('http') ? item.raw.image : `http://localhost:3001${item.raw.image}`"
+                        cover />
                       <v-icon v-else icon="mdi-camera-off" size="16" />
                     </v-avatar>
                   </template>
                   <template #title>
-                    <span :class="item.raw.currentStock <= 0 ? 'text-error' : ''">{{ item.raw.name}}</span>
+                    <span :class="item.raw.currentStock <= 0 ? 'text-error' : ''">{{ item.raw.name }}</span>
                   </template>
                   <template #subtitle>
                     <span :class="item.raw.currentStock <= 0 ? 'text-error' : ''">
@@ -68,41 +66,47 @@
             <span>El carrito está vacío</span>
           </div>
           <div v-else class="scroll-container">
-            <v-data-table :headers="cartHeaders" :items="cartItems" item-key="id" hide-default-footer :items-per-page="-1">
-            <template v-slot:item.name="{ item }">
-              <div class="d-flex align-center">
-                <v-avatar class="mr-3" size="40" rounded="sm" :color="item.image ? 'transparent' : 'grey-lighten-2'">
-                  <v-img v-if="item.image" :src="item.image.startsWith('http') ? item.image : `http://localhost:3001${item.image}`" :alt="item.name" cover />
-                  <v-icon v-else icon="mdi-camera-off" />
-                </v-avatar>
-                <div class="font-weight-bold">{{ item.name }}</div>
-              </div>
-            </template>
-            <template v-slot:item.quantity="{ item }">
-              <div class="pos__quantity-control">
-                <v-btn icon="mdi-minus-circle-outline" variant="text" size="large" color="primary" @click="decreaseQuantity(item)" :disabled="item.quantity <= 1" />
-                <span class="quantity-value">{{ item.quantity }}</span>
-                <v-btn icon="mdi-plus-circle-outline" variant="text" size="large" color="primary" @click="increaseQuantity(item)" :disabled="item.quantity >= item.stock" />
-              </div>
-            </template>
-            <template v-slot:item.price="{ item }">
-              <div>
-                <div>$ {{ formatCurrency(item.price, 'USD').replace('$', '').trim() }}</div>
-                <div class="text-caption text-medium-emphasis">{{ formatCurrency(item.price * exchangeRate, 'VES')
+            <v-data-table :headers="cartHeaders" :items="cartItems" item-key="id" hide-default-footer
+              :items-per-page="-1">
+              <template v-slot:item.name="{ item }">
+                <div class="d-flex align-center">
+                  <v-avatar class="mr-3" size="40" rounded="sm" :color="item.image ? 'transparent' : 'grey-lighten-2'">
+                    <v-img v-if="item.image"
+                      :src="item.image.startsWith('http') ? item.image : `http://localhost:3001${item.image}`"
+                      :alt="item.name" cover />
+                    <v-icon v-else icon="mdi-camera-off" />
+                  </v-avatar>
+                  <div class="font-weight-bold">{{ item.name }}</div>
+                </div>
+              </template>
+              <template v-slot:item.quantity="{ item }">
+                <div class="pos__quantity-control">
+                  <v-btn icon="mdi-minus-circle-outline" variant="text" size="large" color="primary"
+                    @click="decreaseQuantity(item)" :disabled="item.quantity <= 1" />
+                  <span class="quantity-value">{{ item.quantity }}</span>
+                  <v-btn icon="mdi-plus-circle-outline" variant="text" size="large" color="primary"
+                    @click="increaseQuantity(item)" :disabled="item.quantity >= item.stock" />
+                </div>
+              </template>
+              <template v-slot:item.price="{ item }">
+                <div>
+                  <div>$ {{ formatCurrency(item.price, 'USD').replace('$', '').trim() }}</div>
+                  <div class="text-caption text-medium-emphasis">{{ formatCurrency(item.price * exchangeRate, 'VES')
                   }}</div>
-              </div>
-            </template>
-            <template v-slot:item.subtotal="{ item }">
-              <div>
-                <div class="font-weight-bold">$ {{ formatCurrency(item.subtotal, 'USD').replace('$', '').trim() }}</div>
-                <div class="text-caption text-medium-emphasis">{{ formatCurrency(item.subtotal * exchangeRate,
-                  'VES') }}</div>
-              </div>
-            </template>
-            <template v-slot:item.actions="{ item }">
-              <v-btn icon="mdi-delete" variant="text" color="error" size="small" @click="removeItem(item)" />
-            </template>
-          </v-data-table>
+                </div>
+              </template>
+              <template v-slot:item.subtotal="{ item }">
+                <div>
+                  <div class="font-weight-bold">$ {{ formatCurrency(item.subtotal, 'USD').replace('$', '').trim() }}
+                  </div>
+                  <div class="text-caption text-medium-emphasis">{{ formatCurrency(item.subtotal * exchangeRate,
+                    'VES') }}</div>
+                </div>
+              </template>
+              <template v-slot:item.actions="{ item }">
+                <v-btn icon="mdi-delete" variant="text" color="error" size="small" @click="removeItem(item)" />
+              </template>
+            </v-data-table>
           </div>
         </v-card>
       </v-col>
@@ -116,7 +120,7 @@
           <v-card-text>
             <div class="d-flex justify-space-between mb-2">
               <p>Cantidad de productos</p>
-              <p class="font-weight-bold">{{ cartItems.reduce((sum, item) => sum + item.quantity, 0) }}</p>
+              <p class="font-weight-bold">{{cartItems.reduce((sum, item) => sum + item.quantity, 0)}}</p>
             </div>
             <div class="d-flex justify-space-between mb-2 text-h5 font-weight-bold text-primary">
               <p>Tasa del día</p>
@@ -140,12 +144,8 @@
               totalBs: totals.totalBs
             }" :notes="notes" @payment-completed="onPaymentCompleted" />
 
-            <SaleReceiptDialog
-              v-model="showReceiptDialog"
-              :sale="completedSale"
-              :exchange-rate="exchangeRate"
-              @sale-completed="onSaleCompleted"
-            />
+            <SaleReceiptDialog v-model="showReceiptDialog" :sale="completedSale" :exchange-rate="exchangeRate"
+              @sale-completed="onSaleCompleted" />
 
             <v-textarea v-model="notes" label="Añadir notas a la factura..." rows="3" variant="outlined"
               density="compact" class="mt-4"></v-textarea>

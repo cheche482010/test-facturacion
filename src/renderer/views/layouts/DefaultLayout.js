@@ -29,7 +29,6 @@ export default {
         { title: 'Usuarios', icon: 'mdi-account-group', to: '/users', permission: 'users' }
       ]
 
-      // Filtrar items basados en permisos del usuario
       return allItems.filter(item => {
         if (!item.permission) return true
         if (item.permission === 'users') {
@@ -97,7 +96,7 @@ export default {
       formatCurrency,
       formatDateTime,
       hasPendingCart: salesStore.hasPendingCart,
-      salesStore 
+      salesStore
     }
   }
 }

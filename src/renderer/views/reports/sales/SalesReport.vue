@@ -3,31 +3,16 @@
     <!-- Filtros para reporte de ventas -->
     <v-row class="mb-4">
       <v-col cols="12" md="2">
-        <v-text-field
-          v-model="filters.startDate"
-          label="Fecha Desde"
-          type="date"
-          density="compact"
-          variant="outlined"
-        ></v-text-field>
+        <v-text-field v-model="filters.startDate" label="Fecha Desde" type="date" density="compact"
+          variant="outlined"></v-text-field>
       </v-col>
       <v-col cols="12" md="2">
-        <v-text-field
-          v-model="filters.endDate"
-          label="Fecha Hasta"
-          type="date"
-          density="compact"
-          variant="outlined"
-        ></v-text-field>
+        <v-text-field v-model="filters.endDate" label="Fecha Hasta" type="date" density="compact"
+          variant="outlined"></v-text-field>
       </v-col>
       <v-col cols="12" md="2">
-        <v-text-field
-          v-model="filters.batch"
-          label="Lote (opcional)"
-          density="compact"
-          variant="outlined"
-          clearable
-        ></v-text-field>
+        <v-text-field v-model="filters.batch" label="Lote (opcional)" density="compact" variant="outlined"
+          clearable></v-text-field>
       </v-col>
       <v-col cols="12" md="2">
         <v-btn @click="loadReport" color="primary" :loading="loading" block>
@@ -62,13 +47,7 @@
         <v-spacer></v-spacer>
         <span class="text-caption">Tasa actual: {{ formatCurrency(currentDolarRate) }} Bs/USD</span>
       </v-card-title>
-      <v-data-table
-        :headers="headers"
-        :items="data"
-        :loading="loading"
-        item-value="id"
-        density="compact"
-      >
+      <v-data-table :headers="headers" :items="data" :loading="loading" item-value="id" density="compact">
         <template v-slot:item.userName="{ item }">
           {{ item.user.first_name }} {{ item.user.last_name }}
         </template>

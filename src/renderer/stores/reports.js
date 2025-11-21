@@ -77,7 +77,6 @@ export const useReportsStore = defineStore("reports", {
       }
     },
 
-    // Nuevos métodos para reportes detallados
     async fetchDetailedSalesReport(params) {
       try {
         const queryParams = new URLSearchParams(params)

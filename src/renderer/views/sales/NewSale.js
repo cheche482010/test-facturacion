@@ -15,7 +15,6 @@ export default {
     const appStore = useAppStore()
     const currencyStore = useCurrencyStore()
 
-    // State
     const cartItems = ref([])
     const processingSale = ref(false)
     const isFastSale = ref(false)
@@ -37,7 +36,6 @@ export default {
       { title: 'Acciones', key: 'actions', sortable: false, align: 'center', width: '50px' },
     ]
 
-    // Computed Properties
     const products = computed(() => productStore.products)
     const exchangeRate = computed(() => currencyStore.exchangeRate)
 
@@ -49,7 +47,6 @@ export default {
       return { subtotalUsd, subtotalBs, totalUsd, totalBs }
     })
 
-    // Methods
     const updateItemSubtotal = (item) => {
       item.subtotal = item.quantity * item.price
     }
