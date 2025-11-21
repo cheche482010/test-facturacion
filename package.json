@@ -10,6 +10,7 @@
     "build": "npm run build:vue && electron-builder",
     "build:vue": "vite build",
     "build:electron": "electron-builder",
+    "start": "electron dist/win-unpacked/resources/app",
     "preview": "vite preview",
     "db:migrate": "node src/main/database/migrate.js",
     "db:setup": "node src/main/database/setup.js",
@@ -38,7 +39,7 @@
       "node_modules/**/*"
     ],
     "win": {
-      "target": "nsis",
+      "target": "dir",
       "icon": "assets/icon.ico"
     },
     "linux": {
@@ -64,6 +65,7 @@
   "dependencies": {
     "@mdi/font": "^7.3.67",
     "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^9.4.3",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "concurrently": "^8.2.2",
@@ -79,9 +81,8 @@
     "path": "0.12.7",
     "pinia": "^2.1.7",
     "sequelize": "^6.35.0",
-    "sqlite3": "^5.1.7",
     "tailwind-merge": "3.3.1",
-    "tailwindcss-animate": "1.0.7",
+    "tailwindcss-animate": "1.0.0",
     "vue": "^3.3.8",
     "vue-country-flag-next": "^2.3.2",
     "vue-router": "^4.2.5",

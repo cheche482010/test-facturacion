@@ -31,6 +31,7 @@ const getDatabaseConfig = () => {
     // SQLite configuration (default)
     return {
       dialect: "sqlite",
+      dialectModule: require('better-sqlite3'),
       storage: path.join(__dirname, "../../../data/database.sqlite"),
       logging: process.env.NODE_ENV === "development" ? console.log : false,
       define: {
