@@ -76,5 +76,56 @@ export const useReportsStore = defineStore("reports", {
         throw error
       }
     },
+
+    // Nuevos métodos para reportes detallados
+    async fetchDetailedSalesReport(params) {
+      try {
+        const queryParams = new URLSearchParams(params)
+        const data = await api.get(`/reports/sales/detailed?${queryParams}`)
+        return data
+      } catch (error) {
+        throw error
+      }
+    },
+
+    async fetchDetailedInventoryReport(params) {
+      try {
+        const queryParams = new URLSearchParams(params)
+        const data = await api.get(`/reports/inventory/detailed?${queryParams}`)
+        return data
+      } catch (error) {
+        throw error
+      }
+    },
+
+    async fetchInventoryAdjustmentsReport(params) {
+      try {
+        const queryParams = new URLSearchParams(params)
+        const data = await api.get(`/reports/inventory/adjustments?${queryParams}`)
+        return data
+      } catch (error) {
+        throw error
+      }
+    },
+
+    async fetchProductInventoryReport(params) {
+      try {
+        const queryParams = new URLSearchParams(params)
+        const data = await api.get(`/reports/inventory/products?${queryParams}`)
+        return data
+      } catch (error) {
+        throw error
+      }
+    },
+
+    async fetchFinancialSalesReport(params) {
+      try {
+        const queryParams = new URLSearchParams(params)
+        const data = await api.get(`/reports/financial/sales?${queryParams}`)
+        return data
+      } catch (error) {
+        throw error
+      }
+    },
   },
 })

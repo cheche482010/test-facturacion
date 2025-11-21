@@ -25,6 +25,10 @@ const Product = sequelize.define(
     description: {
       type: DataTypes.TEXT,
     },
+    color: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+    },
     categoryId: {
       type: DataTypes.INTEGER,
       references: {

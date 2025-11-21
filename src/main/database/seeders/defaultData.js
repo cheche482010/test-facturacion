@@ -372,15 +372,30 @@ const seedDefaultData = async () => {
         console.log(`   -> ${productsData.length} productos creados.`)
       }
 
+      // Crear tasa de dólar para hoy y días anteriores para las ventas existentes
       const today = new Date().toISOString().split('T')[0]
-      let dolarRate = await DolarRate.findOne({ where: { date: today }, transaction })
-      if (!dolarRate) {
-        dolarRate = await DolarRate.create({
-          rate: 36.5,
-          date: today,
-          source: "manual",
-        }, { transaction })
-        console.log("   -> Tasa de dólar creada para hoy.")
+      const datesToCreate = [
+        today,
+        '2025-10-24', // Fecha de la primera venta
+        '2025-10-27', // Fecha de la segunda venta
+        '2025-10-29'  // Fecha de la tercera venta
+      ]
+
+      for (const dateStr of datesToCreate) {
+        let dolarRate = await DolarRate.findOne({ where: { date: dateStr }, transaction })
+        if (!dolarRate) {
+          try {
+            dolarRate = await DolarRate.create({
+              rate: 36.5,
+              date: dateStr,
+              source: "manual",
+            }, { transaction })
+            console.log(`   -> Tasa de dólar creada para ${dateStr}.`)
+          } catch (error) {
+            // Si ya existe, continuar
+            console.log(`   -> Tasa de dólar ya existe para ${dateStr}.`)
+          }
+        }
       }
 
       const saleCount = await Sale.count({ transaction })
@@ -482,6 +497,42 @@ const seedDefaultData = async () => {
         ], { transaction })
 
         console.log("   -> 5 ventas de ejemplo creadas.")
+
+        // Actualizar ventas existentes para asignar tasas de dólar
+        const existingSales = await Sale.findAll({
+          where: { dolarRateId: null },
+          transaction
+        })
+
+        for (const sale of existingSales) {
+          const saleDate = sale.sale_date.toISOString().split('T')[0]
+          const dolarRate = await DolarRate.findOne({
+            where: { date: saleDate },
+            transaction
+          })
+          if (dolarRate) {
+            await sale.update({ dolarRateId: dolarRate.id }, { transaction })
+            console.log(`   -> Actualizada venta ${sale.saleNumber} con tasa de dólar`)
+          }
+        }
+
+        // Asignar usuario por defecto a ventas sin usuario
+        const adminUser = await User.findOne({
+          where: { username: 'admin' },
+          transaction
+        })
+
+        if (adminUser) {
+          const salesWithoutUser = await Sale.findAll({
+            where: { userId: null },
+            transaction
+          })
+
+          for (const sale of salesWithoutUser) {
+            await sale.update({ userId: adminUser.id }, { transaction })
+            console.log(`   -> Asignado usuario admin a venta ${sale.saleNumber}`)
+          }
+        }
 
         const allSaleItems = await SaleItem.findAll({
           where: { saleId: [sale1.id, sale2.id, sale3.id, sale4.id, sale5.id] },

@@ -13,5 +13,10 @@ router.get("/inventory", requirePermission("reports"), reportsController.getInve
 router.get("/financial", requirePermission("reports"), reportsController.getFinancialReport)
 router.get("/users", requirePermission("reports"), reportsController.getUsersReport)
 router.get("/cash-count", requirePermission("reports"), reportsController.getCashCount)
+router.get("/sales/detailed", requirePermission("reports"), reportsController.getDetailedSalesReport)
+router.get("/inventory/detailed", requirePermission("reports"), reportsController.getDetailedInventoryReport)
+router.get("/inventory/adjustments", requirePermission("reports"), reportsController.getInventoryAdjustmentsReport)
+router.get("/inventory/products", requirePermission("reports"), reportsController.getProductInventoryReport)
+router.get("/financial/sales", requirePermission("reports"), reportsController.getFinancialSalesReport)
 
 module.exports = router
