@@ -262,6 +262,8 @@ export default {
       productDetailsDialog.value = true
     }
 
+    const apiBaseUrl = computed(() => import.meta.env.VITE_API_BASE_URL)
+
     return {
       loading,
       search,
@@ -305,6 +307,7 @@ export default {
       currentDolarRate,
       loadingDolarRate,
       formatBsEquivalent,
+      apiBaseUrl,
     }
   },
 }

@@ -99,7 +99,7 @@ export default {
           if (newProduct.image) {
             imagePreview.value = newProduct.image.startsWith('http')
               ? newProduct.image
-              : `http://localhost:3001${newProduct.image}`
+              : `${import.meta.env.VITE_API_BASE_URL}${newProduct.image}`
           } else {
             imagePreview.value = null
           }

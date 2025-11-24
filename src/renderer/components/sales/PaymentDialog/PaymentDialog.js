@@ -170,7 +170,7 @@ export default {
     const loadPaymentMethods = async () => {
       try {
         // Use fetch API to get payment methods from backend
-        const response = await fetch('http://localhost:3001/api/payment-methods', {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/payment-methods`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }

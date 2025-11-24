@@ -1,5 +1,5 @@
 require("dotenv").config()
-const { CashReconciliation, Sale, SalePayment, PaymentMethod } = require("../models")
+const { CashReconciliation, Sale, SalePayment, PaymentMethod, User } = require("../models")
 const { sequelize } = require("../connection")
 const { Op } = require("sequelize")
 
@@ -14,7 +14,12 @@ const seedCashReconciliations = async () => {
     }
 
     if (cashReconciliationCount === 0) {
-      // Crear 5 arqueos de caja para diferentes fechas
+      const firstUser = await User.findOne()
+      if (!firstUser) {
+        console.log("     -> No hay usuarios disponibles, omitiendo creación de arqueos.")
+        return
+      }
+
       const dates = [
         new Date(new Date().setDate(new Date().getDate() - 5)),
         new Date(new Date().setDate(new Date().getDate() - 4)),
@@ -67,19 +72,14 @@ const seedCashReconciliations = async () => {
           }
 
           // Crear arqueo
-          await CashReconciliation.create({
-            date: startOfDay,
-            totalSales: daySales.length,
-            totalAmountBs: daySales.reduce((sum, sale) => sum + parseFloat(sale.totalBs), 0),
-            totalAmountUsd: daySales.reduce((sum, sale) => sum + parseFloat(sale.totalUsd), 0),
-            cashBsCounted: totalCashBs,
-            cashUsdCounted: totalCashUsd,
-            differenceBs: 0, // Asumir que coincide
-            differenceUsd: 0,
-            notes: `Arqueo automático para ${startOfDay.toISOString().split('T')[0]}`,
-            status: 'completado',
-            paymentMethodBreakdown: JSON.stringify(paymentTotals)
-          })
+           await CashReconciliation.create({
+             openingDate: startOfDay,
+             userId: firstUser.id,
+             totalSales: daySales.reduce((sum, sale) => sum + parseFloat(sale.totalBs), 0),
+             totalSalesUsd: daySales.reduce((sum, sale) => sum + parseFloat(sale.totalUsd), 0),
+             notes: `Arqueo automático para ${startOfDay.toISOString().split('T')[0]}`,
+             paymentMethodBreakdown: JSON.stringify(paymentTotals)
+           })
 
           console.log(`     -> Arqueo creado para ${startOfDay.toISOString().split('T')[0]}.`)
         }

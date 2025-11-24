@@ -61,7 +61,7 @@ export const useSalesStore = defineStore('sales', () => {
 
   async function createSale(saleData) {
     try {
-      const response = await fetch('http://localhost:3001/api/sales', {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/sales`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

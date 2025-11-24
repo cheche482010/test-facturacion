@@ -87,7 +87,7 @@
           >
             <v-img
               v-if="item.image"
-              :src="item.image.startsWith('http') ? item.image : `http://localhost:3001${item.image}`"
+              :src="item.image.startsWith('http') ? item.image : `${apiBaseUrl}${item.image}`"
               :alt="item.name"
               cover
             />
@@ -159,7 +159,7 @@
                 <div class="image-container" style="height: 150px; position: relative; cursor: pointer;" @click="product.image && showImage(product)">
                   <v-img
                     v-if="product.image"
-                    :src="product.image.startsWith('http') ? product.image : `http://localhost:3001${product.image}`"
+                    :src="product.image.startsWith('http') ? product.image : `${apiBaseUrl}${product.image}`"
                     height="150"
                     cover
                   ></v-img>
@@ -273,7 +273,7 @@
               >
                 <v-img
                   v-if="selectedProductForDetails.image"
-                  :src="selectedProductForDetails.image.startsWith('http') ? selectedProductForDetails.image : `http://localhost:3001${selectedProductForDetails.image}`"
+                  :src="selectedProductForDetails.image.startsWith('http') ? selectedProductForDetails.image : `${apiBaseUrl}${selectedProductForDetails.image}`"
                   cover
                 />
                 <v-icon v-else icon="mdi-camera-off" size="64" />
