@@ -160,6 +160,25 @@
         </v-card>
       </v-col>
     </v-row>
+
+    <!-- Dialog para requerir arqueo de caja -->
+    <v-dialog v-model="showCashReconciliationDialog" persistent max-width="500">
+      <v-card>
+        <v-card-title class="text-h6 text-center">
+          Arqueo de Caja Requerido
+        </v-card-title>
+        <v-card-text class="text-center">
+          <v-icon size="64" color="warning" class="mb-4">mdi-cash-register</v-icon>
+          <p>Debe iniciar el arqueo de caja antes de realizar ventas.</p>
+          <p class="text-caption text-medium-emphasis">Será redirigido a la página de arqueo de caja.</p>
+        </v-card-text>
+        <v-card-actions class="justify-center">
+          <v-btn color="primary" @click="goToCashReconciliation">
+            Ir a Arqueo de Caja
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 

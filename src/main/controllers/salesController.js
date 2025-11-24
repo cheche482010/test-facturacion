@@ -26,8 +26,44 @@ const salesController = {
             include: [{ model: Product, as: "product" }],
           },
         ],
-        order: [["saleDate", "DESC"]],
+        order: [["sale_date", "DESC"]],
         limit: Number.parseInt(limit),
+      })
+
+      res.json(sales)
+    } catch (error) {
+      res.status(500).json({ error: error.message })
+    }
+  },
+
+  async getToday(req, res) {
+    try {
+      // Get today's reconciliation
+      const todayReconciliation = await CashReconciliationService.getTodayReconciliation()
+
+      if (!todayReconciliation) {
+        return res.json([])
+      }
+
+      const sales = await Sale.findAll({
+        where: {
+          reconciliationId: todayReconciliation.id,
+          status: 'completada'
+        },
+        include: [
+          { model: User, as: "user", attributes: ["id", "firstName", "lastName"] },
+          {
+            model: SaleItem,
+            as: "items",
+            include: [{ model: Product, as: "product" }],
+          },
+          {
+            model: SalePayment,
+            as: "payments",
+            include: [{ model: PaymentMethod, as: "paymentMethod" }],
+          },
+        ],
+        order: [["sale_date", "DESC"]],
       })
 
       res.json(sales)

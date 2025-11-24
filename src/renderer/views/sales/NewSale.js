@@ -4,6 +4,7 @@ import { useProductStore } from '../../stores/products'
 import { useSalesStore } from '../../stores/sales'
 import { useAppStore } from '../../stores/app'
 import { useCurrencyStore } from '../../stores/currencyStore'
+import { useCashReconciliationStore } from '../../stores/cashReconciliation'
 import { formatCurrency } from '@/utils/formatters'
 
 
@@ -14,6 +15,7 @@ export default {
     const saleStore = useSalesStore()
     const appStore = useAppStore()
     const currencyStore = useCurrencyStore()
+    const cashReconciliationStore = useCashReconciliationStore()
 
     const cartItems = ref([])
     const processingSale = ref(false)
@@ -26,6 +28,7 @@ export default {
     const payments = ref([])
     const showPaymentDialog = ref(false)
     const showReceiptDialog = ref(false)
+    const showCashReconciliationDialog = ref(false)
     const completedSale = ref(null)
     const isCartModified = ref(false)
     const cartHeaders = [
@@ -217,7 +220,21 @@ export default {
       saleStore.clearPendingCart()
     }
 
+    const checkCashReconciliation = async () => {
+      await cashReconciliationStore.fetchTodayReconciliation()
+      if (!cashReconciliationStore.todayReconciliation) {
+        showCashReconciliationDialog.value = true
+      }
+    }
+
+    const goToCashReconciliation = () => {
+      showCashReconciliationDialog.value = false
+      router.push({ name: 'CashReconciliation' })
+    }
+
     onMounted(async () => {
+      await checkCashReconciliation()
+
       await Promise.all([
         productStore.fetchProducts(),
         currencyStore.fetchExchangeRate()
@@ -257,6 +274,7 @@ export default {
       payments,
       showPaymentDialog,
       showReceiptDialog,
+      showCashReconciliationDialog,
       completedSale,
       cartHeaders,
       products,
@@ -273,6 +291,7 @@ export default {
       openPaymentDialog,
       onPaymentCompleted,
       onSaleCompleted,
+      goToCashReconciliation,
       formatCurrency,
       exchangeRate
     }

@@ -1,4 +1,6 @@
+import { ref, computed } from 'vue'
 import { useCashReconciliationStore } from '@/stores/cashReconciliation'
+import { useCurrencyStore } from '@/stores/currencyStore'
 import { storeToRefs } from 'pinia'
 
 const componentLogic = {
@@ -6,7 +8,11 @@ const componentLogic = {
 
   setup() {
     const store = useCashReconciliationStore()
+    const currencyStore = useCurrencyStore()
     const { todayReconciliation: reconciliation, dailyReport, isLoading, isReportLoading, error } = storeToRefs(store)
+    const { exchangeRate } = storeToRefs(currencyStore)
+    const todaysSales = ref([])
+    const showInvoiceDialog = ref(false)
 
     return {
       reconciliation,
@@ -14,7 +20,9 @@ const componentLogic = {
       isLoading,
       isReportLoading,
       error,
-      store
+      store,
+      todaysSales,
+      exchangeRate
     }
   },
 
@@ -26,7 +34,14 @@ const componentLogic = {
       showAdminPasswordDialog: false,
       showConfirmationDialog: false,
       adminPassword: '',
-      adminPasswordError: ''
+      adminPasswordError: '',
+      showInvoiceDialog: false,
+      company: {
+        name: 'Mi Empresa',
+        rif: 'J-12345678-9',
+        address: 'Dirección de la empresa',
+        phone: '0212-1234567'
+      }
     }
   },
 
@@ -39,6 +54,57 @@ const componentLogic = {
       const exchangeRate = this.reconciliation.exchangeRate || 1
       const openingBalanceTotalBs = openingBalanceBs + (openingBalanceUsd * exchangeRate)
       return openingBalanceTotalBs + totalSales
+    },
+
+    todaysSalesItems() {
+      return this.todaysSales.value || []
+    },
+
+    salesHeaders() {
+      return [
+        { title: 'Factura', key: 'saleNumber', sortable: true },
+        { title: 'Fecha', key: 'sale_date', sortable: true },
+        { title: 'Total BS', key: 'totalBs', sortable: true },
+        { title: 'Total USD', key: 'totalUsd', sortable: true },
+        { title: 'Acciones', key: 'actions', sortable: false }
+      ]
+    },
+
+    productHeaders() {
+      return [
+        { title: 'Producto', key: 'product.name' },
+        { title: 'Cantidad', key: 'quantity' },
+        { title: 'Precio', key: 'unitPriceBs' },
+        { title: 'Subtotal', key: 'subtotalBs' }
+      ]
+    },
+
+    paymentHeaders() {
+      return [
+        { title: 'Método', key: 'paymentMethod.name' },
+        { title: 'Monto', key: 'amount' },
+        { title: 'Referencia', key: 'reference' },
+        { title: 'Notas', key: 'notes' }
+      ]
+    },
+
+    totalQuantity() {
+      if (!this.selectedSale?.items) return 0
+      return this.selectedSale.items.reduce((sum, item) => sum + parseInt(item.quantity), 0)
+    },
+
+    totalPaid() {
+      if (!this.selectedSale?.payments) return 0
+      return this.selectedSale.payments.reduce((sum, payment) => sum + parseFloat(payment.amount), 0)
+    },
+
+    changeAmount() {
+      if (!this.selectedSale) return 0
+      return Math.max(0, this.totalPaid - parseFloat(this.selectedSale.totalBs))
+    },
+
+    changeCurrency() {
+      return 'VES'
     }
   },
 
@@ -145,11 +211,95 @@ const componentLogic = {
       if (!this.dailyReport) return;
       this.printReport();
       await this.confirmClose()
+    },
+
+    async fetchTodaysSales() {
+      if (!this.reconciliation) return;
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/sales/today`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        if (response.ok) {
+          this.todaysSales.value = await response.json();
+        }
+      } catch (error) {
+        console.error('Error fetching today\'s sales:', error);
+      }
+    },
+
+    viewInvoice(sale) {
+      this.selectedSale = sale;
+      this.showInvoiceDialog = true;
+    },
+
+    formatDate(date) {
+      return new Date(date).toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    },
+
+    getIconForMethod(name) {
+      const icons = {
+        'Efectivo BS': 'mdi-cash',
+        'Efectivo USD': 'mdi-cash-multiple',
+        'Transferencia': 'mdi-bank-transfer',
+        'POS': 'mdi-credit-card-chip',
+        'Pago Móvil': 'mdi-cellphone',
+        'Crédito': 'mdi-credit-card'
+      }
+      return icons[name] || 'mdi-cash'
+    },
+
+    printInvoice() {
+      const printContent = document.getElementById('invoice-print').innerHTML;
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Factura de Venta</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; }
+              .text-center { text-align: center; }
+              .text-right { text-align: right; }
+              .mb-4 { margin-bottom: 20px; }
+              .mt-4 { margin-top: 20px; }
+              .invoice-table, .product-table, .payment-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+              .invoice-table th, .invoice-table td, .product-table th, .product-table td, .payment-table th, .payment-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+              .invoice-table th, .product-table th, .payment-table th { background-color: #f2f2f2; }
+              .total-row { background-color: #f9f9f9; font-weight: bold; }
+              h2, h4 { margin: 0; }
+              @media print { body { margin: 0; } }
+            </style>
+          </head>
+          <body>
+            ${printContent}
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.print();
     }
   },
 
   mounted() {
     this.store.fetchTodayReconciliation()
+  },
+
+  watch: {
+    reconciliation: {
+      handler(newReconciliation) {
+        if (newReconciliation) {
+          this.fetchTodaysSales()
+        }
+      },
+      immediate: true
+    }
   }
 }
 

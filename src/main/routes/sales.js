@@ -7,6 +7,7 @@ const router = express.Router()
 router.use(authenticateToken)
 
 router.get("/", requirePermission("sales"), salesController.getAll)
+router.get("/today", requirePermission("sales"), salesController.getToday)
 router.post("/", requirePermission("sales"), salesController.create)
 router.get("/:id", requirePermission("sales"), salesController.getById)
 router.put("/:id/cancel", requirePermission("sales"), salesController.cancel)
