@@ -61,7 +61,7 @@ const Product = sequelize.define(
     },
     // Inventario
     currentStock: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.BIGINT,
       defaultValue: 0,
     },
     // Estado

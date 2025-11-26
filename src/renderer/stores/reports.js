@@ -87,6 +87,16 @@ export const useReportsStore = defineStore("reports", {
       }
     },
 
+    async fetchDetailedSalesReportByBatches(params) {
+      try {
+        const queryParams = new URLSearchParams(params)
+        const data = await api.get(`/reports/sales/batches?${queryParams}`)
+        return data
+      } catch (error) {
+        throw error
+      }
+    },
+
     async fetchDetailedInventoryReport(params) {
       try {
         const queryParams = new URLSearchParams(params)

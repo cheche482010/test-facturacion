@@ -13,10 +13,6 @@ async function verifyDatabase() {
       const [result] = await sequelize.query("SELECT DATABASE() as current_db")
       console.log(`Base de datos actual: ${result[0].current_db}`)
 
-      const [databases] = await sequelize.query("SHOW DATABASES")
-      console.log(" Bases de datos disponibles:")
-      databases.forEach((db) => console.log(`   - ${db.Database}`))
-
       const tables = await sequelize.getQueryInterface().showAllTables()
       console.log(` Tablas en '${result[0].current_db}':`, tables)
 
@@ -29,6 +25,22 @@ async function verifyDatabase() {
           } catch (error) {
             console.log(`   ${table}: Error al contar registros`)
           }
+        }
+
+        // Mostrar algunos registros de tablas importantes
+        console.log("\n Detalles de registros:")
+        try {
+          const [sales] = await sequelize.query(`SELECT id, sale_number, sale_date, reconciliation_id FROM sales LIMIT 5`)
+          console.log("   Ventas (primeras 5):", sales)
+        } catch (error) {
+          console.log("   Error obteniendo ventas:", error.message)
+        }
+
+        try {
+          const [reconciliations] = await sequelize.query(`SELECT id, lote, opening_date, closing_date FROM cash_reconciliations LIMIT 5`)
+          console.log("   Arqueos (primeros 5):", reconciliations)
+        } catch (error) {
+          console.log("   Error obteniendo arqueos:", error.message)
         }
       }
     } else {

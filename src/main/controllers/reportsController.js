@@ -459,19 +459,16 @@ const reportsController = {
     }
   },
 
-  // Reporte de Ventas Detallado
+  // Reporte de Ventas Detallado Completo
   async getDetailedSalesReport(req, res) {
     try {
       const { startDate, endDate, batch } = req.query
 
-      let whereClause = {
-        status: "completada"
-      }
+      let whereClause = {}
 
-      if (startDate && endDate) {
-        whereClause.sale_date = {
-          [Op.between]: [startDate, endDate],
-        }
+      // Solo filtrar por status completada si no estamos en desarrollo
+      if (process.env.NODE_ENV === 'production') {
+        whereClause.status = "completada"
       }
 
       if (batch) {
@@ -490,35 +487,102 @@ const reportsController = {
             model: DolarRate,
             as: 'dolarRate',
             attributes: ['rate']
+          },
+          {
+            model: require('../database/models').CashReconciliation,
+            as: 'reconciliation',
+            attributes: ['id', 'lote', 'openingDate', 'closingDate']
+          },
+          {
+            model: require('../database/models').SaleItem,
+            as: 'items',
+            include: [{
+              model: require('../database/models').Product,
+              as: 'product',
+              attributes: ['name', 'internalCode', 'retailPrice']
+            }],
+            attributes: ['quantity', 'unitPriceBs', 'subtotalBs']
+          },
+          {
+            model: require('../database/models').SalePayment,
+            as: 'payments',
+            include: [{
+              model: require('../database/models').PaymentMethod,
+              as: 'paymentMethod',
+              attributes: ['name']
+            }],
+            attributes: ['amount', 'reference', 'notes']
           }
         ],
         attributes: [
-          'id', 'saleNumber', 'totalUsd', 'totalBs', 'sale_date', 'paymentStatus'
+          'id', 'saleNumber', 'totalUsd', 'totalBs', 'sale_date', 'paymentStatus',
+          'changeGivenBs', 'changeGivenUsd', 'notes'
         ],
         order: [['sale_date', 'DESC']]
       })
+
 
       const currentDolarRate = await DolarRate.findOne({
         order: [['date', 'DESC']]
       })
 
-      const salesWithPrices = sales.map(sale => {
+      const salesWithCompleteDetails = sales.map(sale => {
         const saleData = sale.toJSON()
+
+        // Calcular total vendido (sin cambio)
+        const totalSoldBs = parseFloat(saleData.totalBs) - parseFloat(saleData.changeGivenBs || 0)
+        const totalSoldUsd = totalSoldBs / (saleData.dolarRate?.rate || 1)
+
         return {
           ...saleData,
-          totalBs: parseFloat(parseFloat(sale.totalBs).toFixed(2)),
-          totalUsd: parseFloat(parseFloat(sale.totalUsd).toFixed(2)),
-          saleDate: sale.sale_date,
-          userName: sale.user ? `${sale.user.first_name} ${sale.user.last_name}` : 'Usuario Desconocido',
-          dolarRateAtSale: parseFloat(parseFloat(sale.dolarRate?.rate || 0).toFixed(2)),
-          currentDolarRate: currentDolarRate ? parseFloat(parseFloat(currentDolarRate.rate).toFixed(2)) : null
+          totalBs: parseFloat(parseFloat(saleData.totalBs).toFixed(2)),
+          totalUsd: parseFloat(parseFloat(saleData.totalUsd).toFixed(2)),
+          totalSoldBs: parseFloat(totalSoldBs.toFixed(2)),
+          totalSoldUsd: parseFloat(totalSoldUsd.toFixed(2)),
+          changeGivenBs: parseFloat(parseFloat(saleData.changeGivenBs || 0).toFixed(2)),
+          changeGivenUsd: parseFloat(parseFloat(saleData.changeGivenUsd || 0).toFixed(2)),
+          saleDate: saleData.sale_date,
+          userName: saleData.user ? `${saleData.user.first_name} ${saleData.user.last_name}` : 'Usuario Desconocido',
+          dolarRateAtSale: parseFloat(parseFloat(saleData.dolarRate?.rate || 0).toFixed(2)),
+          currentDolarRate: currentDolarRate ? parseFloat(parseFloat(currentDolarRate.rate).toFixed(2)) : null,
+          reconciliation: saleData.reconciliation ? {
+            id: saleData.reconciliation.id,
+            lote: saleData.reconciliation.lote,
+            openingDate: saleData.reconciliation.openingDate,
+            closingDate: saleData.reconciliation.closingDate
+          } : null,
+          items: saleData.items ? saleData.items.map(item => ({
+            productName: item.product?.name || 'Producto Desconocido',
+            productCode: item.product?.internalCode || 'N/A',
+            quantity: parseFloat(item.quantity),
+            unitPriceBs: parseFloat(parseFloat(item.unitPriceBs).toFixed(2)),
+            unitPriceUsd: parseFloat((parseFloat(item.unitPriceBs) / (saleData.dolarRate?.rate || 1)).toFixed(2)),
+            subtotalBs: parseFloat(parseFloat(item.subtotalBs).toFixed(2)),
+            subtotalUsd: parseFloat((parseFloat(item.subtotalBs) / (saleData.dolarRate?.rate || 1)).toFixed(2))
+          })) : [],
+          payments: saleData.payments ? saleData.payments.map(payment => ({
+            methodName: payment.paymentMethod?.name || 'Método Desconocido',
+            amount: parseFloat(parseFloat(payment.amount).toFixed(2)),
+            amountUsd: parseFloat((parseFloat(payment.amount) / (saleData.dolarRate?.rate || 1)).toFixed(2)),
+            reference: payment.reference || '',
+            notes: payment.notes || ''
+          })) : []
         }
       })
 
       res.json({
-        sales: salesWithPrices,
+        sales: salesWithCompleteDetails,
         currentDolarRate: currentDolarRate ? parseFloat(currentDolarRate.rate) : null,
-        filters: { startDate, endDate, batch }
+        filters: { startDate, endDate, batch },
+        summary: {
+          totalSales: salesWithCompleteDetails.length,
+          totalAmountBs: parseFloat(salesWithCompleteDetails.reduce((sum, sale) => sum + sale.totalBs, 0).toFixed(2)),
+          totalAmountUsd: parseFloat(salesWithCompleteDetails.reduce((sum, sale) => sum + sale.totalUsd, 0).toFixed(2)),
+          totalSoldBs: parseFloat(salesWithCompleteDetails.reduce((sum, sale) => sum + sale.totalSoldBs, 0).toFixed(2)),
+          totalSoldUsd: parseFloat(salesWithCompleteDetails.reduce((sum, sale) => sum + sale.totalSoldUsd, 0).toFixed(2)),
+          totalChangeGivenBs: parseFloat(salesWithCompleteDetails.reduce((sum, sale) => sum + sale.changeGivenBs, 0).toFixed(2)),
+          totalChangeGivenUsd: parseFloat(salesWithCompleteDetails.reduce((sum, sale) => sum + sale.changeGivenUsd, 0).toFixed(2))
+        }
       })
     } catch (error) {
       console.error("Error fetching detailed sales report:", error)
@@ -792,6 +856,273 @@ const reportsController = {
       })
     } catch (error) {
       console.error("Error fetching product inventory report:", error)
+      res.status(500).json({ error: error.message })
+    }
+  },
+
+  // Reporte de Ventas Detallado por Lotes
+  async getDetailedSalesReportByBatches(req, res) {
+    try {
+      const { startDate, endDate, batch } = req.query
+
+      let whereClause = {}
+
+      // Solo filtrar por status completada si no estamos en desarrollo
+      if (process.env.NODE_ENV === 'production') {
+        whereClause.status = "completada"
+      }
+
+      if (startDate && endDate) {
+        // Convertir las fechas a objetos Date para asegurar compatibilidad
+        const start = new Date(startDate + ' 00:00:00')
+        const end = new Date(endDate + ' 23:59:59')
+
+        whereClause.sale_date = {
+          [Op.between]: [start, end],
+        }
+      }
+
+      // Construir filtro para arqueos
+      let reconciliationWhereClause = {}
+
+      if (batch) {
+        reconciliationWhereClause.lote = { [Op.like]: `%${batch}%` }
+      }
+
+      if (startDate && endDate) {
+        // Filtrar arqueos por fecha de apertura usando el nombre real de la columna
+        reconciliationWhereClause[Op.and] = [
+          sequelize.literal(`DATE(opening_date) >= '${startDate}'`),
+          sequelize.literal(`DATE(opening_date) <= '${endDate}'`)
+        ]
+      }
+
+      // Obtener arqueos
+      const reconciliations = await require('../database/models').CashReconciliation.findAll({
+        where: reconciliationWhereClause,
+        attributes: [
+          'id', 'lote', 'openingDate', 'closingDate', 'totalSales', 'totalSalesUsd'
+        ],
+        order: [['opening_date', 'DESC']]
+      })
+
+      // Obtener ventas para estos arqueos
+      const reconciliationIds = reconciliations.map(r => r.id)
+      const sales = await require('../database/models').Sale.findAll({
+        where: {
+          reconciliationId: { [Op.in]: reconciliationIds },
+          ...(Object.keys(whereClause).length > 0 ? whereClause : {})
+        },
+        include: [
+          {
+            model: User,
+            as: 'user',
+            attributes: ['username', 'first_name', 'last_name']
+          },
+          {
+            model: DolarRate,
+            as: 'dolarRate',
+            attributes: ['rate']
+          },
+          {
+            model: require('../database/models').SaleItem,
+            as: 'items',
+            include: [{
+              model: require('../database/models').Product,
+              as: 'product',
+              attributes: ['name', 'internalCode', 'retailPrice']
+            }],
+            attributes: ['quantity', 'unitPriceBs', 'subtotalBs']
+          },
+          {
+            model: require('../database/models').SalePayment,
+            as: 'payments',
+            include: [{
+              model: require('../database/models').PaymentMethod,
+              as: 'paymentMethod',
+              attributes: ['name']
+            }],
+            attributes: ['amount', 'reference', 'notes']
+          }
+        ],
+        attributes: [
+          'id', 'saleNumber', 'totalUsd', 'totalBs', 'sale_date', 'paymentStatus',
+          'changeGivenBs', 'changeGivenUsd', 'notes', 'reconciliationId'
+        ]
+      })
+
+      // Agrupar ventas por reconciliationId
+      const salesByReconciliation = sales.reduce((acc, sale) => {
+        const recId = sale.reconciliationId
+        if (!acc[recId]) acc[recId] = []
+        acc[recId].push(sale)
+        return acc
+      }, {})
+
+      const currentDolarRate = await DolarRate.findOne({
+        order: [['date', 'DESC']]
+      })
+
+      // Procesar los arqueos con sus ventas
+      const batchesWithSales = reconciliations.map(reconciliation => {
+        const reconciliationData = reconciliation.toJSON()
+        const reconciliationSales = salesByReconciliation[reconciliationData.id] || []
+
+        // Procesar las ventas del arqueo
+        const salesWithDetails = reconciliationSales.map(sale => {
+          const saleData = sale.toJSON()
+          const totalSoldBs = parseFloat(saleData.totalBs) - parseFloat(saleData.changeGivenBs || 0)
+          const totalSoldUsd = totalSoldBs / (saleData.dolarRate?.rate || 1)
+
+          return {
+            ...saleData,
+            totalBs: parseFloat(parseFloat(saleData.totalBs).toFixed(2)),
+            totalUsd: parseFloat(parseFloat(saleData.totalUsd).toFixed(2)),
+            totalSoldBs: parseFloat(totalSoldBs.toFixed(2)),
+            totalSoldUsd: parseFloat(totalSoldUsd.toFixed(2)),
+            changeGivenBs: parseFloat(parseFloat(saleData.changeGivenBs || 0).toFixed(2)),
+            changeGivenUsd: parseFloat(parseFloat(saleData.changeGivenUsd || 0).toFixed(2)),
+            saleDate: saleData.sale_date,
+            userName: saleData.user ? `${saleData.user.first_name} ${saleData.user.last_name}` : 'Usuario Desconocido',
+            dolarRateAtSale: parseFloat(parseFloat(saleData.dolarRate?.rate || 0).toFixed(2)),
+            items: saleData.items ? saleData.items.map(item => ({
+              productName: item.product?.name || 'Producto Desconocido',
+              productCode: item.product?.internalCode || 'N/A',
+              quantity: parseFloat(item.quantity),
+              unitPriceBs: parseFloat(parseFloat(item.unitPriceBs).toFixed(2)),
+              unitPriceUsd: parseFloat((parseFloat(item.unitPriceBs) / (saleData.dolarRate?.rate || 1)).toFixed(2)),
+              subtotalBs: parseFloat(parseFloat(item.subtotalBs).toFixed(2)),
+              subtotalUsd: parseFloat((parseFloat(item.subtotalBs) / (saleData.dolarRate?.rate || 1)).toFixed(2))
+            })) : [],
+            payments: saleData.payments ? saleData.payments.map(payment => ({
+              methodName: payment.paymentMethod?.name || 'Método Desconocido',
+              amount: parseFloat(parseFloat(payment.amount).toFixed(2)),
+              amountUsd: parseFloat((parseFloat(payment.amount) / (saleData.dolarRate?.rate || 1)).toFixed(2)),
+              reference: payment.reference || '',
+              notes: payment.notes || ''
+            })) : []
+          }
+        })
+
+        // Calcular resumen del lote
+        const batchSummary = {
+          totalSales: salesWithDetails.length,
+          totalAmountBs: parseFloat(salesWithDetails.reduce((sum, sale) => sum + sale.totalBs, 0).toFixed(2)),
+          totalAmountUsd: parseFloat(salesWithDetails.reduce((sum, sale) => sum + sale.totalUsd, 0).toFixed(2)),
+          totalSoldBs: parseFloat(salesWithDetails.reduce((sum, sale) => sum + sale.totalSoldBs, 0).toFixed(2)),
+          totalSoldUsd: parseFloat(salesWithDetails.reduce((sum, sale) => sum + sale.totalSoldUsd, 0).toFixed(2)),
+          totalChangeGivenBs: parseFloat(salesWithDetails.reduce((sum, sale) => sum + sale.changeGivenBs, 0).toFixed(2)),
+          totalChangeGivenUsd: parseFloat(salesWithDetails.reduce((sum, sale) => sum + sale.changeGivenUsd, 0).toFixed(2))
+        }
+
+        return {
+          ...reconciliationData,
+          openingDate: reconciliationData.openingDate,
+          closingDate: reconciliationData.closingDate,
+          sales: salesWithDetails,
+          summary: batchSummary
+        }
+      })
+
+      // Calcular resumen general
+      const overallSummary = {
+        totalBatches: batchesWithSales.length,
+        totalSales: batchesWithSales.reduce((sum, batch) => sum + batch.summary.totalSales, 0),
+        totalAmountBs: parseFloat(batchesWithSales.reduce((sum, batch) => sum + batch.summary.totalAmountBs, 0).toFixed(2)),
+        totalAmountUsd: parseFloat(batchesWithSales.reduce((sum, batch) => sum + batch.summary.totalAmountUsd, 0).toFixed(2)),
+        totalSoldBs: parseFloat(batchesWithSales.reduce((sum, batch) => sum + batch.summary.totalSoldBs, 0).toFixed(2)),
+        totalSoldUsd: parseFloat(batchesWithSales.reduce((sum, batch) => sum + batch.summary.totalSoldUsd, 0).toFixed(2)),
+        totalChangeGivenBs: parseFloat(batchesWithSales.reduce((sum, batch) => sum + batch.summary.totalChangeGivenBs, 0).toFixed(2)),
+        totalChangeGivenUsd: parseFloat(batchesWithSales.reduce((sum, batch) => sum + batch.summary.totalChangeGivenUsd, 0).toFixed(2))
+      }
+
+      // Construir respuesta manualmente sin objetos Sequelize
+      const response = {
+        batches: [],
+        currentDolarRate: currentDolarRate ? parseFloat(currentDolarRate.rate) : null,
+        filters: { startDate, endDate, batch },
+        summary: {
+          totalBatches: overallSummary.totalBatches,
+          totalSales: overallSummary.totalSales,
+          totalAmountBs: overallSummary.totalAmountBs,
+          totalAmountUsd: overallSummary.totalAmountUsd,
+          totalSoldBs: overallSummary.totalSoldBs,
+          totalSoldUsd: overallSummary.totalSoldUsd,
+          totalChangeGivenBs: overallSummary.totalChangeGivenBs,
+          totalChangeGivenUsd: overallSummary.totalChangeGivenUsd
+        }
+      }
+
+      // Procesar batches de manera segura
+      for (const batch of batchesWithSales) {
+        const safeBatch = {
+          id: batch.id,
+          lote: batch.lote,
+          openingDate: batch.openingDate,
+          closingDate: batch.closingDate,
+          totalSales: batch.totalSales,
+          totalSalesUsd: batch.totalSalesUsd,
+          sales: [],
+          summary: {
+            totalSales: batch.summary.totalSales,
+            totalAmountBs: batch.summary.totalAmountBs,
+            totalAmountUsd: batch.summary.totalAmountUsd,
+            totalSoldBs: batch.summary.totalSoldBs,
+            totalSoldUsd: batch.summary.totalSoldUsd,
+            totalChangeGivenBs: batch.summary.totalChangeGivenBs,
+            totalChangeGivenUsd: batch.summary.totalChangeGivenUsd
+          }
+        }
+
+        // Procesar ventas de manera segura
+        for (const sale of batch.sales) {
+          const safeSale = {
+            id: sale.id,
+            saleNumber: sale.saleNumber,
+            totalUsd: sale.totalUsd,
+            totalBs: sale.totalBs,
+            sale_date: sale.sale_date,
+            paymentStatus: sale.paymentStatus,
+            changeGivenBs: sale.changeGivenBs,
+            changeGivenUsd: sale.changeGivenUsd,
+            notes: sale.notes,
+            user: sale.user ? {
+              username: sale.user.username,
+              first_name: sale.user.first_name,
+              last_name: sale.user.last_name
+            } : null,
+            dolarRate: sale.dolarRate ? { rate: sale.dolarRate.rate } : null,
+            items: (sale.items || []).map(item => ({
+              productName: item.productName,
+              productCode: item.productCode,
+              quantity: item.quantity,
+              unitPriceBs: item.unitPriceBs,
+              unitPriceUsd: item.unitPriceUsd,
+              subtotalBs: item.subtotalBs,
+              subtotalUsd: item.subtotalUsd
+            })),
+            payments: (sale.payments || []).map(payment => ({
+              methodName: payment.methodName,
+              amount: payment.amount,
+              amountUsd: payment.amountUsd,
+              reference: payment.reference,
+              notes: payment.notes
+            })),
+            totalSoldBs: sale.totalSoldBs,
+            totalSoldUsd: sale.totalSoldUsd,
+            saleDate: sale.saleDate,
+            userName: sale.userName,
+            dolarRateAtSale: sale.dolarRateAtSale
+          }
+          safeBatch.sales.push(safeSale)
+        }
+
+        response.batches.push(safeBatch)
+      }
+
+      res.json(response)
+    } catch (error) {
+      console.error("Error fetching detailed sales report by batches:", error)
       res.status(500).json({ error: error.message })
     }
   },

@@ -57,8 +57,7 @@ if (app && typeof app.whenReady === 'function') {
       fs.mkdirSync(uploadsDir, { recursive: true })
       console.log(`Directorio de subidas creado en: ${uploadsDir}`)
     }
-    // --- FIN: Crear directorio de subidas ---
-
+    
     await startServer()
 
     await currencyController.updateExchangeRate()
@@ -82,11 +81,13 @@ if (app && typeof app.whenReady === 'function') {
     Menu.setApplicationMenu(null)
   })
 }
-app.on("activate", () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow()
-  }
-})
+if (app && typeof app.on === 'function') {
+  app.on("activate", () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow()
+    }
+  })
+}
 
 if (app && typeof app.on === 'function') {
   app.on("window-all-closed", () => {
