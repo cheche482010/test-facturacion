@@ -117,6 +117,16 @@ export const useReportsStore = defineStore("reports", {
       }
     },
 
+    async fetchInventoryMovementsReport(params) {
+      try {
+        const queryParams = new URLSearchParams(params)
+        const data = await api.get(`/reports/inventory/adjustments?${queryParams}`)
+        return data
+      } catch (error) {
+        throw error
+      }
+    },
+
     async fetchProductInventoryReport(params) {
       try {
         const queryParams = new URLSearchParams(params)

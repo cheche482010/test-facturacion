@@ -1,57 +1,84 @@
 <template>
   <v-card-text>
-    <!-- Filtros para reporte de inventario -->
-    <v-row class="mb-4">
-      <v-col cols="12" md="3">
-        <v-select
-          v-model="filters.status"
-          :items="statusOptions"
-          label="Estado de Stock"
-          density="compact"
-          variant="outlined"
-        ></v-select>
-      </v-col>
-      <v-col cols="12" md="3">
-        <v-btn @click="loadReport" color="primary" :loading="loading">
-          Generar Reporte de Inventario
-        </v-btn>
-      </v-col>
-      <v-col cols="12" md="3">
-        <v-btn @click="exportToExcel" color="success" prepend-icon="mdi-file-excel-outline">
-          Exportar Excel
-        </v-btn>
-      </v-col>
-      <v-col cols="12" md="3">
-        <v-btn @click="exportToPDF" color="error" prepend-icon="mdi-file-pdf-box">
-          Exportar PDF
-        </v-btn>
-      </v-col>
-    </v-row>
+    <!-- Filtros en tiempo real -->
+    <v-card variant="outlined" class="mb-4">
+      <v-card-title class="text-subtitle-1 font-weight-bold">
+        <v-icon class="me-2">mdi-filter-variant</v-icon>
+        Filtros de Movimientos de Inventario
+      </v-card-title>
+      <v-card-text>
+        <v-row>
+          <v-col cols="12" md="3">
+            <v-text-field
+              type="date"
+              v-model="filters.startDate"
+              label="Fecha de Inicio"
+              density="compact"
+              variant="outlined"
+            ></v-text-field>
+          </v-col>
+          <v-col cols="12" md="3">
+            <v-text-field
+              type="date"
+              v-model="filters.endDate"
+              label="Fecha de Fin"
+              density="compact"
+              variant="outlined"
+            ></v-text-field>
+          </v-col>
+          <v-col cols="12" md="3">
+            <v-text-field
+              v-model="filters.searchTerm"
+              label="Buscar Producto"
+              density="compact"
+              variant="outlined"
+              clearable
+              placeholder="Escribe para buscar..."
+            ></v-text-field>
+          </v-col>
+          <v-col cols="12" md="2">
+            <v-select
+              v-model="filters.movementType"
+              :items="movementTypeOptions"
+              label="Tipo de Movimiento"
+              density="compact"
+              variant="outlined"
+            ></v-select>
+          </v-col>
+        </v-row>
+      </v-card-text>
+    </v-card>
 
-    <!-- Tabla de inventario detallado -->
     <v-card>
       <v-card-title>
-        Reporte de Inventario
+        Reporte de Movimientos de Inventario
         <v-spacer></v-spacer>
         <span class="text-caption">Tasa actual: {{ formatCurrency(currentDolarRate) }} Bs/USD</span>
+        <v-spacer></v-spacer>
+        <v-btn @click="exportToExcel" color="success" prepend-icon="mdi-file-excel-outline" class="me-2">
+          Excel
+        </v-btn>
+        <v-btn @click="exportToPDF" color="error" prepend-icon="mdi-file-pdf-box">
+          PDF
+        </v-btn>
       </v-card-title>
       <v-data-table
         :headers="headers"
-        :items="data"
+        :items="movements"
         :loading="loading"
         item-value="id"
         density="compact"
       >
-        <template v-slot:item.currentStock="{ item }">
-          <v-chip :color="item.stockColor" size="small">
-            {{ item.currentStock }}
+        <template v-slot:item.movementDate="{ item }">
+          {{ new Date(item.movementDate).toLocaleString() }}
+        </template>
+        <template v-slot:item.quantity="{ item }">
+          <v-chip :color="item.quantity > 0 ? 'success' : 'error'" size="small">
+            <span class="font-weight-bold">{{ item.quantity > 0 ? '+' : '' }}{{ item.quantity }}</span>
           </v-chip>
         </template>
-        <template v-slot:item.retailPriceBs="{ item }">
-          {{ formatCurrency(item.retailPriceBs) }} Bs
-        </template>
-        <template v-slot:item.retailPriceUsd="{ item }">
-          {{ formatCurrency(item.retailPriceUsd) }} USD
+        <template v-slot:item.movementType="{ item }">
+          <v-chip size="small">{{ item.movementType }}</v-chip>
         </template>
       </v-data-table>
     </v-card>

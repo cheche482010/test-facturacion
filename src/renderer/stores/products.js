@@ -4,6 +4,7 @@ import api from "@/services/api.js"
 export const useProductStore = defineStore("products", {
   state: () => ({
     products: [],
+    categories: [],
     loading: false,
     error: null,
   }),
@@ -102,6 +103,19 @@ export const useProductStore = defineStore("products", {
         this.error = error.message
         console.error("Error uploading product image:", error)
         throw error
+      }
+    },
+
+    async fetchCategories() {
+      this.loading = true
+      try {
+        const data = await api.get("/categories")
+        this.categories = data
+      } catch (error) {
+        this.error = error.message
+        console.error("Error fetching categories:", error)
+      } finally {
+        this.loading = false
       }
     },
   },

@@ -323,7 +323,7 @@ const reportsController = {
         include: [
           {
             model: User,
-            attributes: ["username", "first_name", "last_name"],
+            attributes: ["username", "firstName", "lastName"],
           },
         ],
         attributes: [
@@ -481,7 +481,7 @@ const reportsController = {
           {
             model: User,
             as: 'user',
-            attributes: ['username', 'first_name', 'last_name']
+            attributes: ['username', 'firstName', 'lastName']
           },
           {
             model: DolarRate,
@@ -542,7 +542,7 @@ const reportsController = {
           changeGivenBs: parseFloat(parseFloat(saleData.changeGivenBs || 0).toFixed(2)),
           changeGivenUsd: parseFloat(parseFloat(saleData.changeGivenUsd || 0).toFixed(2)),
           saleDate: saleData.sale_date,
-          userName: saleData.user ? `${saleData.user.first_name} ${saleData.user.last_name}` : 'Usuario Desconocido',
+          userName: saleData.user ? `${saleData.user.firstName} ${saleData.user.lastName}` : 'Usuario Desconocido',
           dolarRateAtSale: parseFloat(parseFloat(saleData.dolarRate?.rate || 0).toFixed(2)),
           currentDolarRate: currentDolarRate ? parseFloat(parseFloat(currentDolarRate.rate).toFixed(2)) : null,
           reconciliation: saleData.reconciliation ? {
@@ -670,10 +670,10 @@ const reportsController = {
     }
   },
 
-  // Reporte de Ajuste de Inventario
+  // Reporte de Movimientos de Inventario
   async getInventoryAdjustmentsReport(req, res) {
     try {
-      const { startDate, endDate, type } = req.query
+      const { startDate, endDate, movementType } = req.query
 
       let whereClause = {
         movementDate: {
@@ -681,11 +681,15 @@ const reportsController = {
         }
       }
 
-      if (type) {
-        if (type === 'sales') {
+      if (movementType && movementType !== 'Todos') {
+        if (movementType === 'Venta') {
           whereClause.reason = 'venta'
-        } else if (type === 'adjustments') {
+        } else if (movementType === 'Ajuste Manual') {
           whereClause.reason = 'ajuste_inventario'
+        } else if (movementType === 'Compra') {
+          whereClause.reason = 'compra'
+        } else if (movementType === 'Devolución') {
+          whereClause.reason = { [Op.in]: ['devolucion_cliente', 'devolucion_proveedor'] }
         }
       }
 
@@ -700,7 +704,7 @@ const reportsController = {
           {
             model: User,
             as: 'user',
-            attributes: ['username', 'first_name', 'last_name']
+            attributes: ['username', 'firstName', 'lastName']
           }
         ],
         attributes: [
@@ -718,7 +722,7 @@ const reportsController = {
         ...movement.toJSON(),
         productName: movement.product ? movement.product.name : 'Producto Desconocido',
         productCode: movement.product ? movement.product.internalCode : 'N/A',
-        userName: movement.user ? `${movement.user.first_name} ${movement.user.last_name}` : 'Usuario Desconocido',
+        userName: movement.user ? `${movement.user.firstName} ${movement.user.lastName}` : 'Usuario Desconocido',
         quantity: parseFloat(movement.quantity),
         unitCostBs: currentDolarRate ?
           parseFloat((parseFloat(movement.unitCost) * parseFloat(currentDolarRate.rate)).toFixed(2)) : parseFloat((0).toFixed(2)),
@@ -917,7 +921,7 @@ const reportsController = {
           {
             model: User,
             as: 'user',
-            attributes: ['username', 'first_name', 'last_name']
+            attributes: ['username', 'firstName', 'lastName']
           },
           {
             model: DolarRate,
@@ -983,7 +987,7 @@ const reportsController = {
             changeGivenBs: parseFloat(parseFloat(saleData.changeGivenBs || 0).toFixed(2)),
             changeGivenUsd: parseFloat(parseFloat(saleData.changeGivenUsd || 0).toFixed(2)),
             saleDate: saleData.sale_date,
-            userName: saleData.user ? `${saleData.user.first_name} ${saleData.user.last_name}` : 'Usuario Desconocido',
+            userName: saleData.user ? `${saleData.user.firstName} ${saleData.user.lastName}` : 'Usuario Desconocido',
             dolarRateAtSale: parseFloat(parseFloat(saleData.dolarRate?.rate || 0).toFixed(2)),
             items: saleData.items ? saleData.items.map(item => ({
               productName: item.product?.name || 'Producto Desconocido',

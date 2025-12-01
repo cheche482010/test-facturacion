@@ -1,4 +1,4 @@
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useReportsStore } from '@/stores/reports'
 import { formatCurrency } from '@/utils/formatters'
 import * as XLSX from 'xlsx'
@@ -16,49 +16,59 @@ export default {
   setup(props) {
     const reportsStore = useReportsStore()
     const loading = ref(false)
-    const data = ref([])
+    const movements = ref([])
 
     const filters = ref({
-      status: 'all'
+      startDate: new Date(new Date().setDate(new Date().getDate() - 7)).toISOString().substr(0, 10),
+      endDate: new Date().toISOString().substr(0, 10),
+      searchTerm: '',
+      movementType: 'Todos'
     })
 
-    const statusOptions = [
-      { title: 'Todos', value: 'all' },
-      { title: 'Stock Bajo', value: 'low' },
-      { title: 'Agotado', value: 'out' }
+    const movementTypeOptions = [
+      'Todos',
+      'Venta',
+      'Ajuste Manual',
+      'Compra',
+      'Devolución'
     ]
 
     const headers = [
-      { title: 'Código', key: 'internalCode' },
-      { title: 'Producto', key: 'name' },
-      { title: 'Stock', key: 'currentStock', align: 'center' },
-      { title: 'Precio Venta BS', key: 'retailPriceBs', align: 'end' },
-      { title: 'Precio Venta USD', key: 'retailPriceUsd', align: 'end' },
-      { title: 'Estado', key: 'status' }
+      { title: 'Fecha', key: 'movementDate' },
+      { title: 'Producto', key: 'productName' },
+      { title: 'Tipo', key: 'movementType', align: 'center' },
+      { title: 'Cantidad', key: 'quantity', align: 'center' },
+      { title: 'Stock Anterior', key: 'previousStock', align: 'center' },
+      { title: 'Stock Nuevo', key: 'newStock', align: 'center' },
+      { title: 'Usuario', key: 'userName' },
+      { title: 'Referencia', key: 'referenceId' }
     ]
 
     const loadReport = async () => {
       loading.value = true
       try {
         const params = { ...filters.value }
-        const result = await reportsStore.fetchDetailedInventoryReport(params)
-        data.value = result.products
+        if (params.movementType === 'Todos') {
+          delete params.movementType
+        }
+        const data = await reportsStore.fetchInventoryMovementsReport(params)
+        movements.value = data.movements
       } catch (error) {
         console.error('Error loading inventory report:', error)
       } finally {
         loading.value = false
       }
     }
-
+    
     const exportToExcel = () => {
-      if (data.value.length === 0) return
+      if (movements.value.length === 0) return
       const worksheetData = [
         headers.map(h => h.title),
-        ...data.value.map(item =>
+        ...movements.value.map(item =>
           headers.map(h => {
             const value = item[h.key]
-            if (h.key.includes('Bs') || h.key.includes('Usd')) {
-              return parseFloat(value) || 0
+            if (h.key === 'movementDate') {
+              return new Date(value).toLocaleString()
             }
             return value
           })
@@ -66,13 +76,12 @@ export default {
       ]
 
       const worksheet = XLSX.utils.aoa_to_sheet(worksheetData)
-      const workbook = XLSX.utils.book_new()
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Inventario')
-      XLSX.writeFile(workbook, 'reporte-inventario.xlsx')
+      const workbook = XLSX.utils.book_new() 
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Movimientos de Inventario')
+      XLSX.writeFile(workbook, 'reporte-movimientos-inventario.xlsx')
     }
 
     const exportToPDF = () => {
-      if (data.value.length === 0) return
       const doc = new jsPDF()
 
       doc.setFontSize(16)
@@ -82,13 +91,13 @@ export default {
       doc.text(`Fecha de generación: ${new Date().toLocaleDateString()}`, 14, 30)
       doc.text(`Tasa USD actual: ${formatCurrency(props.currentDolarRate)} Bs/USD`, 14, 35)
 
-      const tableData = data.value.map(item =>
+      const tableData = movements.value.map(item =>
         headers.map(h => {
           const value = item[h.key]
-          if (h.key.includes('Bs') || h.key.includes('Usd')) {
-            return formatCurrency(parseFloat(value) || 0)
+          if (h.key === 'movementDate') {
+            return new Date(value).toLocaleString()
           }
-          return value
+          return value ?? ''
         })
       )
 
@@ -100,8 +109,10 @@ export default {
         headStyles: { fillColor: [41, 128, 185] }
       })
 
-      doc.save('reporte-inventario.pdf')
+      doc.save('reporte-movimientos-inventario.pdf')
     }
+
+    watch(filters, loadReport, { deep: true })
 
     onMounted(() => {
       loadReport()
@@ -109,9 +120,9 @@ export default {
 
     return {
       loading,
-      data,
+      movements,
       filters,
-      statusOptions,
+      movementTypeOptions,
       headers,
       loadReport,
       exportToExcel,
