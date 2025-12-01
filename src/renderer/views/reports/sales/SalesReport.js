@@ -1,7 +1,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useReportsStore } from '@/stores/reports'
 import { formatCurrency } from '@/utils/formatters'
-import * as XLSX from 'xlsx'
+import ExcelJS from 'exceljs'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 
@@ -115,121 +115,214 @@ export default {
         return
       }
 
-      const workbook = XLSX.utils.book_new()
+      const workbook = new ExcelJS.Workbook()
+      const worksheet = workbook.addWorksheet('Reporte Completo')
 
-      // Hoja de resumen general
-      const summaryHeaders = ['Métrica', 'Valor']
-      const summaryData = [
-        ['Total Lotes', summary.value?.totalBatches || 0],
-        ['Total Ventas', summary.value?.totalSales || 0],
-        ['Monto Total BS', summary.value?.totalAmountBs || 0],
-        ['Total Vendido BS', summary.value?.totalSoldBs || 0],
-        ['Cambio Total BS', summary.value?.totalChangeGivenBs || 0],
-        ['Fecha de Generación', new Date().toLocaleDateString()],
-        ['Tasa USD Actual', formatCurrency(props.currentDolarRate)]
+      // Configurar columnas
+      worksheet.columns = [
+        { width: 20 }, // Columna A - títulos y contenido principal
+        { width: 30 }, // Columna B
+        { width: 15 }, // Columna C
+        { width: 20 }, // Columna D
+        { width: 12 }, // Columna E
+        { width: 12 }, // Columna F
+        { width: 12 }  // Columna G
       ]
-      const summaryWorksheet = XLSX.utils.aoa_to_sheet([summaryHeaders, ...summaryData])
-      XLSX.utils.book_append_sheet(workbook, summaryWorksheet, 'Resumen General')
 
-      // Crear una hoja por lote con estructura jerárquica completa
+      let currentRow = 1
+
+      // Encabezado general - azul
+      const titleRow = worksheet.addRow(['', 'REPORTE DE VENTAS POR LOTES - DETALLADO'])
+      titleRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1976D2' } }
+      titleRow.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 14 }
+      
+      currentRow++
+
+      worksheet.addRow(['', 'Sistema de Facturación'])
+      currentRow++
+
+      worksheet.addRow(['', 'Fecha de generación:', new Date().toLocaleDateString()])
+      currentRow++
+
+      worksheet.addRow([]) // Fila vacía
+      currentRow++
+
       batches.forEach((batch, batchIndex) => {
-        const batchData = []
+        const batchLote = batch.lote || 'N/A'
+        const batchOpeningDate = batch.openingDate ? new Date(batch.openingDate).toLocaleDateString() : 'N/A'
+        const batchClosingDate = batch.closingDate ? new Date(batch.closingDate).toLocaleDateString() : 'En curso'
 
-        // Encabezado del lote
-        batchData.push(['REPORTE DE VENTAS POR LOTES - DETALLADO'])
-        batchData.push(['Sistema de Facturación'])
-        batchData.push(['Fecha de generación:', new Date().toLocaleDateString()])
-        batchData.push(['Tasa USD actual:', formatCurrency(props.currentDolarRate) + ' Bs/USD'])
-        batchData.push([])
+        // Información del lote - verde
+        const batchInfoRow = worksheet.addRow(['', 'INFORMACIÓN DEL LOTE: ' + batchLote])
+        batchInfoRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF388E3C' } }
+        batchInfoRow.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 12 }
+        
+        currentRow++
 
-        batchData.push(['INFORMACIÓN DEL LOTE'])
-        batchData.push(['Lote', batch.lote || 'N/A'])
-        batchData.push(['Fecha Apertura', batch.openingDate ? new Date(batch.openingDate).toLocaleDateString() : 'N/A'])
-        batchData.push(['Fecha Cierre', batch.closingDate ? new Date(batch.closingDate).toLocaleDateString() : 'En curso'])
-        batchData.push(['Total Ventas', batch.summary?.totalSales || 0])
-        batchData.push(['Total BS', batch.summary?.totalAmountBs || 0])
-        batchData.push(['Vendido BS', batch.summary?.totalSoldBs || 0])
-        batchData.push(['Cambio BS', batch.summary?.totalChangeGivenBs || 0])
-        batchData.push([]) // Fila vacía
+        worksheet.addRow(['', 'Lote', batchLote])
+        currentRow++
 
-        // Verificar si hay ventas en el lote
-        if (batch.sales && batch.sales.length > 0) {
-          // Ventas del lote
-          batchData.push(['VENTAS DEL LOTE'])
-          batchData.push(['Número Venta', 'Fecha', 'Usuario', 'Total BS', 'Vendido BS', 'Cambio BS', 'Productos', 'Métodos Pago'])
+        worksheet.addRow(['', 'Fecha Apertura', batchOpeningDate])
+        currentRow++
 
+        worksheet.addRow(['', 'Fecha Cierre', batchClosingDate])
+        currentRow++
+
+        worksheet.addRow(['', 'Total Ventas', batch.summary?.totalSales || 0])
+        currentRow++
+
+        worksheet.addRow(['', 'Total BS', batch.summary?.totalAmountBs || 0])
+        currentRow++
+
+        worksheet.addRow(['', 'Vendido BS', batch.summary?.totalSoldBs || 0])
+        currentRow++
+
+        worksheet.addRow(['', 'Cambio BS', batch.summary?.totalChangeGivenBs || 0])
+        currentRow++
+
+        worksheet.addRow([]) 
+        currentRow++
+
+        if (batch.sales && Array.isArray(batch.sales) && batch.sales.length > 0) {
           batch.sales.forEach((sale, saleIndex) => {
-            batchData.push([
-              sale.saleNumber || 'N/A',
-              sale.saleDate ? new Date(sale.saleDate).toLocaleDateString() : 'N/A',
-              sale.userName || 'Usuario Desconocido',
-              sale.totalBs || 0,
-              sale.totalSoldBs || 0,
-              sale.changeGivenBs || 0,
-              sale.items ? sale.items.length : 0,
-              sale.payments ? sale.payments.length : 0
-            ])
+            
+            worksheet.addRow(['', '----------------------------------- INICIO DE VENTA -------------------------------'])
+            worksheet.addRow([]) 
 
-            // Productos de la venta
-            batchData.push([]) // Fila vacía
-            batchData.push(['    PRODUCTOS VENDIDOS', '', '', '', ''])
-            batchData.push(['    Nombre', 'Código', 'Cantidad', 'Total BS'])
+            const saleRow = worksheet.addRow(['','VENTA: ' + (sale.saleNumber || 'N/A')])
+            saleRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFEB3B' } }
+            saleRow.font = { bold: true, color: { argb: 'FF000000' }, size: 12 }
+            
+            currentRow++
+
+            worksheet.addRow([]) 
+            currentRow++
+
+            worksheet.addRow(['', 'Fecha:', sale.saleDate ? new Date(sale.saleDate).toLocaleDateString() : 'N/A'])
+            currentRow++
+
+            worksheet.addRow(['', 'Usuario:', sale.userName || 'Usuario Desconocido'])
+            currentRow++
+
+            worksheet.addRow(['', 'Total BS:', sale.totalBs || 0])
+            currentRow++
+
+            worksheet.addRow(['', 'Vendido BS:', sale.totalSoldBs || 0])
+            currentRow++
+
+            worksheet.addRow(['', 'Cambio BS:', sale.changeGivenBs || 0])
+            currentRow++
+
+            worksheet.addRow([]) // Fila vacía
+            currentRow++
+
+            // Productos de la venta - indentado
+            const productsRow = worksheet.addRow(['', 'PRODUCTOS VENDIDOS'])
+            productsRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFBBDEFB' } }
+            productsRow.font = { bold: true, color: { argb: 'FF000000' }, size: 11 }
+            productsRow.alignment = { horizontal: 'center' }
+            currentRow++
+
+            // Headers de productos - indentado
+            const productsHeaderRow = worksheet.addRow(['', 'Nombre', 'Código', 'Cantidad', 'Precio Unitario BS', 'Subtotal BS'])
+            productsHeaderRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE3F2FD' } }
+            productsHeaderRow.font = { bold: true }
+            currentRow++
 
             if (sale.items && Array.isArray(sale.items) && sale.items.length > 0) {
               sale.items.forEach(item => {
-                batchData.push([
-                  '    ' + (item.productName || item.name || 'Producto Desconocido'),
+                worksheet.addRow([
+                  '',
+                  item.productName || item.name || 'Producto Desconocido',
                   item.productCode || item.internalCode || 'N/A',
                   item.quantity || 0,
-                  item.subtotalBs || item.totalBs || 0
+                  item.unitPriceBs || 0,
+                  item.subtotalBs || 0
                 ])
+                currentRow++
               })
             } else {
-              batchData.push(['    No hay productos registrados', '', '', ''])
+              worksheet.addRow(['', 'No hay productos registrados', '', '', '', ''])
+              currentRow++
             }
 
-            // Métodos de pago de la venta
-            batchData.push([]) // Fila vacía
-            batchData.push(['    MÉTODOS DE PAGO', '', '', ''])
-            batchData.push(['    Método', 'Monto BS', 'Referencia'])
+            worksheet.addRow([]) // Fila vacía
+            currentRow++
+
+            // Métodos de pago de la venta - indentado
+            const paymentsRow = worksheet.addRow(['', 'MÉTODOS DE PAGO'])
+            paymentsRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC8E6C9' } }
+            paymentsRow.font = { bold: true, color: { argb: 'FF000000' }, size: 11 }
+            paymentsRow.alignment = { horizontal: 'center' }
+            currentRow++
+
+            // Headers de pagos - indentado
+            const paymentsHeaderRow = worksheet.addRow(['', 'Método', 'Monto BS', 'Referencia'])
+            paymentsHeaderRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE3F2FD' } }
+            paymentsHeaderRow.font = { bold: true }
+            currentRow++
 
             if (sale.payments && Array.isArray(sale.payments) && sale.payments.length > 0) {
               sale.payments.forEach(payment => {
-                batchData.push([
-                  '    ' + (payment.methodName || payment.name || 'Método Desconocido'),
+                worksheet.addRow([
+                  '',
+                  payment.methodName || payment.name || 'Método Desconocido',
                   payment.amount || 0,
                   payment.reference || ''
                 ])
+                currentRow++
               })
             } else {
-              batchData.push(['    No hay métodos de pago registrados', '', ''])
+              worksheet.addRow(['', 'No hay métodos de pago registrados', '', ''])
+              currentRow++
             }
 
-            batchData.push([]) // Fila vacía entre ventas
-            batchData.push(['--- FIN DE VENTA ---', '', '', '', ''])
-            batchData.push([]) // Fila vacía
+            worksheet.addRow([]) // Fila vacía entre ventas
+            currentRow++
+
+            worksheet.addRow(['', '----------------------------------- FIN DE VENTA -------------------------------'])
+            worksheet.addRow([])
+            currentRow++
+
+            worksheet.addRow([]) // Fila vacía
+            currentRow++
           })
         } else {
-          batchData.push(['No hay ventas registradas en este lote'])
+          worksheet.addRow(['No hay ventas registradas en este lote'])
+          currentRow++
+
+          worksheet.addRow([])
+          currentRow++
         }
+        
+        // Separador entre lotes: solo si hay más de un lote y no es el último
+        if (batches.length > 1 && batchIndex < batches.length - 1) {
+          worksheet.addRow([])
+          worksheet.addRow(['================================================================================','================================================================================', 'CAMBIO DE LOTE', '================================================================================ '])
+          currentRow++
 
-        const batchWorksheet = XLSX.utils.aoa_to_sheet(batchData)
-
-        // Aplicar estilos básicos
-        if (batchWorksheet['!cols']) {
-          batchWorksheet['!cols'] = [
-            { width: 20 }, // Columna A
-            { width: 15 }, // Columna B
-            { width: 12 }, // Columna C
-            { width: 12 }, // Columna D
-            { width: 12 }, // Columna E
-          ]
+          worksheet.addRow([])
+          currentRow++
         }
-
-        XLSX.utils.book_append_sheet(workbook, batchWorksheet, `Lote ${batch.lote || batchIndex + 1}`)
       })
 
-      XLSX.writeFile(workbook, 'reporte-ventas-por-lotes-completo.xlsx')
+      // Determinar el nombre del archivo
+      let fileName = 'reporte-completo.xlsx'
+      if (batches.length === 1 && batches[0].lote) {
+        const loteName = batches[0].lote.replace(/[^a-z0-9]/gi, '_').toLowerCase()
+        fileName = `reporte-lote-${loteName}.xlsx`
+      }
+
+      // Generar el archivo
+      const buffer = await workbook.xlsx.writeBuffer()
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = fileName
+      a.click()
+      window.URL.revokeObjectURL(url)
+
       console.log('Archivo Excel generado y enviado al navegador para descarga')
     }
 
@@ -498,7 +591,7 @@ export default {
     watch(() => filters.value.batch, () => loadReport())
 
     onMounted(() => {
-      loadReport()
+      loadAllReport()
     })
 
     return {

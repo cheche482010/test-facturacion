@@ -12,11 +12,8 @@ const seedSales = async () => {
       const saleCount = await Sale.count({ transaction })
       if (saleCount > 0) {
         console.log("     -> Eliminando ventas existentes para crear datos de prueba...")
-        // Resetear stock de productos a un valor inicial
         await Product.update({ currentStock: 100 }, { where: {}, transaction })
         console.log("     -> Stock de productos reseteado a 100.")
-  
-        // Eliminar en orden inverso por dependencias
         await SalePayment.destroy({ where: {}, transaction })
         await SaleItem.destroy({ where: {}, transaction })
         await Sale.destroy({ where: {}, transaction })
@@ -41,29 +38,26 @@ const seedSales = async () => {
         return
       }
 
-      // Crear 5 lotes con 5 ventas cada uno, fechas diferentes
       const salesData = []
       const numLotes = 5
       const ventasPorLote = 5
 
       for (let lote = 0; lote < numLotes; lote++) {
         const loteDate = new Date()
-        loteDate.setDate(loteDate.getDate() - (numLotes - lote)) // Fechas decrecientes: hoy-5, hoy-4, ..., hoy-1
+        loteDate.setDate(loteDate.getDate() - (numLotes - lote)) 
 
         for (let venta = 0; venta < ventasPorLote; venta++) {
-          // Seleccionar 2-5 productos aleatorios
-          const numProducts = Math.floor(Math.random() * 4) + 2 // 2-5
+          const numProducts = Math.floor(Math.random() * 4) + 2 
           const selectedProducts = []
           const quantities = []
 
           for (let i = 0; i < numProducts; i++) {
             const randomIndex = Math.floor(Math.random() * products.length)
             selectedProducts.push(products[randomIndex])
-            quantities.push(Math.floor(Math.random() * 5) + 1) // 1-5
+            quantities.push(Math.floor(Math.random() * 5) + 1) 
           }
 
-          // Seleccionar 2-3 métodos de pago aleatorios
-          const numPayments = Math.floor(Math.random() * 2) + 2 // 2-3
+          const numPayments = Math.floor(Math.random() * 2) + 2 
           const selectedMethods = []
           const usedIndices = new Set()
 
@@ -94,13 +88,11 @@ const seedSales = async () => {
           sum + (Number(product.retailPrice) * quantities[index]), 0)
         const totalBs = totalUsd * 36.5
 
-        // Decidir si dar cambio (aleatoriamente, ~30% de las ventas)
         const giveChange = Math.random() < 0.3
         let changeGivenBs = 0
         let totalPaid = totalBs
 
         if (giveChange) {
-          // Agregar un cambio aleatorio entre 5 y 20 BS
           changeGivenBs = Math.floor(Math.random() * 16) + 5
           totalPaid = totalBs + changeGivenBs
         }
@@ -116,7 +108,6 @@ const seedSales = async () => {
           changeGivenBs: changeGivenBs,
         }, { transaction })
 
-        // Crear items de venta
         const saleItems = saleProducts.map((product, index) => ({
           saleId: sale.id,
           productId: product.id,
@@ -126,7 +117,6 @@ const seedSales = async () => {
         }))
         await SaleItem.bulkCreate(saleItems, { transaction })
 
-        // Crear pagos
         const numPayments = saleInfo.paymentMethods.length
         let remainingAmount = totalPaid
         const salePayments = saleInfo.paymentMethods.map((pm, index) => {
@@ -134,7 +124,6 @@ const seedSales = async () => {
           if (index === numPayments - 1) {
             amount = remainingAmount
           } else {
-            // Distribuir aleatoriamente, dejando algo para el último
             const minAmount = 1
             const maxAmount = remainingAmount - (numPayments - index - 1) * minAmount
             amount = Math.floor(Math.random() * (maxAmount - minAmount + 1)) + minAmount
@@ -148,7 +137,6 @@ const seedSales = async () => {
         })
         await SalePayment.bulkCreate(salePayments, { transaction })
 
-        // Actualizar stock y movimientos
         for (const item of saleItems) {
           const product = saleProducts.find(p => p.id === item.productId)
           const previousStock = product.currentStock
@@ -178,7 +166,6 @@ const seedSales = async () => {
 
       console.log(`     -> ${salesData.length} ventas creadas en ${numLotes} lotes con métodos de pago variados y cambios incluidos.`)
 
-      // Crear arqueos de caja para cada lote
       console.log("     -> Creando arqueos de caja para cada lote...")
       const loteDates = [...new Set(salesData.map(s => s.saleDate.toISOString().split('T')[0]))]
 
@@ -188,7 +175,6 @@ const seedSales = async () => {
         const nextDay = new Date(loteDate)
         nextDay.setDate(nextDay.getDate() + 1)
 
-        // Obtener ventas del lote
         const loteSales = await Sale.findAll({
           where: sequelize.where(
             sequelize.fn('DATE', sequelize.col('sale_date')),
@@ -207,11 +193,9 @@ const seedSales = async () => {
         })
 
         if (loteSales.length > 0) {
-          // Calcular totales
           const totalSales = loteSales.reduce((sum, sale) => sum + parseFloat(sale.totalBs), 0)
           const totalSalesUsd = loteSales.reduce((sum, sale) => sum + parseFloat(sale.totalUsd), 0)
 
-          // Calcular totales por método de pago
           const paymentTotals = {}
           let totalCashBs = 0
           let totalCashUsd = 0
@@ -237,9 +221,9 @@ const seedSales = async () => {
             lote: `LOTE-${loteIndex + 1}`,
             openingDate: loteDate,
             closingDate: nextDay,
-            openingBalanceBs: 0, // Asumir 0 para datos de prueba
+            openingBalanceBs: 0, 
             openingBalanceUsd: 0,
-            closingBalanceBs: totalCashBs, // Saldo final efectivo
+            closingBalanceBs: totalCashBs, 
             closingBalanceUsd: totalCashUsd,
             totalSales: totalSales,
             totalSalesUsd: totalSalesUsd,
@@ -247,8 +231,7 @@ const seedSales = async () => {
             notes: `Arqueo automático para lote ${loteDateStr}`,
             paymentMethodBreakdown: JSON.stringify(paymentTotals)
           }, { transaction })
-
-          // Asignar reconciliationId a las ventas del lote
+          
           await Sale.update(
             { reconciliationId: reconciliation.id },
             {

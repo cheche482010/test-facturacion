@@ -5,16 +5,15 @@ class DolarService {
   static async fetchDolarRate() {
     try {
       const response = await axios.get('https://ve.dolarapi.com/v1/dolares/oficial', {
-        timeout: 10000 // 10 segundos timeout
+        timeout: 10000 
       })
 
       const data = response.data
       if (data && data.promedio) {
         const rate = parseFloat(data.promedio).toFixed(2)
         const today = new Date()
-        today.setHours(0, 0, 0, 0) // Reset time to start of day
+        today.setHours(0, 0, 0, 0) 
 
-        // Check if we already have a rate for today
         const existingRate = await DolarRate.findOne({
           where: {
             date: today
@@ -22,7 +21,6 @@ class DolarService {
         })
 
         if (existingRate) {
-          // Update existing rate
           await existingRate.update({
             rate: rate,
             source: data.fuente || 'oficial',
@@ -30,7 +28,6 @@ class DolarService {
           })
           return existingRate
         } else {
-          // Create new rate
           const newRate = await DolarRate.create({
             rate: rate,
             date: today,
