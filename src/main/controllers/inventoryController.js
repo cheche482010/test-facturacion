@@ -1,4 +1,5 @@
-const { InventoryMovement, Product, User, Category, sequelize } = require("../database/models")
+const { InventoryMovement, Product, User, Category } = require("../database/models")
+const { sequelize } = require("../database/connection")
 const { Op } = require("sequelize")
 
 const inventoryController = {
@@ -58,6 +59,19 @@ const inventoryController = {
     try {
       const { productId, newStock, reason, notes } = req.body
 
+      // Map frontend reasons to database enum values
+      const reasonMapping = {
+        'inventario_fisico': 'ajuste_inventario',
+        'ajuste_diferencia': 'ajuste_inventario',
+        'producto_danado': 'merma',
+        'producto_vencido': 'merma',
+        'robo_perdida': 'robo',
+        'error_sistema': 'ajuste_inventario',
+        'otro': 'ajuste_inventario'
+      }
+
+      const dbReason = reasonMapping[reason] || 'ajuste_inventario'
+
       const product = await Product.findByPk(productId, { transaction })
       if (!product) {
         await transaction.rollback()
@@ -75,7 +89,7 @@ const inventoryController = {
           productId,
           userId: req.user?.id || 1,
           movementType: movementType,
-          reason: reason || "ajuste_inventario",
+          reason: dbReason,
           quantity,
           previousStock,
           newStock,
@@ -111,6 +125,19 @@ const inventoryController = {
 
     try {
       const { product, category, adjustmentType, adjustmentValue, reason, notes } = req.body
+
+      // Map frontend reasons to database enum values
+      const reasonMapping = {
+        'inventario_fisico': 'ajuste_inventario',
+        'ajuste_diferencia': 'ajuste_inventario',
+        'producto_danado': 'merma',
+        'producto_vencido': 'merma',
+        'robo_perdida': 'robo',
+        'error_sistema': 'ajuste_inventario',
+        'otro': 'ajuste_inventario'
+      }
+
+      const dbReason = reasonMapping[reason] || 'ajuste_inventario'
 
       const whereClause = {}
       if (product) whereClause.id = product
@@ -150,7 +177,7 @@ const inventoryController = {
               productId: product.id,
               userId: req.user?.id || 1,
               movementType,
-              reason: reason || "ajuste_masivo",
+              reason: dbReason,
               quantity,
               previousStock,
               newStock,

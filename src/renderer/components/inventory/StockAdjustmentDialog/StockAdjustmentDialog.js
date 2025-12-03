@@ -1,4 +1,4 @@
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, getCurrentInstance } from 'vue'
 import { useInventoryStore } from '../../../stores/inventory'
 import { useCategoryStore } from '../../../stores/categories'
 import { useProductStore } from '../../../stores/products'
@@ -13,6 +13,7 @@ export default {
     const inventoryStore = useInventoryStore()
     const categoryStore = useCategoryStore()
     const productStore = useProductStore()
+    const instance = getCurrentInstance()
 
     categoryStore.fetchCategories()
     if (!productStore.products || productStore.products.length === 0) {
@@ -114,6 +115,7 @@ export default {
             formData.value.reason,
             formData.value.notes
           )
+          alert('Stock ajustado correctamente')
         } else {
           await inventoryStore.massAdjustment({
             product: formData.value.product,
@@ -123,6 +125,7 @@ export default {
             reason: formData.value.reason,
             notes: formData.value.notes
           })
+          alert('Ajuste masivo aplicado correctamente')
         }
         emit('saved')
       } catch (error) {

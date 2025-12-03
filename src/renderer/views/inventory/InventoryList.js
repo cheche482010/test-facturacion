@@ -27,6 +27,7 @@ export default {
     const startDate = ref('')
     const endDate = ref('')
     const movements = ref([])
+    const currentDolarRate = ref(null)
 
     const products = computed(() => productStore.products)
 
@@ -195,6 +196,19 @@ export default {
       return colors[type] || 'info'
     }
 
+    const getReasonText = (reason) => {
+      const reasons = {
+        'compra': 'Compra',
+        'venta': 'Venta',
+        'ajuste_inventario': 'Ajuste de Inventario',
+        'devolucion_cliente': 'Devolución de Cliente',
+        'devolucion_proveedor': 'Devolución a Proveedor',
+        'merma': 'Merma',
+        'robo': 'Robo/Pérdida'
+      }
+      return reasons[reason] || reason
+    }
+
     const formatDate = (date) => {
       return new Date(date).toLocaleDateString('es-ES')
     }
@@ -217,9 +231,28 @@ export default {
       return colors[status]
     }
 
+    const fetchCurrentDolarRate = async () => {
+      try {
+        const result = await window.electronAPI.invoke('get-current-dolar-rate')
+        if (result.success && result.data) {
+          const data = result.data.dataValues || result.data
+          currentDolarRate.value = data
+        }
+      } catch (error) {
+        console.error('Error fetching current dolar rate:', error)
+      }
+    }
+
+    const formatBsEquivalent = (usdAmount) => {
+      if (!currentDolarRate.value || !currentDolarRate.value.rate || !usdAmount || isNaN(usdAmount)) return ''
+      const bsAmount = parseFloat(usdAmount) * parseFloat(currentDolarRate.value.rate)
+      return formatCurrency(bsAmount)
+    }
+
     onMounted(async () => {
       await loadInventory()
       await loadMovements()
+      await fetchCurrentDolarRate()
     })
 
     const movementHeaders = [
@@ -269,8 +302,10 @@ export default {
       getStockStatusColor,
       getMovementTypeText,
       getMovementTypeColor,
+      getReasonText,
       formatDate,
-      formatCurrency
+      formatCurrency,
+      formatBsEquivalent
     }
   }
 }

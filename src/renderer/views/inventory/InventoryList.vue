@@ -124,13 +124,13 @@
             </template>
             <template v-slot:item.quantity="{ item }">
               <span :class="item.movementType === 'entrada' ? 'text-success' : 'text-error'">
-                {{ item.movementType === 'entrada' ? '+' : '-' }}{{ item.quantity }}
+                {{ item.movementType === 'entrada' ? '+' : '-' }}{{ Math.round(item.quantity) }}
               </span>
             </template>
             <template v-slot:item.priceInfo="{ item }">
               <div class="text-caption">
-                <div>USD: ${{ item.product?.dollarPrice || 0 }}</div>
-                <div>Bs: {{ formatCurrency(item.product?.retailPrice || 0) }}</div>
+                <div>USD: ${{ item.unitCost || 0 }}</div>
+                <div>Bs: {{ formatBsEquivalent(item.unitCost || 0) }}</div>
               </div>
             </template>
             <template v-slot:item.movementDate="{ item }">
@@ -299,7 +299,7 @@
           </v-col>
           <v-col cols="12" md="6">
             <v-text-field
-              :model-value="selectedMovement.quantity"
+              :model-value="Math.round(selectedMovement.quantity)"
               label="Cantidad"
               readonly
               variant="outlined"
@@ -307,40 +307,16 @@
           </v-col>
           <v-col cols="12" md="6">
             <v-text-field
-              :model-value="selectedMovement.previousStock"
-              label="Stock Anterior"
-              readonly
-              variant="outlined"
-            />
-          </v-col>
-          <v-col cols="12" md="6">
-            <v-text-field
-              :model-value="selectedMovement.newStock"
-              label="Stock Nuevo"
-              readonly
-              variant="outlined"
-            />
-          </v-col>
-          <v-col cols="12" md="6">
-            <v-text-field
-              :model-value="formatCurrency(selectedMovement.unitCost)"
-              label="Costo Unitario"
-              readonly
-              variant="outlined"
-            />
-          </v-col>
-          <v-col cols="12" md="6">
-            <v-text-field
-              :model-value="formatCurrency(selectedMovement.totalCost)"
-              label="Costo Total"
-              readonly
-              variant="outlined"
-            />
-          </v-col>
-          <v-col cols="12" md="6">
-            <v-text-field
-              :model-value="selectedMovement.reason"
+              :model-value="getReasonText(selectedMovement.reason)"
               label="Motivo"
+              readonly
+              variant="outlined"
+            />
+          </v-col>
+          <v-col v-if="selectedMovement.referenceType === 'sale'" cols="12" md="6">
+            <v-text-field
+              :model-value="selectedMovement.notes.replace('Venta ', '')"
+              label="Número de Factura"
               readonly
               variant="outlined"
             />

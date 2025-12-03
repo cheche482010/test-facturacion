@@ -103,7 +103,7 @@
                       size="small"
                       variant="tonal"
                     >
-                      {{ movement.movementType === 'entrada' ? '+' : '-' }}{{ movement.quantity }} {{ product.unit }}
+                      {{ movement.movementType === 'entrada' ? '+' : '-' }}{{ Math.round(movement.quantity) }} {{ product.unit }}
                     </v-chip>
                     <div class="text-caption mt-1">
                       {{ formatDate(movement.movementDate) }}

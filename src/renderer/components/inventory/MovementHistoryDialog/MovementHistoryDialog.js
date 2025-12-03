@@ -83,15 +83,15 @@ export default {
       const reasons = {
         'compra': 'Compra',
         'venta': 'Venta',
-        'ajuste_inventario': 'Ajuste de inventario',
-        'devolucion_cliente': 'Devolución de cliente',
-        'devolucion_proveedor': 'Devolución a proveedor',
+        'ajuste_inventario': 'Ajuste de Inventario',
+        'devolucion_cliente': 'Devolución de Cliente',
+        'devolucion_proveedor': 'Devolución a Proveedor',
         'merma': 'Merma',
         'robo': 'Robo/Pérdida',
-        'inventario_inicial': 'Inventario inicial',
-        'inventario_fisico': 'Inventario físico',
-        'producto_danado': 'Producto dañado',
-        'producto_vencido': 'Producto vencido'
+        'inventario_inicial': 'Inventario Inicial',
+        'inventario_fisico': 'Inventario Físico',
+        'producto_danado': 'Producto Dañado',
+        'producto_vencido': 'Producto Vencido'
       }
       return reasons[reason] || reason
     }

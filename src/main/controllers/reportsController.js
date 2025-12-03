@@ -673,23 +673,27 @@ const reportsController = {
   // Reporte de Movimientos de Inventario
   async getInventoryAdjustmentsReport(req, res) {
     try {
-      const { startDate, endDate, movementType } = req.query
+      const { startDate, endDate, movementType, searchTerm } = req.query
 
       let whereClause = {
         movementDate: {
-          [Op.between]: [startDate, endDate],
+          [Op.between]: [new Date(startDate + ' 00:00:00'), new Date(endDate + ' 23:59:59')],
         }
+      }
+
+      if (searchTerm) {
+        whereClause['$product.name$'] = { [Op.like]: `%${searchTerm}%` }
       }
 
       if (movementType && movementType !== 'Todos') {
         if (movementType === 'Venta') {
-          whereClause.reason = 'venta'
+          whereClause.movementType = 'salida'
         } else if (movementType === 'Ajuste Manual') {
-          whereClause.reason = 'ajuste_inventario'
+          whereClause.movementType = 'ajuste'
         } else if (movementType === 'Compra') {
-          whereClause.reason = 'compra'
+          whereClause.movementType = 'entrada'
         } else if (movementType === 'Devolución') {
-          whereClause.reason = { [Op.in]: ['devolucion_cliente', 'devolucion_proveedor'] }
+          whereClause.movementType = 'devolucion'
         }
       }
 

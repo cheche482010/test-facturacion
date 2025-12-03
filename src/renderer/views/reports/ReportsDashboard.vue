@@ -19,17 +19,9 @@
           <v-icon start>mdi-package-variant-closed</v-icon>
           Inventario
         </v-tab>
-        <v-tab value="adjustments">
-          <v-icon start>mdi-swap-horizontal</v-icon>
-          Ajustes
-        </v-tab>
         <v-tab value="products">
           <v-icon start>mdi-tag-multiple</v-icon>
           Productos
-        </v-tab>
-        <v-tab value="finance">
-          <v-icon start>mdi-finance</v-icon>
-          Financiero
         </v-tab>
       </v-tabs>
       <v-divider></v-divider>
@@ -49,24 +41,12 @@
           <InventoryReport :current-dolar-rate="currentDolarRate" />
         </v-window-item>
 
-        <!-- Adjustments Tab -->
-        <v-window-item value="adjustments">
-          <AdjustmentsReport
-            :start-date="startDate"
-            :end-date="endDate"
-            :current-dolar-rate="currentDolarRate"
-          />
-        </v-window-item>
 
         <!-- Products Tab -->
         <v-window-item value="products">
           <ProductsReport :current-dolar-rate="currentDolarRate" />
         </v-window-item>
 
-        <!-- Finance Tab -->
-        <v-window-item value="finance">
-          <FinanceReport :current-dolar-rate="currentDolarRate" />
-        </v-window-item>
       </v-window>
     </v-card>
   </div>
@@ -75,9 +55,7 @@
 <script>
 import SalesReport from './sales/SalesReport.vue'
 import InventoryReport from './inventory/InventoryReport.vue'
-import AdjustmentsReport from './adjustments/AdjustmentsReport.vue'
 import ProductsReport from './products/ProductsReport.vue'
-import FinanceReport from './finance/FinanceReport.vue'
 import reportsDashboardLogic from './ReportsDashboard.js'
 
 export default {
@@ -85,9 +63,7 @@ export default {
   components: {
     SalesReport,
     InventoryReport,
-    AdjustmentsReport,
-    ProductsReport,
-    FinanceReport
+    ProductsReport
   }
 }
 </script>

@@ -191,7 +191,7 @@ export default {
           batch.sales.forEach((sale, saleIndex) => {
             
             worksheet.addRow(['', '----------------------------------- INICIO DE VENTA -------------------------------'])
-            worksheet.addRow([]) 
+            worksheet.addRow([])
 
             const saleRow = worksheet.addRow(['','VENTA: ' + (sale.saleNumber || 'N/A')])
             saleRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFEB3B' } }
@@ -284,7 +284,7 @@ export default {
             worksheet.addRow([])
             currentRow++
 
-            worksheet.addRow(['', '', '----------------------------------- FIN DE VENTA -------------------------------'])
+            worksheet.addRow(['', '----------------------------------- FIN DE VENTA -------------------------------'])
             worksheet.addRow([])
             currentRow++
 
@@ -324,7 +324,6 @@ export default {
       a.click()
       window.URL.revokeObjectURL(url)
 
-      console.log('Archivo Excel generado y enviado al navegador para descarga')
     }
 
     const exportToPDF = async (batchesToExport = null) => {

@@ -1,7 +1,7 @@
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useReportsStore } from '@/stores/reports'
 import { formatCurrency } from '@/utils/formatters'
-import * as XLSX from 'xlsx'
+import ExcelJS from 'exceljs'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 
@@ -25,6 +25,13 @@ export default {
       movementType: 'Todos'
     })
 
+    const exportOptions = ref({
+      formats: {
+        excel: false,
+        pdf: false
+      }
+    })
+
     const movementTypeOptions = [
       'Todos',
       'Venta',
@@ -41,7 +48,7 @@ export default {
       { title: 'Stock Anterior', key: 'previousStock', align: 'center' },
       { title: 'Stock Nuevo', key: 'newStock', align: 'center' },
       { title: 'Usuario', key: 'userName' },
-      { title: 'Referencia', key: 'referenceId' }
+      { title: 'Factura', key: 'saleNumber' }
     ]
 
     const loadReport = async () => {
@@ -51,34 +58,81 @@ export default {
         if (params.movementType === 'Todos') {
           delete params.movementType
         }
-        const data = await reportsStore.fetchInventoryMovementsReport(params)
-        movements.value = data.movements
+        if (!params.searchTerm) {
+          delete params.searchTerm
+        }
+        const response = await reportsStore.fetchInventoryMovementsReport(params)
+        movements.value = (response.movements || []).map(movement => ({
+          ...movement,
+          saleNumber: movement.referenceType === 'sale' ? movement.notes.replace('Venta ', '') : ''
+        }))
       } catch (error) {
         console.error('Error loading inventory report:', error)
       } finally {
         loading.value = false
       }
     }
-    
-    const exportToExcel = () => {
-      if (movements.value.length === 0) return
-      const worksheetData = [
-        headers.map(h => h.title),
-        ...movements.value.map(item =>
-          headers.map(h => {
-            const value = item[h.key]
-            if (h.key === 'movementDate') {
-              return new Date(value).toLocaleString()
-            }
-            return value
-          })
-        )
-      ]
 
-      const worksheet = XLSX.utils.aoa_to_sheet(worksheetData)
-      const workbook = XLSX.utils.book_new() 
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Movimientos de Inventario')
-      XLSX.writeFile(workbook, 'reporte-movimientos-inventario.xlsx')
+    const canExport = computed(() => {
+      return exportOptions.value.formats.excel || exportOptions.value.formats.pdf
+    })
+
+    const exportReport = async () => {
+      if (exportOptions.value.formats.excel) {
+        await exportToExcel()
+      }
+      if (exportOptions.value.formats.pdf) {
+        exportToPDF()
+      }
+    }
+
+    const exportToExcel = async () => {
+      if (movements.value.length === 0) return
+
+      const workbook = new ExcelJS.Workbook()
+      const worksheet = workbook.addWorksheet('Movimientos de Inventario')
+
+      // Set column widths
+      headers.forEach((header, index) => {
+        worksheet.getColumn(index + 1).width = 30
+      })
+
+      // Add header row with styling
+      const headerRow = worksheet.addRow(headers.map(h => h.title))
+      headerRow.eachCell((cell) => {
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF4CAF50' } // Green background
+        }
+        cell.font = {
+          bold: true,
+          color: { argb: 'FFFFFFFF' } // White text
+        }
+        cell.alignment = { horizontal: 'center' }
+      })
+
+      // Add data rows
+      movements.value.forEach(item => {
+        const rowData = headers.map(h => {
+          const value = item[h.key]
+          if (h.key === 'movementDate') {
+            return new Date(value).toLocaleString()
+          }
+          return value || ''
+        })
+        worksheet.addRow(rowData)
+      })
+
+      // Generate and download file
+      const buffer = await workbook.xlsx.writeBuffer()
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'reporte-movimientos-inventario.xlsx'
+      a.click()
+      window.URL.revokeObjectURL(url)
     }
 
     const exportToPDF = () => {
@@ -124,7 +178,10 @@ export default {
       filters,
       movementTypeOptions,
       headers,
+      exportOptions,
+      canExport,
       loadReport,
+      exportReport,
       exportToExcel,
       exportToPDF,
       formatCurrency
