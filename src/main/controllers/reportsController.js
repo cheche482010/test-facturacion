@@ -346,14 +346,12 @@ const reportsController = {
     try {
       const { date } = req.query
 
-      // Obtener hora de apertura desde Settings
       const openingSetting = await Settings.findOne({ where: { key: "openingTime" } })
       const openingTime = (openingSetting?.value || "08:00").toString()
 
       const [openHour, openMinute] = openingTime.split(":").map((v) => Number.parseInt(v, 10))
       const target = date ? new Date(date) : new Date()
 
-      // Rango de día del arqueo basado en hora de apertura
       const dayStart = new Date(
         target.getFullYear(),
         target.getMonth(),
@@ -371,7 +369,6 @@ const reportsController = {
         status: "completada",
       }
 
-      // Totales del día
       const dayTotalsRow = await Sale.findOne({
         where: whereDay,
         attributes: [
@@ -410,8 +407,7 @@ const reportsController = {
         raw: true,
       })
 
-      // Semana a la fecha (basado en lunes como inicio de semana)
-      const dayOfWeek = (dayStart.getDay() + 6) % 7 // 0 = lunes
+      const dayOfWeek = (dayStart.getDay() + 6) % 7 
       const weekStartDate = new Date(dayStart)
       weekStartDate.setDate(weekStartDate.getDate() - dayOfWeek)
       weekStartDate.setHours(Number.isFinite(openHour) ? openHour : 8, Number.isFinite(openMinute) ? openMinute : 0, 0, 0)
@@ -425,7 +421,6 @@ const reportsController = {
         raw: true,
       })
 
-      // Mes a la fecha
       const monthStartDate = new Date(dayStart.getFullYear(), dayStart.getMonth(), 1, Number.isFinite(openHour) ? openHour : 8, Number.isFinite(openMinute) ? openMinute : 0, 0, 0)
       const monthTotalsRow = await Sale.findOne({
         where: {
@@ -459,14 +454,12 @@ const reportsController = {
     }
   },
 
-  // Reporte de Ventas Detallado Completo
   async getDetailedSalesReport(req, res) {
     try {
       const { startDate, endDate, batch } = req.query
 
       let whereClause = {}
 
-      // Solo filtrar por status completada si no estamos en desarrollo
       if (process.env.NODE_ENV === 'production') {
         whereClause.status = "completada"
       }
@@ -529,7 +522,6 @@ const reportsController = {
       const salesWithCompleteDetails = sales.map(sale => {
         const saleData = sale.toJSON()
 
-        // Calcular total vendido (sin cambio)
         const totalSoldBs = parseFloat(saleData.totalBs) - parseFloat(saleData.changeGivenBs || 0)
         const totalSoldUsd = totalSoldBs / (saleData.dolarRate?.rate || 1)
 
@@ -590,7 +582,6 @@ const reportsController = {
     }
   },
 
-  // Reporte de Inventario Detallado
   async getDetailedInventoryReport(req, res) {
     try {
       const { category, status = "all" } = req.query
@@ -670,7 +661,6 @@ const reportsController = {
     }
   },
 
-  // Reporte de Movimientos de Inventario
   async getInventoryAdjustmentsReport(req, res) {
     try {
       const { startDate, endDate, movementType, searchTerm } = req.query
@@ -753,32 +743,25 @@ const reportsController = {
     }
   },
 
-  // Reporte de Inventario por Productos o Completo
   async getProductInventoryReport(req, res) {
     try {
       const { productId, complete = 'true', category, status = 'all', stockFilter = 'all', showAll } = req.query
 
       let whereClause = {}
 
-      // Si es reporte completo, mostrar todos los productos
       if (complete !== 'true') {
-        // Si es reporte detallado, aplicar filtros adicionales
-        // Filtro por precio de venta > 0 si no se especifica showAll
         if (showAll !== 'true') {
           whereClause.retailPrice = { [Op.gt]: 0 }
         }
 
-        // Filtro por estado
         if (status !== 'all') {
           whereClause.status = status
         }
 
-        // Filtro por categoría
         if (category) {
           whereClause.categoryId = category
         }
 
-        // Filtro por stock
         if (stockFilter !== 'all') {
           switch (stockFilter) {
             case 'low':
@@ -805,7 +788,6 @@ const reportsController = {
         order: [['name', 'ASC']]
       })
 
-      // Obtener tasa actual del dólar
       const currentDolarRate = await DolarRate.findOne({
         order: [['date', 'DESC']]
       })
@@ -814,7 +796,6 @@ const reportsController = {
         const retailPriceBs = currentDolarRate ?
           parseFloat(product.retailPrice) * parseFloat(currentDolarRate.rate) : 0
 
-        // Calcular colores para stock (igual que en reporte de inventario)
         let stockStatus = 'normal'
         let stockColor = 'green'
 
@@ -868,20 +849,17 @@ const reportsController = {
     }
   },
 
-  // Reporte de Ventas Detallado por Lotes
   async getDetailedSalesReportByBatches(req, res) {
     try {
       const { startDate, endDate, batch } = req.query
 
       let whereClause = {}
 
-      // Solo filtrar por status completada si no estamos en desarrollo
       if (process.env.NODE_ENV === 'production') {
         whereClause.status = "completada"
       }
 
       if (startDate && endDate) {
-        // Convertir las fechas a objetos Date para asegurar compatibilidad
         const start = new Date(startDate + ' 00:00:00')
         const end = new Date(endDate + ' 23:59:59')
 
@@ -890,7 +868,6 @@ const reportsController = {
         }
       }
 
-      // Construir filtro para arqueos
       let reconciliationWhereClause = {}
 
       if (batch) {
@@ -898,14 +875,12 @@ const reportsController = {
       }
 
       if (startDate && endDate) {
-        // Filtrar arqueos por fecha de apertura usando el nombre real de la columna
         reconciliationWhereClause[Op.and] = [
           sequelize.literal(`DATE(opening_date) >= '${startDate}'`),
           sequelize.literal(`DATE(opening_date) <= '${endDate}'`)
         ]
       }
 
-      // Obtener arqueos
       const reconciliations = await require('../database/models').CashReconciliation.findAll({
         where: reconciliationWhereClause,
         attributes: [
@@ -914,7 +889,6 @@ const reportsController = {
         order: [['opening_date', 'DESC']]
       })
 
-      // Obtener ventas para estos arqueos
       const reconciliationIds = reconciliations.map(r => r.id)
       const sales = await require('../database/models').Sale.findAll({
         where: {
@@ -959,7 +933,6 @@ const reportsController = {
         ]
       })
 
-      // Agrupar ventas por reconciliationId
       const salesByReconciliation = sales.reduce((acc, sale) => {
         const recId = sale.reconciliationId
         if (!acc[recId]) acc[recId] = []
@@ -971,12 +944,10 @@ const reportsController = {
         order: [['date', 'DESC']]
       })
 
-      // Procesar los arqueos con sus ventas
       const batchesWithSales = reconciliations.map(reconciliation => {
         const reconciliationData = reconciliation.toJSON()
         const reconciliationSales = salesByReconciliation[reconciliationData.id] || []
 
-        // Procesar las ventas del arqueo
         const salesWithDetails = reconciliationSales.map(sale => {
           const saleData = sale.toJSON()
           const totalSoldBs = parseFloat(saleData.totalBs) - parseFloat(saleData.changeGivenBs || 0)
@@ -1012,7 +983,6 @@ const reportsController = {
           }
         })
 
-        // Calcular resumen del lote
         const batchSummary = {
           totalSales: salesWithDetails.length,
           totalAmountBs: parseFloat(salesWithDetails.reduce((sum, sale) => sum + sale.totalBs, 0).toFixed(2)),
@@ -1032,7 +1002,6 @@ const reportsController = {
         }
       })
 
-      // Calcular resumen general
       const overallSummary = {
         totalBatches: batchesWithSales.length,
         totalSales: batchesWithSales.reduce((sum, batch) => sum + batch.summary.totalSales, 0),
@@ -1044,7 +1013,6 @@ const reportsController = {
         totalChangeGivenUsd: parseFloat(batchesWithSales.reduce((sum, batch) => sum + batch.summary.totalChangeGivenUsd, 0).toFixed(2))
       }
 
-      // Construir respuesta manualmente sin objetos Sequelize
       const response = {
         batches: [],
         currentDolarRate: currentDolarRate ? parseFloat(currentDolarRate.rate) : null,
@@ -1061,7 +1029,6 @@ const reportsController = {
         }
       }
 
-      // Procesar batches de manera segura
       for (const batch of batchesWithSales) {
         const safeBatch = {
           id: batch.id,
@@ -1082,7 +1049,6 @@ const reportsController = {
           }
         }
 
-        // Procesar ventas de manera segura
         for (const sale of batch.sales) {
           const safeSale = {
             id: sale.id,
@@ -1135,7 +1101,6 @@ const reportsController = {
     }
   },
 
-  // Reporte Financiero de Ventas - Por fecha y productos
   async getFinancialSalesReport(req, res) {
     try {
       const { date, productId } = req.query
@@ -1183,7 +1148,6 @@ const reportsController = {
         order: [['sale', 'sale_date', 'DESC']]
       })
 
-      // Obtener tasa actual del dólar
       const currentDolarRate = await DolarRate.findOne({
         order: [['date', 'DESC']]
       })
@@ -1203,13 +1167,12 @@ const reportsController = {
           unitPriceUsd: parseFloat((unitPriceBs / rate).toFixed(2)),
           subtotalBs: parseFloat(subtotalBs.toFixed(2)),
           subtotalUsd: parseFloat((subtotalBs / rate).toFixed(2)),
-          totalBs: parseFloat(subtotalBs.toFixed(2)), // Para el item, el total es el subtotal
+          totalBs: parseFloat(subtotalBs.toFixed(2)), 
           totalUsd: parseFloat((subtotalBs / rate).toFixed(2)),
           dolarRateAtSale: parseFloat(rate.toFixed(2))
         }
       })
 
-      // Agrupar por producto si no se especifica uno
       let groupedData = salesData
       if (!productId) {
         const grouped = salesData.reduce((acc, item) => {
@@ -1218,15 +1181,15 @@ const reportsController = {
             acc[key] = {
               productName: item.productName,
               productCode: item.productCode,
-              quantity: 0, // Cambiado de totalQuantity a quantity para coincidir con headers
-              unitPriceBs: 0, // Promedio o suma? En reporte agrupado, precio unitario puede variar.
+              quantity: 0, 
+              unitPriceBs: 0, 
               unitPriceUsd: 0,
               subtotalBs: 0,
               subtotalUsd: 0,
               totalBs: 0,
               totalUsd: 0,
               salesCount: 0,
-              dolarRateAtSale: item.dolarRateAtSale // Mostrar la última o promedio?
+              dolarRateAtSale: item.dolarRateAtSale 
             }
           }
           acc[key].quantity += item.quantity
@@ -1235,7 +1198,6 @@ const reportsController = {
           acc[key].totalBs += item.totalBs
           acc[key].totalUsd += item.totalUsd
           acc[key].salesCount += 1
-          // Precio unitario promedio
           acc[key].unitPriceBs = acc[key].subtotalBs / acc[key].quantity
           acc[key].unitPriceUsd = acc[key].subtotalUsd / acc[key].quantity
           return acc

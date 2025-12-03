@@ -92,27 +92,26 @@ export default {
       const workbook = new ExcelJS.Workbook()
       const worksheet = workbook.addWorksheet('Movimientos de Inventario')
 
-      // Set column widths
+
       headers.forEach((header, index) => {
         worksheet.getColumn(index + 1).width = 30
       })
 
-      // Add header row with styling
       const headerRow = worksheet.addRow(headers.map(h => h.title))
       headerRow.eachCell((cell) => {
         cell.fill = {
           type: 'pattern',
           pattern: 'solid',
-          fgColor: { argb: 'FF4CAF50' } // Green background
+          fgColor: { argb: 'FF4CAF50' } 
         }
         cell.font = {
           bold: true,
-          color: { argb: 'FFFFFFFF' } // White text
+          color: { argb: 'FFFFFFFF' }
         }
         cell.alignment = { horizontal: 'center' }
       })
 
-      // Add data rows
+
       movements.value.forEach(item => {
         const rowData = headers.map(h => {
           const value = item[h.key]
@@ -124,7 +123,7 @@ export default {
         worksheet.addRow(rowData)
       })
 
-      // Generate and download file
+      
       const buffer = await workbook.xlsx.writeBuffer()
       const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
       const url = window.URL.createObjectURL(blob)

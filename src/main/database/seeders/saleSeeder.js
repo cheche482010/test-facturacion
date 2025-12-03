@@ -216,7 +216,6 @@ const seedSales = async () => {
             }
           }
 
-          // Crear arqueo
           const reconciliation = await CashReconciliation.create({
             lote: `LOTE-${loteIndex + 1}`,
             openingDate: loteDate,

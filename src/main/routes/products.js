@@ -7,11 +7,9 @@ const productsController = require("../controllers/productsController")
 
 const router = express.Router()
 
-// Configuración de Multer para la subida de imágenes
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const dir = path.resolve(__dirname, "../../../uploads/products")
-    // Asegurarse de que el directorio exista
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true })
     }
@@ -29,7 +27,6 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
-    // Aceptar solo imágenes
     if (file.mimetype.startsWith("image/")) {
       cb(null, true)
     } else {
@@ -47,7 +44,6 @@ router.put("/:id", requirePermission("products"), productsController.update)
 router.delete("/:id", requirePermission("products"), productsController.delete)
 router.put("/:id/stock", requirePermission("inventory"), productsController.updateStock)
 
-// Nueva ruta para subir imagen de producto
 router.post(
   "/:id/upload-image",
   upload.single("image"),

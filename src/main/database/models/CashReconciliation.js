@@ -44,7 +44,6 @@ const CashReconciliation = sequelize.define(
       allowNull: true,
       comment: 'Saldo final en Dólares',
     },
-    // Campo legacy para compatibilidad
     openingBalance: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: true,

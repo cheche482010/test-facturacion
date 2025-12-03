@@ -1,7 +1,6 @@
 const { Sequelize } = require("sequelize")
 const path = require("path")
 
-// Function to get database configuration based on environment variable
 const getDatabaseConfig = () => {
   const dbType = process.env.DB_TYPE || "sqlite"
 
@@ -28,7 +27,6 @@ const getDatabaseConfig = () => {
       },
     }
   } else {
-    // SQLite configuration (default)
     return {
       dialect: "sqlite",
       dialectModule: require('better-sqlite3'),
@@ -46,20 +44,16 @@ const getDatabaseConfig = () => {
 
 const sequelize = new Sequelize(getDatabaseConfig())
 
-// Función para inicializar la base de datos
 const initializeDatabase = async () => {
   try {
     await sequelize.authenticate()
     console.log("Conexión a la base de datos establecida correctamente.")
 
-    // Importar modelos para establecer relaciones
     require("./models")
 
-    // Sincronizar modelos
     await sequelize.sync({ alter: true })
     console.log("Modelos sincronizados correctamente.")
 
-    // Ejecutar seeders
     const { runAllSeeders } = require("./seeders/index")
     await runAllSeeders()
   } catch (error) {

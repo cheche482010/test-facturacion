@@ -6,7 +6,6 @@ if (ipcMain && typeof ipcMain.handle === 'function') {
   ipcMain.handle("get-settings", settingsController.getSettings)
   ipcMain.handle("save-settings", settingsController.saveSettings)
 
-  // Dolar rate handlers
   ipcMain.handle("get-current-dolar-rate", async () => {
     try {
       const rate = await DolarService.getCurrentDolarRate()

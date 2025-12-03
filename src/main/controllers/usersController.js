@@ -7,7 +7,6 @@ const usersController = {
         attributes: { exclude: ["password"] },
         order: [["id", "DESC"]],
       })
-      // Transformar isActive a status para compatibilidad con frontend
       const transformedUsers = users.map(user => ({
         ...user.toJSON(),
         status: user.isActive ? 'active' : 'inactive'
@@ -38,7 +37,6 @@ const usersController = {
 
       const userResponse = user.toJSON()
       delete userResponse.password
-      // Agregar status para compatibilidad
       userResponse.status = userResponse.isActive ? 'active' : 'inactive'
 
       res.status(201).json({ user: userResponse })
@@ -73,7 +71,6 @@ const usersController = {
 
       const userResponse = user.toJSON()
       delete userResponse.password
-      // Agregar status para compatibilidad
       userResponse.status = userResponse.isActive ? 'active' : 'inactive'
 
       res.json({ user: userResponse })

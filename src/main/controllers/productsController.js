@@ -26,7 +26,6 @@ const productsController = {
         order: [["name", "ASC"]],
       })
 
-      // Obtener la tasa del dólar actual para calcular equivalentes
       const today = new Date()
       today.setHours(0, 0, 0, 0)
 
@@ -35,7 +34,6 @@ const productsController = {
         order: [['updatedAt', 'DESC']]
       })
 
-      // Agregar información de conversión a cada producto
       const productsWithConversion = products.map(product => {
         const productData = product.toJSON()
 
@@ -105,7 +103,6 @@ const productsController = {
         return res.status(404).json({ error: "Producto no encontrado" })
       }
 
-      // Si se envía image: null, significa que se quiere eliminar la imagen
       if (req.body.image === null && product.image) {
         const imagePath = path.resolve(
           __dirname,
@@ -115,11 +112,10 @@ const productsController = {
         if (fs.existsSync(imagePath)) {
           fs.unlinkSync(imagePath)
         }
-        // Nos aseguramos de que el campo en la DB se actualice a null
+
         req.body.image = null
       }
 
-      // Crear movimiento de inventario si el estado cambió
       if (req.body.status && req.body.status !== product.status) {
         await InventoryMovement.create({
           productId: product.id,
@@ -155,7 +151,6 @@ const productsController = {
         return res.status(404).json({ error: "Producto no encontrado" })
       }
 
-      // Eliminar la imagen asociada si existe
       if (product.image) {
         const imagePath = path.resolve(
           __dirname,
@@ -214,7 +209,6 @@ const productsController = {
         return res.status(404).json({ error: "Producto no encontrado" })
       }
 
-      // Si hay una imagen anterior, eliminarla
       if (product.image) {
         const oldImagePath = path.resolve(
           __dirname,
@@ -226,7 +220,6 @@ const productsController = {
         }
       }
 
-      // La ruta del archivo se guarda relativa al servidor para el acceso del cliente
       const imagePath = `/uploads/products/${req.file.filename}`
       product.image = imagePath
       await product.save()

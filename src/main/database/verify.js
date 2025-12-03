@@ -27,7 +27,6 @@ async function verifyDatabase() {
           }
         }
 
-        // Mostrar algunos registros de tablas importantes
         console.log("\n Detalles de registros:")
         try {
           const [sales] = await sequelize.query(`SELECT id, sale_number, sale_date, reconciliation_id FROM sales LIMIT 5`)

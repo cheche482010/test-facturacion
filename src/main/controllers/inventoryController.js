@@ -59,7 +59,6 @@ const inventoryController = {
     try {
       const { productId, newStock, reason, notes } = req.body
 
-      // Map frontend reasons to database enum values
       const reasonMapping = {
         'inventario_fisico': 'ajuste_inventario',
         'ajuste_diferencia': 'ajuste_inventario',
@@ -126,7 +125,6 @@ const inventoryController = {
     try {
       const { product, category, adjustmentType, adjustmentValue, reason, notes } = req.body
 
-      // Map frontend reasons to database enum values
       const reasonMapping = {
         'inventario_fisico': 'ajuste_inventario',
         'ajuste_diferencia': 'ajuste_inventario',

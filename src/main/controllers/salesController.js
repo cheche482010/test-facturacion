@@ -38,7 +38,6 @@ const salesController = {
 
   async getToday(req, res) {
     try {
-      // Get today's reconciliation
       const todayReconciliation = await CashReconciliationService.getTodayReconciliation()
 
       if (!todayReconciliation) {
@@ -90,8 +89,7 @@ const salesController = {
         return res.status(400).json({ error: "La venta debe tener al menos un método de pago." });
       }
 
-      // Obtener la tasa de cambio del día actual
-      const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD
+      const today = new Date().toISOString().split('T')[0]  
       const dolarRate = await DolarRate.findOne({
         where: { date: today },
         transaction
@@ -177,7 +175,6 @@ const salesController = {
         )
       }
 
-      // Crear pagos
       let totalPaidBs = 0;
       for (const payment of payments) {
         const paymentMethod = await PaymentMethod.findByPk(payment.paymentMethodId, { transaction });
@@ -199,7 +196,6 @@ const salesController = {
         totalPaidBs += parseFloat(payment.amount);
       }
 
-      // Calcular cambio dado
       const changeGivenBs = Math.max(0, totalPaidBs - calculatedTotalBs);
       const changeGivenUsd = changeGivenBs / exchangeRate;
 
@@ -210,7 +206,6 @@ const salesController = {
         changeGivenUsd,
       }, { transaction });
 
-      // Asignar reconciliationId si hay una caja abierta
       try {
         const todayReconciliation = await CashReconciliationService.getTodayReconciliation()
         if (todayReconciliation) {
@@ -226,7 +221,6 @@ const salesController = {
         const todayReconciliation = await CashReconciliationService.getTodayReconciliation()
         if (todayReconciliation) {
           const currentTotalSales = todayReconciliation.totalSales || 0
-          // El efectivo neto en caja es el total vendido menos el cambio dado
           const netCashFromSale = calculatedTotalBs - changeGivenBs
           const newTotalSales = currentTotalSales + netCashFromSale
 
@@ -351,7 +345,6 @@ const salesController = {
         const todayReconciliation = await CashReconciliationService.getTodayReconciliation()
         if (todayReconciliation) {
           const currentTotalSales = todayReconciliation.totalSales || 0
-          // Revertir el efectivo neto: total vendido menos cambio dado
           const netCashFromSale = parseFloat(sale.totalBs) - parseFloat(sale.changeGivenBs || 0)
           const newTotalSales = Math.max(0, currentTotalSales - netCashFromSale)
 

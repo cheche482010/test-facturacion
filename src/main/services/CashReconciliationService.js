@@ -4,26 +4,18 @@ const { sequelize } = require("../database/connection")
 const bcrypt = require("bcryptjs")
 
 class CashReconciliationService {
-  /**
-   * Obtiene la hora de apertura del negocio desde la configuración.
-   * @returns {Promise<string>} La hora de apertura en formato "HH:mm".
-   */
+
   async getBusinessOpeningTime() {
     const setting = await Settings.findOne({ where: { key: "business_opening_time" } })
-    return setting ? setting.value : "09:00" // Valor por defecto si no se encuentra
+    return setting ? setting.value : "09:00" 
   }
 
-  /**
-   * Calcula la fecha de inicio del día de negocio actual.
-   * @returns {Promise<Date>} La fecha y hora de inicio.
-   */
   async getStartOfBusinessDay() {
     const openingTime = await this.getBusinessOpeningTime()
     const [hours, minutes] = openingTime.split(":")
     const now = new Date()
     const startOfBusinessDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0)
 
-    // Si la hora actual es antes de la hora de apertura, el día de negocio es el de ayer.
     if (now < startOfBusinessDay) {
       startOfBusinessDay.setDate(startOfBusinessDay.getDate() - 1)
     }
@@ -31,14 +23,6 @@ class CashReconciliationService {
     return startOfBusinessDay
   }
 
-  /**
-   * Crea una nueva apertura de caja (reconciliación).
-   * @param {number} userId - ID del usuario que realiza la apertura.
-   * @param {number} openingBalanceBs - Saldo inicial en Bolívares.
-   * @param {number} openingBalanceUsd - Saldo inicial en Dólares.
-   * @param {string} [notes] - Notas adicionales.
-   * @returns {Promise<CashReconciliation>} La reconciliación creada.
-   */
   async createReconciliation(userId, openingBalanceBs = 0, openingBalanceUsd = 0, notes = "") {
     const todayStart = await this.getStartOfBusinessDay()
 
@@ -47,7 +31,7 @@ class CashReconciliationService {
         openingDate: {
           [Op.gte]: todayStart,
         },
-        closingDate: null, // Buscar una que aún no esté cerrada
+        closingDate: null, 
       },
     })
 
@@ -55,7 +39,6 @@ class CashReconciliationService {
       throw new Error("Ya existe una caja abierta para el día de hoy.")
     }
 
-    // Asignar lote incremental
     const lastReconciliation = await CashReconciliation.findOne({
       order: [['id', 'DESC']],
     })
@@ -66,20 +49,15 @@ class CashReconciliationService {
       userId,
       openingBalanceBs,
       openingBalanceUsd,
-      openingBalance: openingBalanceBs, // Para compatibilidad
+      openingBalance: openingBalanceBs, 
       openingDate: new Date(),
       notes,
       lote,
-      // closingDate, closingBalance y totalSales se llenarán al cerrar
     })
 
     return reconciliation
   }
 
-  /**
-   * Obtiene la reconciliación activa del día de hoy.
-   * @returns {Promise<CashReconciliation|null>} La reconciliación activa o null si no hay.
-   */
   async getTodayReconciliation() {
     const startOfBusinessDay = await this.getStartOfBusinessDay()
 
@@ -88,7 +66,7 @@ class CashReconciliationService {
         openingDate: {
           [Op.gte]: startOfBusinessDay,
         },
-        closingDate: null, // Solo las que están abiertas
+        closingDate: null,  
       },
       include: [{ model: User, as: "user", attributes: ["id", "username", "firstName", "lastName"] }],
     })
@@ -97,11 +75,9 @@ class CashReconciliationService {
       return null
     }
 
-    // Si hay una reconciliación, calculamos las ventas hasta el momento.
     const salesData = await this.calculateSalesData(reconciliation.openingDate, new Date())
 
-    // Calcular el total en USD usando la tasa del dólar del día actual
-    const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD
+    const today = new Date().toISOString().split('T')[0]
     const dolarRate = await DolarRate.findOne({
       where: { date: today }
     })
@@ -110,21 +86,14 @@ class CashReconciliationService {
 
     return {
       ...reconciliation.toJSON(),
-      totalSales: salesData.totalSalesBs, // Para compatibilidad con el frontend
+      totalSales: salesData.totalSalesBs, 
       totalSalesBs: salesData.totalSalesBs,
       totalSalesUsd: totalSalesUsd,
       salesCount: salesData.salesCount,
     }
   }
 
-  /**
-   * Cierra la caja del día.
-   * @param {number} reconciliationId - ID de la reconciliación a cerrar.
-   * @param {number} closingBalanceBs - Saldo final contado en Bolívares.
-   * @param {number} closingBalanceUsd - Saldo final contado en Dólares.
-   * @param {string} [notes] - Notas de cierre.
-   * @returns {Promise<CashReconciliation>}
-   */
+ 
   async closeReconciliation(reconciliationId, closingBalanceBs, closingBalanceUsd, notes = "") {
     const reconciliation = await CashReconciliation.findByPk(reconciliationId)
     if (!reconciliation) {
@@ -136,9 +105,8 @@ class CashReconciliationService {
 
     const salesData = await this.calculateSalesData(reconciliation.openingDate, new Date())
 
-    // Obtener la tasa del dólar del día de cierre
     const closingDate = new Date()
-    const dateString = closingDate.toISOString().split('T')[0] // YYYY-MM-DD
+    const dateString = closingDate.toISOString().split('T')[0] 
     const dolarRate = await DolarRate.findOne({
       where: { date: dateString }
     })
@@ -153,7 +121,7 @@ class CashReconciliationService {
     reconciliation.closingDate = closingDate
     reconciliation.closingBalanceBs = closingBalanceBs
     reconciliation.closingBalanceUsd = closingBalanceUsd
-    reconciliation.closingBalance = closingBalanceBs // Para compatibilidad
+    reconciliation.closingBalance = closingBalanceBs 
     reconciliation.notes = `${reconciliation.notes || ""}\nCierre: ${notes}`.trim()
     reconciliation.totalSales = totalSalesBs
     reconciliation.totalSalesUsd = totalSalesUsd
@@ -162,25 +130,19 @@ class CashReconciliationService {
     return reconciliation
   }
 
-  /**
-   * Calcula los datos de ventas para un período.
-   * @param {Date} startDate - Fecha de inicio.
-   * @param {Date} endDate - Fecha de fin.
-   * @returns {Promise<object>} Un objeto con el total de ventas en BS y USD.
-   */
+
   async calculateSalesData(startDate, endDate) {
     const sales = await Sale.findAll({
       where: {
         sale_date: {
           [Op.between]: [startDate, endDate],
         },
-        status: "completada", // Solo ventas completadas
+        status: "completada",
       },
     })
 
     const totalSalesBs = sales.reduce((sum, sale) => sum + parseFloat(sale.totalBs || 0), 0)
-    // totalSalesUsd será calculado como totalSalesBs dividido por la tasa del dólar del día de cierre
-    const totalSalesUsd = 0 // Se calculará al momento del cierre con la tasa actual
+    const totalSalesUsd = 0 
 
     return {
       totalSalesBs,
@@ -190,11 +152,6 @@ class CashReconciliationService {
   }
 
 
-  /**
-   * Genera un reporte detallado de ventas para un arqueo específico.
-   * @param {number} reconciliationId - El ID del arqueo.
-   * @returns {Promise<object>}
-   */
   async getDailySalesReport(reconciliationId) {
     const reconciliation = await CashReconciliation.findByPk(reconciliationId, {
       include: [{ model: User, as: "user", attributes: ["username"] }],
@@ -204,7 +161,6 @@ class CashReconciliationService {
       throw new Error("Arqueo de caja no encontrado.")
     }
 
-    // Obtener ventas con pagos incluidos
     const sales = await Sale.findAll({
       where: {
         sale_date: {
@@ -230,15 +186,12 @@ class CashReconciliationService {
 
     const summary = await this.calculateSalesData(reconciliation.openingDate, new Date())
 
-    // Calcular desglose por método de pago
     const paymentMethodBreakdown = {}
     let totalChangeGivenBs = 0
 
     for (const sale of sales) {
       totalChangeGivenBs += parseFloat(sale.changeGivenBs || 0)
-
-      // Agregar método de pago principal (asumiendo el primero, o "Efectivo" por defecto)
-      let paymentMethod = "Efectivo BS" // Valor por defecto
+      let paymentMethod = "Efectivo BS" 
       if (sale.payments && sale.payments.length > 0) {
         paymentMethod = sale.payments[0].paymentMethod?.name || "Efectivo BS"
       }
@@ -249,7 +202,6 @@ class CashReconciliationService {
       paymentMethodBreakdown[paymentMethod] += parseFloat(sale.totalBs || 0)
     }
 
-    // Calcular total en USD usando la tasa del día actual
     const today = new Date().toISOString().split('T')[0]
     const dolarRate = await DolarRate.findOne({
       where: { date: today }
@@ -258,9 +210,8 @@ class CashReconciliationService {
     const totalSalesUsd = dolarRate ? summary.totalSalesBs / dolarRate.rate : 0
     const totalChangeGivenUsd = dolarRate ? totalChangeGivenBs / dolarRate.rate : 0
 
-    // Preparar datos de ventas para el frontend
     const salesData = sales.map(sale => {
-      let paymentMethod = "Efectivo BS" // Valor por defecto
+      let paymentMethod = "Efectivo BS" 
       if (sale.payments && sale.payments.length > 0) {
         paymentMethod = sale.payments[0].paymentMethod?.name || "Efectivo BS"
       }
@@ -293,13 +244,8 @@ class CashReconciliationService {
     }
   }
 
-  /**
-   * Verifica la contraseña de administrador para cierres de caja.
-   * @param {string} password - Contraseña a verificar.
-   * @returns {Promise<boolean>} True si la contraseña es correcta.
-   */
+ 
   async verifyAdminPassword(password) {
-    // Buscar usuario administrador (asumiendo que hay uno con rol 'administrador')
     const adminUser = await User.findOne({
       where: {
         role: "administrador",

@@ -36,7 +36,6 @@ const Product = sequelize.define(
         key: "id",
       },
     },
-    // Costos y precios
     costPrice: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
@@ -59,17 +58,14 @@ const Product = sequelize.define(
       type: DataTypes.DECIMAL(10, 2),
       defaultValue: 0,
     },
-    // Inventario
     currentStock: {
       type: DataTypes.BIGINT,
       defaultValue: 0,
     },
-    // Estado
     status: {
       type: DataTypes.ENUM("activo", "descontinuado", "agotado"),
       defaultValue: "activo",
     },
-    // Metadatos
     image: {
       type: DataTypes.STRING(500),
     },
@@ -78,7 +74,6 @@ const Product = sequelize.define(
     tableName: "products",
     hooks: {
       beforeSave: (product) => {
-        // Calcular precio automático si no se especifica
         if (!product.retailPrice || product.retailPrice === 0) {
           const costPrice = parseFloat(product.costPrice) || 0
           const profitPercentage = parseFloat(product.profitPercentage) || 30

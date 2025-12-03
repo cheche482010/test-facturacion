@@ -169,7 +169,6 @@ export default {
 
     const loadPaymentMethods = async () => {
       try {
-        // Use fetch API to get payment methods from backend
         const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/payment-methods`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -178,7 +177,6 @@ export default {
         if (response.ok) {
           availablePaymentMethods.value = await response.json()
         } else {
-          // Fallback to hardcoded methods if API fails
           availablePaymentMethods.value = [
             { id: 1, name: 'Efectivo BS' },
             { id: 2, name: 'Efectivo USD' },
@@ -190,7 +188,6 @@ export default {
         }
       } catch (error) {
         console.error('Error loading payment methods:', error)
-        // Fallback
         availablePaymentMethods.value = [
           { id: 1, name: 'Efectivo BS' },
           { id: 2, name: 'Efectivo USD' },
@@ -200,7 +197,7 @@ export default {
           { id: 6, name: 'Crédito' }
         ]
       }
-      // Add icons to payment methods
+      
       availablePaymentMethods.value = availablePaymentMethods.value.map(method => ({
         ...method,
         icon: getIconForMethod(method.name)

@@ -11,13 +11,12 @@ const seedDolarRates = async () => {
       return
     }
 
-    // Crear tasa de dólar para hoy y días anteriores para las ventas existentes
     const today = new Date().toISOString().split('T')[0]
     const datesToCreate = [
       today,
-      '2025-10-24', // Fecha de la primera venta
-      '2025-10-27', // Fecha de la segunda venta
-      '2025-10-29'  // Fecha de la tercera venta
+      '2025-10-24', 
+      '2025-10-27', 
+      '2025-10-29'  
     ]
 
     for (const dateStr of datesToCreate) {
@@ -31,7 +30,6 @@ const seedDolarRates = async () => {
           })
           console.log(`     -> Tasa de dólar creada para ${dateStr}.`)
         } catch (error) {
-          // Si ya existe, continuar
           console.log(`     -> Tasa de dólar ya existe para ${dateStr}.`)
         }
       }

@@ -33,7 +33,6 @@ const Category = sequelize.define(
   },
 )
 
-// Relación jerárquica
 Category.belongsTo(Category, { as: "parent", foreignKey: "parentId" })
 Category.hasMany(Category, { as: "children", foreignKey: "parentId" })
 

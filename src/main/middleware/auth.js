@@ -1,7 +1,6 @@
 const jwt = require("jsonwebtoken")
 const { User } = require("../database/models/index.js")
 
-// JWT Authentication Middleware
 const authenticateToken = async (req, res, next) => {
   const authHeader = req.headers["authorization"]
   const token = authHeader && authHeader.split(" ")[1]
@@ -25,7 +24,6 @@ const authenticateToken = async (req, res, next) => {
   }
 }
 
-// Role-based Authorization Middleware
 const requireRole = (roles) => {
   return (req, res, next) => {
     if (!req.user) {

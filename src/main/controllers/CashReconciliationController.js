@@ -15,7 +15,6 @@ class CashReconciliationController {
   async getToday(req, res) {
     try {
       const reconciliation = await CashReconciliationService.getTodayReconciliation()
-      // Devolver null en lugar de 404 cuando no hay reconciliación abierta
       res.json(reconciliation)
     } catch (error) {
       res.status(500).json({ message: "Error fetching today's reconciliation", error: error.message })
@@ -29,13 +28,11 @@ class CashReconciliationController {
       const { closingBalanceBs, closingBalanceUsd, notes, adminPassword } = req.body
       const userRole = req.user.role
 
-      // If user is cajero, require admin password for closure
       if (userRole === "cajero") {
         if (!adminPassword) {
           return res.status(400).json({ message: "Se requiere contraseña de administrador para cerrar caja" })
         }
 
-        // Verify admin password (this would need to be implemented in the service)
         const isValidAdminPassword = await CashReconciliationService.verifyAdminPassword(adminPassword)
         if (!isValidAdminPassword) {
           return res.status(403).json({ message: "Contraseña de administrador incorrecta" })

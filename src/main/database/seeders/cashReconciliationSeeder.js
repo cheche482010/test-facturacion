@@ -33,7 +33,6 @@ const seedCashReconciliations = async () => {
         const endOfDay = new Date(startOfDay)
         endOfDay.setDate(endOfDay.getDate() + 1)
 
-        // Obtener ventas del día
         const daySales = await Sale.findAll({
           where: {
             sale_date: { [Op.between]: [startOfDay, endOfDay] },
@@ -50,7 +49,6 @@ const seedCashReconciliations = async () => {
         })
 
         if (daySales.length > 0) {
-          // Calcular totales por método de pago
           const paymentTotals = {}
           let totalCashBs = 0
           let totalCashUsd = 0
@@ -71,7 +69,6 @@ const seedCashReconciliations = async () => {
             }
           }
 
-          // Crear arqueo
            await CashReconciliation.create({
              openingDate: startOfDay,
              userId: firstUser.id,

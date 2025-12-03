@@ -62,10 +62,10 @@ const InventoryMovement = sequelize.define(
       defaultValue: 0,
     },
     referenceId: {
-      type: DataTypes.INTEGER, // ID de venta, compra, etc.
+      type: DataTypes.INTEGER,  
     },
     referenceType: {
-      type: DataTypes.STRING(50), // 'sale', 'purchase', 'adjustment'
+      type: DataTypes.STRING(50), 
     },
     notes: {
       type: DataTypes.TEXT,

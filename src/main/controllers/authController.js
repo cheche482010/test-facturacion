@@ -6,7 +6,6 @@ const authController = {
     try {
       const { username: identifier, password } = req.body
 
-      // Buscar usuario por email o username
       const user = await User.findOne({
         where: {
           [require('sequelize').Op.or]: [
