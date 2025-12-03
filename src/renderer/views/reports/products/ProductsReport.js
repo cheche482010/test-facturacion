@@ -1,8 +1,8 @@
 import { ref, computed, onMounted } from 'vue'
-import { useReportsStore } from '@/stores/reports'
+import { useProductStore } from '@/stores/products'
 import { useCategoryStore } from '@/stores/categories'
 import { formatCurrency } from '@/utils/formatters'
-import * as XLSX from 'xlsx'
+import ExcelJS from 'exceljs'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 
@@ -15,22 +15,23 @@ export default {
     }
   },
   setup(props) {
-    const reportsStore = useReportsStore()
+    const productStore = useProductStore()
     const categoryStore = useCategoryStore()
     const loading = ref(false)
     const data = ref([])
 
     const filters = ref({
-      complete: 'true',
       category: null,
       status: 'all',
       stockFilter: 'all'
     })
 
-    const completeOptions = [
-      { title: 'Completo', value: 'true' },
-      { title: 'Detallado', value: 'false' }
-    ]
+    const exportOptions = ref({
+      formats: {
+        excel: false,
+        pdf: false
+      }
+    })
 
     const statusOptions = [
       { title: 'Todos', value: 'all' },
@@ -55,9 +56,42 @@ export default {
       }))
     ])
 
+    const filteredData = computed(() => {
+      let filtered = data.value
+
+      if (filters.value.category) {
+        filtered = filtered.filter(product => product.categoryId === filters.value.category)
+      }
+
+      if (filters.value.status !== 'all') {
+        filtered = filtered.filter(product => product.status === filters.value.status)
+      }
+
+      if (filters.value.stockFilter !== 'all') {
+        filtered = filtered.filter(product => {
+          const stock = parseInt(product.currentStock) || 0
+          switch (filters.value.stockFilter) {
+            case 'low':
+              return stock > 0 && stock <= 5
+            case 'out':
+              return stock === 0
+            case 'normal':
+              return stock > 5 && stock <= 100
+            case 'overstock':
+              return stock > 100
+            default:
+              return true
+          }
+        })
+      }
+
+      return filtered
+    })
+
     const headers = [
       { title: 'Código Interno', key: 'internalCode' },
       { title: 'Producto', key: 'name' },
+      { title: 'Categoría', key: 'categoryName' },
       { title: 'Estado', key: 'status', align: 'center' },
       { title: 'Stock', key: 'currentStock', align: 'center' },
       { title: 'Precio Venta USD', key: 'retailPriceUsd', align: 'end' },
@@ -93,48 +127,105 @@ export default {
 
     const getActiveFiltersText = () => {
       const activeFilters = []
-      if (filters.value.category) activeFilters.push(`Categoría: ${filters.value.category}`)
+      if (filters.value.category) {
+        const categoryName = categoryOptions.value.find(cat => cat.value === filters.value.category)?.title
+        activeFilters.push(`Categoría: ${categoryName}`)
+      }
       if (filters.value.status !== 'all') activeFilters.push(`Estado: ${filters.value.status}`)
       if (filters.value.stockFilter !== 'all') activeFilters.push(`Stock: ${filters.value.stockFilter}`)
       return activeFilters.length > 0 ? activeFilters.join(', ') : 'Ninguno'
     }
 
-    const loadReport = async () => {
+    const loadProducts = async () => {
       loading.value = true
       try {
-        const params = { ...filters.value, showAll: 'true' }
-        const result = await reportsStore.fetchProductInventoryReport(params)
-        data.value = result.products
+        await productStore.fetchProducts()
+        data.value = productStore.products.map(product => ({
+          ...product,
+          categoryName: product.category?.name || 'Sin Categoría',
+          retailPriceUsd: parseFloat(product.costPrice) || 0,
+          totalValueUsd: Math.round(((parseFloat(product.costPrice) || 0) * (parseInt(product.currentStock) || 0)) * 100) / 100,
+          retailPriceBs: Math.round(((parseFloat(product.costPrice) || 0) * (props.currentDolarRate || 1)) * 100) / 100,
+          costPriceBs: Math.round(((parseFloat(product.costPrice) || 0) * (props.currentDolarRate || 1)) * 100) / 100,
+          totalValueBs: Math.round((((parseFloat(product.costPrice) || 0) * (parseInt(product.currentStock) || 0)) * (props.currentDolarRate || 1)) * 100) / 100
+        }))
       } catch (error) {
-        console.error('Error loading products report:', error)
+        console.error('Error loading products:', error)
       } finally {
         loading.value = false
       }
     }
 
-    const exportToExcel = () => {
-      if (data.value.length === 0) return
-      const worksheetData = [
-        headers.map(h => h.title),
-        ...data.value.map(item =>
-          headers.map(h => {
-            const value = item[h.key]
-            if (h.key.includes('Bs') || h.key.includes('Usd')) {
-              return parseFloat(value) || 0
-            }
-            return value
-          })
-        )
-      ]
+    const clearFilters = () => {
+      filters.value = {
+        category: null,
+        status: 'all',
+        stockFilter: 'all'
+      }
+    }
 
-      const worksheet = XLSX.utils.aoa_to_sheet(worksheetData)
-      const workbook = XLSX.utils.book_new()
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Productos')
-      XLSX.writeFile(workbook, 'reporte-productos-inventario.xlsx')
+    const canExport = computed(() => {
+      return exportOptions.value.formats.excel || exportOptions.value.formats.pdf
+    })
+
+    const exportReport = async () => {
+      if (exportOptions.value.formats.excel) {
+        await exportToExcel()
+      }
+      if (exportOptions.value.formats.pdf) {
+        exportToPDF()
+      }
+    }
+
+    const exportToExcel = async () => {
+      const exportData = filteredData.value
+      if (exportData.length === 0) return
+
+      const workbook = new ExcelJS.Workbook()
+      const worksheet = workbook.addWorksheet('Productos')
+
+      headers.forEach((header, index) => {
+        worksheet.getColumn(index + 1).width = index === 1 ? 50 : 20
+      })
+
+      const headerRow = worksheet.addRow(headers.map(h => h.title))
+      headerRow.eachCell((cell) => {
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF4CAF50' } 
+        }
+        cell.font = {
+          bold: true,
+          color: { argb: 'FFFFFFFF' } 
+        }
+        cell.alignment = { horizontal: 'center' }
+      })
+
+      exportData.forEach(item => {
+        const rowData = headers.map(h => {
+          const value = item[h.key]
+          if (h.key.includes('Bs') || h.key.includes('Usd')) {
+            return parseFloat(value) || 0
+          }
+          return value || ''
+        })
+        worksheet.addRow(rowData)
+      })
+
+      const buffer = await workbook.xlsx.writeBuffer()
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'reporte-productos-inventario.xlsx'
+      a.click()
+      window.URL.revokeObjectURL(url)
     }
 
     const exportToPDF = () => {
-      if (data.value.length === 0) return
+      const exportData = filteredData.value
+      if (exportData.length === 0) return
       const doc = new jsPDF()
 
       doc.setFontSize(16)
@@ -143,9 +234,9 @@ export default {
       doc.setFontSize(10)
       doc.text(`Fecha de generación: ${new Date().toLocaleDateString()}`, 14, 30)
       doc.text(`Tasa USD actual: ${formatCurrency(props.currentDolarRate)} Bs/USD`, 14, 35)
-      doc.text(`Filtros: ${getActiveFiltersText()}`, 14, 40)
+      doc.text(`Filtros aplicados: ${getActiveFiltersText()}`, 14, 40)
 
-      const tableData = data.value.map(item =>
+      const tableData = exportData.map(item =>
         headers.map(h => {
           const value = item[h.key]
           if (h.key.includes('Bs') || h.key.includes('Usd')) {
@@ -168,19 +259,23 @@ export default {
 
     onMounted(async () => {
       await categoryStore.fetchCategories()
-      loadReport()
+      await loadProducts()
     })
 
     return {
       loading,
       data,
+      filteredData,
       filters,
-      completeOptions,
       statusOptions,
       stockFilterOptions,
       categoryOptions,
       headers,
-      loadReport,
+      exportOptions,
+      canExport,
+      loadProducts,
+      clearFilters,
+      exportReport,
       exportToExcel,
       exportToPDF,
       getStatusColor,
