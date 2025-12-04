@@ -1,18 +1,16 @@
 import { ref, onMounted, watch, computed } from 'vue'
 import { useAppStore } from '../../stores/app'
-import { useCurrencyStore } from '../../stores/currencyStore'
 import { useSettingsStore } from '../../stores/settingsStore'
+import { useAuthStore } from '../../stores/auth'
 
 export default {
   name: 'Settings',
   setup() {
     const tab = ref(0)
     const appStore = useAppStore()
-    const currencyStore = useCurrencyStore()
     const settingsStore = useSettingsStore()
+    const authStore = useAuthStore()
     const saving = ref(false)
-    const isUpdatingRate = ref(false)
-
     const currentDolarRate = ref({ rate: null, date: null })
     const loadingDolarRate = ref(false)
     const updatingDolarRate = ref(false)
@@ -22,24 +20,44 @@ export default {
     const dolarHistory = ref([])
     const loadingHistory = ref(false)
 
-    const exchangeRate = computed(() => currencyStore.exchangeRate)
-
-    const settings = ref({})
+    const settings = ref({ ...settingsStore.settings })
 
     watch(() => settingsStore.settings, (newSettings) => {
       if (newSettings) {
-        settings.value = JSON.parse(JSON.stringify(newSettings))
-        if (!settings.value.fontsTitle) settings.value.fontsTitle = { font: 'Arial', size: '24px' }
-        if (!settings.value.fontsSubtitle) settings.value.fontsSubtitle = { font: 'Arial', size: '18px' }
-        if (!settings.value.fontsText) settings.value.fontsText = { font: 'Arial', size: '14px' }
+        settings.value = { ...settings.value, ...newSettings }
+        if (!settings.value.fonts_title) settings.value.fonts_title = { font: 'Arial', size: '24px' }
+        if (!settings.value.fonts_subtitle) settings.value.fonts_subtitle = { font: 'Arial', size: '18px' }
+        if (!settings.value.fonts_text) settings.value.fonts_text = { font: 'Arial', size: '14px' }
       }
     }, { immediate: true, deep: true })
 
-    watch(() => settings.value.darkMode, (newDarkMode) => {
-      if (settingsStore.settings.darkMode !== newDarkMode) {
-        settingsStore.settings.darkMode = newDarkMode
+    const availableTabs = computed(() => {
+      const userRole = authStore.user?.role
+      const allTabs = [
+        { name: 'Interfaz', index: 0 },
+        { name: 'Empresa', index: 1 },
+        { name: 'Dólar', index: 2 }
+      ]
+
+      if (userRole === 'dev') {
+        return allTabs
+      } else if (userRole === 'administrador') {
+        return allTabs.filter(tab => tab.name === 'Dólar')
+      } else {
+        return []
       }
-    }, { immediate: false })
+    })
+
+    watch(() => availableTabs.value, (newTabs) => {
+      if (newTabs.length > 0 && tab.value >= newTabs.length) {
+        tab.value = 0
+      }
+    }, { immediate: true })
+
+    const currentWindowIndex = computed(() => {
+      if (availableTabs.value.length === 0) return 0
+      return availableTabs.value[tab.value]?.index || 0
+    })
 
     const saveSettings = async () => {
       saving.value = true
@@ -47,8 +65,10 @@ export default {
         settingsStore.settings = { ...settingsStore.settings, ...settings.value }
         await settingsStore.saveSettings()
         await settingsStore.fetchSettings()
+        alert('Configuración guardada exitosamente')
       } catch (error) {
         console.error('Error saving settings:', error)
+        alert('Error al guardar configuración: ' + error.message)
       } finally {
         saving.value = false
       }
@@ -59,7 +79,7 @@ export default {
       if (file) {
         const reader = new FileReader()
         reader.onload = (e) => {
-          settings.value.systemLogo = e.target.result
+          settings.value.system_logo = e.target.result
         }
         reader.readAsDataURL(file)
       }
@@ -106,25 +126,6 @@ export default {
       'Webdings',
       'Wingdings'
     ]
-
-    const createBackup = async () => {
-      try {
-        await window.electronAPI.invoke('create-backup')
-      } catch (error) {
-        console.error('Error creating backup:', error)
-      }
-    }
-
-    const updateExchangeRate = async () => {
-      isUpdatingRate.value = true
-      try {
-        await currencyStore.updateExchangeRate()
-      } catch (error) {
-        console.error('Error updating exchange rate:', error)
-      } finally {
-        isUpdatingRate.value = false
-      }
-    }
 
     const fetchCurrentDolarRate = async () => {
       loadingDolarRate.value = true
@@ -230,21 +231,24 @@ export default {
 
     onMounted(async () => {
       await settingsStore.fetchSettings()
-      currencyStore.fetchExchangeRate()
       await fetchCurrentDolarRate()
       await fetchDolarHistory()
     })
+
+    watch(() => tab.value, async (newTab) => {
+      if (newTab === 0) { 
+        await settingsStore.fetchSettings()
+      } else if (newTab === 1) { 
+        await settingsStore.fetchCompanySettings()
+      }
+    }, { immediate: true })
 
     return {
       tab,
       settings,
       saving,
       saveSettings,
-      createBackup,
       onLogoChange,
-      exchangeRate,
-      isUpdatingRate,
-      updateExchangeRate,
       fontOptions,
       currentDolarRate,
       loadingDolarRate,
@@ -260,6 +264,8 @@ export default {
       formatDate,
       formatDateTime,
       dolarHeaders,
+      availableTabs,
+      currentWindowIndex,
     }
   },
 }

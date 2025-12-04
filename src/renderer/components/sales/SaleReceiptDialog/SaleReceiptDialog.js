@@ -1,3 +1,5 @@
+import { useSettingsStore } from '../../../stores/settingsStore'
+
 export default {
   name: 'SaleReceiptDialog',
   props: {
@@ -9,18 +11,25 @@ export default {
     }
   },
   emits: ['update:modelValue', 'sale-completed'],
+  setup() {
+    const settingsStore = useSettingsStore()
+    return { settingsStore }
+  },
   data() {
     return {
-      completing: false,
-      company: {
-        name: 'Mi Empresa',
-        rif: 'J-12345678-9',
-        address: 'Dirección de la empresa',
-        phone: '0212-1234567'
-      }
+      completing: false
     }
   },
   computed: {
+    company() {
+      return {
+        name: this.settingsStore.settings.company_name,
+        rif: this.settingsStore.settings.company_rif,
+        address: this.settingsStore.settings.company_address,
+        phone: this.settingsStore.settings.company_phone,
+        email: this.settingsStore.settings.company_email
+      }
+    },
     dialog: {
       get() {
         return this.modelValue

@@ -5,15 +5,7 @@ const seedSettings = async () => {
   try {
     console.log("   -> Creando configuraciones...")
 
-    const settingsCount = await Settings.count()
-    if (settingsCount > 0) {
-      console.log("     -> Las configuraciones ya existen, omitiendo creación.")
-      return
-    }
-
-    const settingsExist = await Settings.count()
-    if (settingsExist === 0) {
-      const defaultSettings = [
+    const defaultSettings = [
         {
           key: "company_name",
           value: "Mi Empresa",
@@ -33,38 +25,16 @@ const seedSettings = async () => {
           description: "Dirección fiscal",
         },
         {
-          key: "default_currency",
-          value: "VES",
-          category: "system",
-          description: "Moneda por defecto",
+          key: "company_phone",
+          value: "+58 212 123 4567",
+          category: "company",
+          description: "Teléfono de la empresa",
         },
         {
-          key: "exchange_rate",
-          value: "36.50",
-          dataType: "number",
-          category: "system",
-          description: "Tasa de cambio USD/VES",
-        },
-        {
-          key: "auto_update_exchange_rate",
-          value: "true",
-          dataType: "boolean",
-          category: "system",
-          description: "Actualizar tasa automáticamente",
-        },
-        {
-          key: "default_tax_rate",
-          value: "16.00",
-          dataType: "number",
-          category: "system",
-          description: "Tasa de IVA por defecto",
-        },
-        {
-          key: "business_opening_time",
-          value: "09:00",
-          dataType: "string",
-          category: "system",
-          description: "Hora de apertura del negocio (HH:mm)",
+          key: "company_email",
+          value: "info@empresa.com",
+          category: "company",
+          description: "Email de la empresa",
         },
         {
           key: "system_title",
@@ -150,13 +120,35 @@ const seedSettings = async () => {
           category: "interface",
           description: "Tamaño del texto de las tarjetas resumen",
         },
+        {
+          key: "default_currency",
+          value: "VES",
+          dataType: "string",
+          category: "system",
+          description: "Moneda por defecto del sistema",
+        },
+        {
+          key: "business_opening_time",
+          value: "09:00",
+          dataType: "string",
+          category: "system",
+          description: "Hora de apertura del negocio",
+        },
+        {
+          key: "auto_update_exchange_rate",
+          value: "true",
+          dataType: "boolean",
+          category: "system",
+          description: "Actualización automática de la tasa de cambio",
+        },
       ]
 
-      await Settings.bulkCreate(defaultSettings)
-      console.log("     -> Configuraciones por defecto creadas.")
-    }
-
-    console.log("   -> Configuraciones creadas exitosamente.")
+      for (const setting of defaultSettings) {
+        await Settings.upsert(setting)
+      }
+      console.log("     -> Configuraciones por defecto creadas/actualizadas.")
+ 
+      console.log("   -> Configuraciones creadas exitosamente.")
   } catch (error) {
     console.error("Error creando configuraciones:", error)
     throw error

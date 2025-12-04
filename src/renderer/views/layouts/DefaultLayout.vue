@@ -10,7 +10,7 @@
                         :color="settingsStore.settings.darkMode ? 'white' : 'primary'">mdi-store-outline</v-icon>
                 </div>
                 <v-list-item-title class="text-h6 text-center">
-                    {{ settingsStore.settings.systemTitle || 'Facturación' }}
+                    {{ settingsStore.settings.system_title || 'Facturación' }}
                 </v-list-item-title>
                 <v-list-item-subtitle class="text-center">
                     Menú Principal
@@ -42,10 +42,9 @@
                 </div>
             </template>
         </v-navigation-drawer>
-
-        <v-app-bar app :color="settingsStore.settings.primaryColor" :dark="settingsStore.settings.darkMode">
+        <v-app-bar app :color="settingsStore.settings.primary_color" :dark="settingsStore.settings.dark_mode">
             <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
-            <v-toolbar-title>{{ settingsStore.settings.systemTitle || 'Sistema de Facturación' }}</v-toolbar-title>
+            <v-toolbar-title>{{ settingsStore.settings.system_title || 'Sistema de Facturación' }}</v-toolbar-title>
 
             <v-spacer></v-spacer>
 

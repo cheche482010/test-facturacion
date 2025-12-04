@@ -1,4 +1,4 @@
-const { Sale, SaleItem, SalePayment, PaymentMethod, Product, User, InventoryMovement, CashReconciliation, DolarRate } = require("../database/models")
+const { Sale, SaleItem, SalePayment, PaymentMethod, Product, User, InventoryMovement, CashReconciliation, DolarRate, Settings } = require("../database/models")
 const CashReconciliationService = require("../services/CashReconciliationService")
 const { Op } = require("sequelize")
 
@@ -408,13 +408,24 @@ const salesController = {
       if (format === "pdf") {
         res.status(501).json({ error: "Generación de PDF no implementada aún" })
       } else {
+        // Obtener datos de la empresa desde settings
+        const companySettings = await Settings.findAll({
+          where: { category: 'company' }
+        })
+
+        const companyData = {}
+        companySettings.forEach(setting => {
+          companyData[setting.key] = setting.value
+        })
+
         res.json({
           sale,
           company: {
-            name: "Mi Empresa",
-            rif: "J-12345678-9",
-            address: "Dirección de la empresa",
-            phone: "0212-1234567",
+            name: companyData.company_name || "Mi Empresa",
+            rif: companyData.company_rif || "J-12345678-9",
+            address: companyData.company_address || "Dirección de la empresa",
+            phone: companyData.company_phone || "+58 212 123 4567",
+            email: companyData.company_email || "info@empresa.com"
           },
           generatedAt: new Date(),
         })

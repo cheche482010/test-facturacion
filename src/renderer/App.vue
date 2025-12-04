@@ -16,28 +16,28 @@ const settingsStore = useSettingsStore()
 const updateTheme = () => {
   const settings = settingsStore.settings
 
-  theme.change(settings.darkMode ? "dark" : "light")
+  theme.change(settings.dark_mode ? "dark" : "light")
 
-  if (settings.primaryColor) {
-    theme.themes.value.light.colors.primary = settings.primaryColor
-    theme.themes.value.dark.colors.primary = settings.primaryColor
+  if (settings.primary_color) {
+    theme.themes.value.light.colors.primary = settings.primary_color
+    theme.themes.value.dark.colors.primary = settings.primary_color
   }
-  if (settings.secondaryColor) {
-    theme.themes.value.light.colors.secondary = settings.secondaryColor
-    theme.themes.value.dark.colors.secondary = settings.secondaryColor
+  if (settings.secondary_color) {
+    theme.themes.value.light.colors.secondary = settings.secondary_color
+    theme.themes.value.dark.colors.secondary = settings.secondary_color
   }
 
-  if (settings.fontsTitle) {
-    document.documentElement.style.setProperty('--font-title', settings.fontsTitle.font)
-    document.documentElement.style.setProperty('--font-size-title', settings.fontsTitle.size)
+  if (settings.fonts_title) {
+    document.documentElement.style.setProperty('--font-title', settings.fonts_title.font)
+    document.documentElement.style.setProperty('--font-size-title', settings.fonts_title.size)
   }
-  if (settings.fontsSubtitle) {
-    document.documentElement.style.setProperty('--font-subtitle', settings.fontsSubtitle.font)
-    document.documentElement.style.setProperty('--font-size-subtitle', settings.fontsSubtitle.size)
+  if (settings.fonts_subtitle) {
+    document.documentElement.style.setProperty('--font-subtitle', settings.fonts_subtitle.font)
+    document.documentElement.style.setProperty('--font-size-subtitle', settings.fonts_subtitle.size)
   }
-  if (settings.fontsText) {
-    document.documentElement.style.setProperty('--font-text', settings.fontsText.font)
-    document.documentElement.style.setProperty('--font-size-text', settings.fontsText.size)
+  if (settings.fonts_text) {
+    document.documentElement.style.setProperty('--font-text', settings.fonts_text.font)
+    document.documentElement.style.setProperty('--font-size-text', settings.fonts_text.size)
   }
 }
 

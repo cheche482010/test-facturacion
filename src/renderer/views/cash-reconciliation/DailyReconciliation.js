@@ -1,184 +1,158 @@
-import { ref, computed } from 'vue'
+import { defineComponent, ref, computed } from 'vue'
 import { useCashReconciliationStore } from '@/stores/cashReconciliation'
 import { useCurrencyStore } from '@/stores/currencyStore'
+import { useSettingsStore } from '@/stores/settingsStore'
 import { storeToRefs } from 'pinia'
 
-const componentLogic = {
+export default defineComponent({
   name: 'DailyReconciliation',
 
   setup() {
     const store = useCashReconciliationStore()
     const currencyStore = useCurrencyStore()
+    const settingsStore = useSettingsStore()
     const { todayReconciliation: reconciliation, dailyReport, isLoading, isReportLoading, error } = storeToRefs(store)
     const { exchangeRate } = storeToRefs(currencyStore)
     const todaysSales = ref([])
     const showInvoiceDialog = ref(false)
+    const openForm = ref({ openingBalanceBs: 0, openingBalanceUsd: 0, notes: '' })
+    const closeForm = ref({ closingBalanceBs: 0, closingBalanceUsd: 0, notes: '' })
+    const showReportDialog = ref(false)
+    const showAdminPasswordDialog = ref(false)
+    const showConfirmationDialog = ref(false)
+    const adminPassword = ref('')
+    const adminPasswordError = ref('')
+    const selectedSale = ref(null)
 
-    return {
-      reconciliation,
-      dailyReport,
-      isLoading,
-      isReportLoading,
-      error,
-      store,
-      todaysSales,
-      exchangeRate
-    }
-  },
-
-  data() {
-    return {
-      openForm: { openingBalanceBs: 0, openingBalanceUsd: 0, notes: '' },
-      closeForm: { closingBalanceBs: 0, closingBalanceUsd: 0, notes: '' },
-      showReportDialog: false,
-      showAdminPasswordDialog: false,
-      showConfirmationDialog: false,
-      adminPassword: '',
-      adminPasswordError: '',
-      showInvoiceDialog: false,
-      company: {
-        name: 'Mi Empresa',
-        rif: 'J-12345678-9',
-        address: 'Dirección de la empresa',
-        phone: '0212-1234567'
-      }
-    }
-  },
-
-  computed: {
-    expectedBalance() {
-      if (!this.reconciliation) return 0
-      const openingBalanceBs = parseFloat(this.reconciliation.openingBalanceBs || 0)
-      const openingBalanceUsd = parseFloat(this.reconciliation.openingBalanceUsd || 0)
-      const totalSales = parseFloat(this.reconciliation.totalSales || 0)
-      const exchangeRate = this.reconciliation.exchangeRate || 1
-      const openingBalanceTotalBs = openingBalanceBs + (openingBalanceUsd * exchangeRate)
+    const expectedBalance = computed(() => {
+      if (!reconciliation.value) return 0
+      const openingBalanceBs = parseFloat(reconciliation.value.openingBalanceBs || 0)
+      const openingBalanceUsd = parseFloat(reconciliation.value.openingBalanceUsd || 0)
+      const totalSales = parseFloat(reconciliation.value.totalSales || 0)
+      const exchangeRateValue = reconciliation.value.exchangeRate || 1
+      const openingBalanceTotalBs = openingBalanceBs + (openingBalanceUsd * exchangeRateValue)
       return openingBalanceTotalBs + totalSales
-    },
+    })
 
-    todaysSalesItems() {
-      return this.todaysSales.value || []
-    },
+    const todaysSalesItems = computed(() => todaysSales.value || [])
 
-    salesHeaders() {
-      return [
-        { title: 'Factura', key: 'saleNumber', sortable: true },
-        { title: 'Fecha', key: 'sale_date', sortable: true },
-        { title: 'Total BS', key: 'totalBs', sortable: true },
-        { title: 'Total USD', key: 'totalUsd', sortable: true },
-        { title: 'Acciones', key: 'actions', sortable: false }
-      ]
-    },
+    const salesHeaders = computed(() => [
+      { title: 'Factura', key: 'saleNumber', sortable: true },
+      { title: 'Fecha', key: 'sale_date', sortable: true },
+      { title: 'Total BS', key: 'totalBs', sortable: true },
+      { title: 'Total USD', key: 'totalUsd', sortable: true },
+      { title: 'Acciones', key: 'actions', sortable: false }
+    ])
 
-    productHeaders() {
-      return [
-        { title: 'Producto', key: 'product.name' },
-        { title: 'Cantidad', key: 'quantity' },
-        { title: 'Precio', key: 'unitPriceBs' },
-        { title: 'Subtotal', key: 'subtotalBs' }
-      ]
-    },
+    const productHeaders = computed(() => [
+      { title: 'Producto', key: 'product.name' },
+      { title: 'Cantidad', key: 'quantity' },
+      { title: 'Precio', key: 'unitPriceBs' },
+      { title: 'Subtotal', key: 'subtotalBs' }
+    ])
 
-    paymentHeaders() {
-      return [
-        { title: 'Método', key: 'paymentMethod.name' },
-        { title: 'Monto', key: 'amount' },
-        { title: 'Referencia', key: 'reference' },
-        { title: 'Notas', key: 'notes' }
-      ]
-    },
+    const paymentHeaders = computed(() => [
+      { title: 'Método', key: 'paymentMethod.name' },
+      { title: 'Monto', key: 'amount' },
+      { title: 'Referencia', key: 'reference' },
+      { title: 'Notas', key: 'notes' }
+    ])
 
-    totalQuantity() {
-      if (!this.selectedSale?.items) return 0
-      return this.selectedSale.items.reduce((sum, item) => sum + parseInt(item.quantity), 0)
-    },
+    const totalQuantity = computed(() => {
+      if (!selectedSale.value?.items) return 0
+      return selectedSale.value.items.reduce((sum, item) => sum + parseInt(item.quantity), 0)
+    })
 
-    totalPaid() {
-      if (!this.selectedSale?.payments) return 0
-      return this.selectedSale.payments.reduce((sum, payment) => sum + parseFloat(payment.amount), 0)
-    },
+    const totalPaid = computed(() => {
+      if (!selectedSale.value?.payments) return 0
+      return selectedSale.value.payments.reduce((sum, payment) => sum + parseFloat(payment.amount), 0)
+    })
 
-    changeAmount() {
-      if (!this.selectedSale) return 0
-      return Math.max(0, this.totalPaid - parseFloat(this.selectedSale.totalBs))
-    },
+    const changeAmount = computed(() => {
+      if (!selectedSale.value) return 0
+      return Math.max(0, totalPaid.value - parseFloat(selectedSale.value.totalBs))
+    })
 
-    changeCurrency() {
-      return 'VES'
-    }
-  },
+    const changeCurrency = computed(() => 'VES')
 
-  methods: {
-    formatCurrency(value, currency = 'VES') {
+    const company = computed(() => ({
+      name: settingsStore.settings.company_name || 'Mi Empresa',
+      rif: settingsStore.settings.company_rif || 'J-12345678-9',
+      address: settingsStore.settings.company_address || 'Dirección de la empresa',
+      phone: settingsStore.settings.company_phone || '+58 212 123 4567',
+      email: settingsStore.settings.company_email || 'info@empresa.com'
+    }))
+
+    const formatCurrency = (value, currency = 'VES') => {
       return new Intl.NumberFormat('es-VE', { style: 'currency', currency }).format(value || 0)
-    },
+    }
 
-    async handleOpenReconciliation() {
+    const handleOpenReconciliation = async () => {
       try {
-        await this.store.openReconciliation(this.openForm)
-        this.openForm = { openingBalanceBs: 0, openingBalanceUsd: 0, notes: '' }
+        await store.openReconciliation(openForm.value)
+        openForm.value = { openingBalanceBs: 0, openingBalanceUsd: 0, notes: '' }
       } catch (e) {
         console.error('Failed to open reconciliation:', e)
       }
-    },
+    }
 
-    async initiateClose() {
-      if (!this.reconciliation) return;
-      await this.store.fetchDailyReport(this.reconciliation.id);
-      if (this.store.dailyReport) {
-        this.showReportDialog = true;
+    const initiateClose = async () => {
+      if (!reconciliation.value) return
+      await store.fetchDailyReport(reconciliation.value.id)
+      if (store.dailyReport) {
+        showReportDialog.value = true
       }
-    },
+    }
 
-    async handleConfirmAndPrint() {
+    const handleConfirmAndPrint = async () => {
       const { useAuthStore } = await import('@/stores/auth')
       const authStore = useAuthStore()
 
       if (authStore.user.role === 'cajero') {
-        this.showReportDialog = false
-        this.showAdminPasswordDialog = true
+        showReportDialog.value = false
+        showAdminPasswordDialog.value = true
       } else {
-        this.showReportDialog = false
-        this.showConfirmationDialog = true
+        showReportDialog.value = false
+        showConfirmationDialog.value = true
       }
-    },
+    }
 
-    async confirmCloseWithAdminPassword() {
-      if (!this.adminPassword.trim()) {
-        this.adminPasswordError = 'La contraseña es requerida'
+    const confirmCloseWithAdminPassword = async () => {
+      if (!adminPassword.value.trim()) {
+        adminPasswordError.value = 'La contraseña es requerida'
         return
       }
 
-      this.adminPasswordError = ''
+      adminPasswordError.value = ''
 
       try {
         const closeData = {
-          ...this.closeForm,
-          adminPassword: this.adminPassword
+          ...closeForm.value,
+          adminPassword: adminPassword.value
         }
-        await this.store.closeReconciliation(closeData)
-        this.showAdminPasswordDialog = false
-        this.adminPassword = ''
-        this.closeForm = { closingBalanceBs: 0, closingBalanceUsd: 0, notes: '' }
+        await store.closeReconciliation(closeData)
+        showAdminPasswordDialog.value = false
+        adminPassword.value = ''
+        closeForm.value = { closingBalanceBs: 0, closingBalanceUsd: 0, notes: '' }
       } catch (e) {
         console.error('Failed to close reconciliation:', e)
-        this.adminPasswordError = e.message || 'Error al cerrar la caja'
+        adminPasswordError.value = e.message || 'Error al cerrar la caja'
       }
-    },
+    }
 
-    async confirmClose() {
+    const confirmClose = async () => {
       try {
-        await this.store.closeReconciliation(this.closeForm)
-        this.showConfirmationDialog = false
-        this.closeForm = { closingBalance: 0, notes: '' }
+        await store.closeReconciliation(closeForm.value)
+        showConfirmationDialog.value = false
+        closeForm.value = { closingBalance: 0, notes: '' }
       } catch (e) {
         console.error('Failed to close reconciliation:', e)
       }
-    },
+    }
 
-    printReport() {
-      const printContent = document.getElementById('printable-report').innerHTML;
-      const originalContent = document.body.innerHTML;
+    const printReport = () => {
+      const printContent = document.getElementById('printable-report').innerHTML
+      const originalContent = document.body.innerHTML
 
       document.body.innerHTML = `
         <html>
@@ -200,41 +174,41 @@ const componentLogic = {
             ${printContent}
           </body>
         </html>
-      `;
+      `
 
-      window.print();
-      document.body.innerHTML = originalContent;
-      window.location.reload(); 
-    },
+      window.print()
+      document.body.innerHTML = originalContent
+      window.location.reload()
+    }
 
-    async confirmAndPrint() {
-      if (!this.dailyReport) return;
-      this.printReport();
-      await this.confirmClose()
-    },
+    const confirmAndPrint = async () => {
+      if (!dailyReport.value) return
+      printReport()
+      await confirmClose()
+    }
 
-    async fetchTodaysSales() {
-      if (!this.reconciliation) return;
+    const fetchTodaysSales = async () => {
+      if (!reconciliation.value) return
       try {
         const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/sales/today`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
-        });
+        })
         if (response.ok) {
-          this.todaysSales.value = await response.json();
+          todaysSales.value = await response.json()
         }
       } catch (error) {
-        console.error('Error fetching today\'s sales:', error);
+        console.error('Error fetching today\'s sales:', error)
       }
-    },
+    }
 
-    viewInvoice(sale) {
-      this.selectedSale = sale;
-      this.showInvoiceDialog = true;
-    },
+    const viewInvoice = (sale) => {
+      selectedSale.value = sale
+      showInvoiceDialog.value = true
+    }
 
-    formatDate(date) {
+    const formatDate = (date) => {
       return new Date(date).toLocaleDateString('es-ES', {
         year: 'numeric',
         month: 'long',
@@ -242,9 +216,9 @@ const componentLogic = {
         hour: '2-digit',
         minute: '2-digit'
       })
-    },
+    }
 
-    getIconForMethod(name) {
+    const getIconForMethod = (name) => {
       const icons = {
         'Efectivo BS': 'mdi-cash',
         'Efectivo USD': 'mdi-cash-multiple',
@@ -254,11 +228,11 @@ const componentLogic = {
         'Crédito': 'mdi-credit-card'
       }
       return icons[name] || 'mdi-cash'
-    },
+    }
 
-    printInvoice() {
-      const printContent = document.getElementById('invoice-print').innerHTML;
-      const printWindow = window.open('', '_blank');
+    const printInvoice = () => {
+      const printContent = document.getElementById('invoice-print').innerHTML
+      const printWindow = window.open('', '_blank')
       printWindow.document.write(`
         <html>
           <head>
@@ -281,9 +255,51 @@ const componentLogic = {
             ${printContent}
           </body>
         </html>
-      `);
-      printWindow.document.close();
-      printWindow.print();
+      `)
+      printWindow.document.close()
+      printWindow.print()
+    }
+
+    return {
+      reconciliation,
+      dailyReport,
+      isLoading,
+      isReportLoading,
+      error,
+      store,
+      todaysSales,
+      exchangeRate,
+      openForm,
+      closeForm,
+      showReportDialog,
+      showAdminPasswordDialog,
+      showConfirmationDialog,
+      adminPassword,
+      adminPasswordError,
+      showInvoiceDialog,
+      selectedSale,
+      expectedBalance,
+      todaysSalesItems,
+      salesHeaders,
+      productHeaders,
+      paymentHeaders,
+      totalQuantity,
+      totalPaid,
+      changeAmount,
+      changeCurrency,
+      company,
+      formatCurrency,
+      handleOpenReconciliation,
+      initiateClose,
+      handleConfirmAndPrint,
+      confirmCloseWithAdminPassword,
+      confirmClose,
+      confirmAndPrint,
+      fetchTodaysSales,
+      viewInvoice,
+      formatDate,
+      getIconForMethod,
+      printInvoice
     }
   },
 
@@ -301,6 +317,4 @@ const componentLogic = {
       immediate: true
     }
   }
-}
-
-export default componentLogic
+})

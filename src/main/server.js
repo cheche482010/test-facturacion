@@ -14,6 +14,7 @@ const reportRoutes = require("./routes/reports")
 const usersRoutes = require("./routes/users")
 const currencyRoutes = require("./routes/currency")
 const cashReconciliationRoutes = require("./routes/cashReconciliation")
+const settingsRoutes = require("./routes/settings")
 
 const { initializeDatabase } = require("./database/connection")
 
@@ -37,6 +38,7 @@ app.use("/api/reports", reportRoutes)
 app.use("/api/users", usersRoutes)
 app.use("/api/currency", currencyRoutes)
 app.use("/api/cash-reconciliation", cashReconciliationRoutes)
+app.use("/api/settings", settingsRoutes)
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "OK", message: "Servidor funcionando correctamente" })

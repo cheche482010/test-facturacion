@@ -1,9 +1,44 @@
 const { ipcMain } = require("electron")
+const express = require('express')
+const router = express.Router()
 const settingsController = require("../controllers/settingsController")
+const Settings = require("../database/models/Settings")
 const DolarService = require("../services/dolarService")
+
+router.get('/', async (req, res) => {
+  try {
+    const settings = await Settings.findAll()
+    res.json(settings)
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
+router.get('/company', async (req, res) => {
+  try {
+    const settings = await Settings.findAll({ where: { category: 'company' } })
+    res.json(settings)
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
+router.post('/', async (req, res) => {
+  try {
+    const settingsData = req.body
+    for (const setting of settingsData) {
+      await Settings.upsert(setting)
+    }
+    res.json({ success: true })
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
 
 if (ipcMain && typeof ipcMain.handle === 'function') {
   ipcMain.handle("get-settings", settingsController.getSettings)
+  ipcMain.handle("get-company-settings", settingsController.getCompanySettings)
   ipcMain.handle("save-settings", settingsController.saveSettings)
 
   ipcMain.handle("get-current-dolar-rate", async () => {
@@ -51,3 +86,5 @@ if (ipcMain && typeof ipcMain.handle === 'function') {
     }
   })
 }
+
+module.exports = router
