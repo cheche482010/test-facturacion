@@ -39,9 +39,14 @@ export default {
 
       try {
         await this.authStore.login(this.credentials)
-        const redirectPath = this.authStore.user.role === 'cajero' ? '/sales/new' : '/dashboard'
-        this.$router.push(redirectPath)
+        if (this.authStore.user && this.authStore.user.role) {
+          const redirectPath = this.authStore.user.role === 'cajero' ? '/sales/new' : '/dashboard'
+          this.$router.push(redirectPath)
+        } else {
+          throw new Error('Error al obtener información del usuario')
+        }
       } catch (error) {
+        // Mostrar el mensaje de error que viene directamente del servidor
         this.error = error.message || 'Error al iniciar sesión'
       } finally {
         this.loading = false

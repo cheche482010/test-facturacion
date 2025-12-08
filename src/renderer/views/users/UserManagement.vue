@@ -135,11 +135,24 @@
 
         <template v-slot:item.actions="{ item }">
           <div class="user-management__actions">
-            <v-btn icon="mdi-pencil" size="small" variant="text" @click="openUserDialog(item)"></v-btn>
-            <v-btn :icon="item.status === 'active' ? 'mdi-account-off' : 'mdi-account-check'" size="small"
-              variant="text" :color="item.status === 'active' ? 'warning' : 'success'"
-              @click="toggleUserStatus(item)"></v-btn>
-            <v-btn icon="mdi-delete" size="small" variant="text" color="error" @click="confirmDelete(item)"></v-btn>
+            <v-tooltip text="Editar usuario">
+              <template v-slot:activator="{ props }">
+                <v-btn icon="mdi-pencil" size="small" variant="text" v-bind="props" @click="openUserDialog(item)"></v-btn>
+              </template>
+            </v-tooltip>
+            <v-tooltip :text="item.status === 'active' ? 'Desactivar usuario' : 'Activar usuario'">
+              <template v-slot:activator="{ props }">
+                <v-btn :icon="item.status === 'active' ? 'mdi-account-off' : 'mdi-account-check'" size="small"
+                  variant="text" :color="item.status === 'active' ? 'warning' : 'success'"
+                  v-bind="props" @click="confirmToggleUserStatus(item)"
+                  :disabled="isCurrentUser(item)"></v-btn>
+              </template>
+            </v-tooltip>
+            <v-tooltip text="Eliminar usuario">
+              <template v-slot:activator="{ props }">
+                <v-btn icon="mdi-delete" size="small" variant="text" color="error" v-bind="props" @click="confirmDelete(item)"></v-btn>
+              </template>
+            </v-tooltip>
           </div>
         </template>
       </v-data-table>
@@ -216,6 +229,25 @@
           <v-spacer />
           <v-btn @click="deleteDialog = false">Cancelar</v-btn>
           <v-btn color="error" @click="deleteUser">Eliminar</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Dialog de confirmación de cambio de status -->
+    <v-dialog v-model="statusDialog" max-width="400">
+      <v-card>
+        <v-card-title>Confirmar cambio de estado</v-card-title>
+        <v-card-text>
+          ¿Está seguro que desea {{ userToToggle?.isActive ? 'desactivar' : 'activar' }} el usuario "{{ userToToggle?.username }}"?
+          <br><br>
+          {{ userToToggle?.isActive ? 'El usuario no podrá acceder al sistema.' : 'El usuario podrá acceder al sistema nuevamente.' }}
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn @click="statusDialog = false">Cancelar</v-btn>
+          <v-btn :color="userToToggle?.isActive ? 'warning' : 'success'" @click="toggleUserStatus">
+            {{ userToToggle?.isActive ? 'Desactivar' : 'Activar' }}
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

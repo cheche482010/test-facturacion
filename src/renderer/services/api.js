@@ -22,22 +22,36 @@ async function request(url, options = {}) {
     headers,
   })
 
-  if (!response.ok) {
+  const contentType = response.headers.get("content-type")
+  let responseData = null
 
+  if (contentType && contentType.includes("application/json")) {
+    responseData = await response.json()
+  }
+
+  // Si la respuesta tiene un campo error, es un error aunque el status sea 200
+  if (responseData && responseData.error) {
+    throw new Error(responseData.error)
+  }
+
+  // Si el status no es ok, es un error
+  if (!response.ok) {
     if (response.status === 401 && authStore.token) {
       authStore.logout()
     }
 
-    const errorData = await response.json().catch(() => ({}))
-    throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`)
+    let errorMessage = `Error ${response.status}: ${response.statusText}`
+
+    // Intentar usar el mensaje del servidor si existe
+    if (responseData && (responseData.message || responseData.error)) {
+      errorMessage = responseData.message || responseData.error
+    }
+
+    throw new Error(errorMessage)
   }
 
-  const contentType = response.headers.get("content-type")
-  if (contentType && contentType.includes("application/json")) {
-    return response.json()
-  }
-
-  return response 
+  // Si no hay error, devolver los datos o la respuesta
+  return responseData || response
 }
 
 export default {

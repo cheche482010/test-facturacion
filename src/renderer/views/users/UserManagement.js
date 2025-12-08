@@ -10,9 +10,11 @@ export default {
       saving: false,
       userDialog: false,
       deleteDialog: false,
+      statusDialog: false,
       userFormValid: false,
       editingUser: null,
       userToDelete: null,
+      userToToggle: null,
       selectedRole: null,
       selectedStatus: null,
       userForm: {
@@ -116,7 +118,8 @@ export default {
       try {
         await this.usersStore.fetchUsers()
       } catch (error) {
-        this.$toast.error('Error al cargar usuarios')
+        console.error('Error al cargar usuarios:', error)
+        alert('Error al cargar usuarios')
       } finally {
         this.loading = false
       }
@@ -162,11 +165,12 @@ export default {
     async deleteUser() {
       try {
         await this.usersStore.deleteUser(this.userToDelete.id)
-        this.$toast.success('Usuario eliminado exitosamente')
+        alert('Usuario eliminado exitosamente')
         this.deleteDialog = false
         this.userToDelete = null
       } catch (error) {
-        this.$toast.error('Error al eliminar usuario')
+        console.error('Error al eliminar usuario:', error)
+        alert('Error al eliminar usuario')
       }
     },
 
@@ -194,26 +198,40 @@ export default {
       try {
         if (this.editingUser) {
           await this.usersStore.updateUser(this.editingUser.id, this.userForm)
-          this.$toast.success('Usuario actualizado')
+          alert('Usuario actualizado')
         } else {
           await this.usersStore.createUser(this.userForm)
-          this.$toast.success('Usuario creado')
+          alert('Usuario creado')
         }
         this.closeUserDialog()
       } catch (error) {
-        this.$toast.error(error.message || 'Error al guardar usuario')
+        console.error('Error al guardar usuario:', error)
+        alert(error.message || 'Error al guardar usuario')
       } finally {
         this.saving = false
       }
     },
 
-    async toggleUserStatus(user) {
+    confirmToggleUserStatus(user) {
+      if (this.isCurrentUser(user)) {
+        alert('No puedes desactivar tu propio usuario')
+        return
+      }
+      this.userToToggle = user
+      this.statusDialog = true
+    },
+
+    async toggleUserStatus() {
+      const user = this.userToToggle
       try {
         const newStatus = user.isActive ? false : true
         await this.usersStore.updateUser(user.id, { isActive: newStatus })
-        this.$toast.success(`Usuario ${newStatus ? 'activado' : 'desactivado'}`)
+        alert(`Usuario ${newStatus ? 'activado' : 'desactivado'}`)
+        this.statusDialog = false
+        this.userToToggle = null
       } catch (error) {
-        this.$toast.error('Error al cambiar estado del usuario')
+        console.error('Error al cambiar estado del usuario:', error)
+        alert('Error al cambiar estado del usuario')
       }
     },
 
@@ -233,6 +251,10 @@ export default {
         dev: 'Dev'
       }
       return labels[role] || role
+    },
+
+    isCurrentUser(user) {
+      return this.authStore.user && this.authStore.user.id === user.id
     }
   }
 }

@@ -17,12 +17,12 @@ const authController = {
       })
 
       if (!user) {
-        return res.status(401).json({ error: "Usuario no encontrado" })
+        return res.status(200).json({ error: "Usuario no encontrado" })
       }
 
       const isValidPassword = await user.validatePassword(password)
       if (!isValidPassword) {
-        return res.status(401).json({ error: "Contraseña incorrecta" })
+        return res.status(200).json({ error: "Contraseña incorrecta" })
       }
 
       await user.update({ lastLogin: new Date() })
