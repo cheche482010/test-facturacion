@@ -60,7 +60,7 @@
             <!-- Info -->
             <v-col cols="12" md="4">
               <v-card variant="tonal">
-                <v-list-item :title="reconciliation.user.username" subtitle="Abierta por"></v-list-item>
+                <v-list-item :title="reconciliation.user?.username || 'Usuario desconocido'" subtitle="Abierta por"></v-list-item>
                 <v-list-item :title="formatCurrency(reconciliation.openingBalanceBs, 'VES')" subtitle="Saldo Inicial BS"></v-list-item>
                 <v-list-item :title="formatCurrency(reconciliation.openingBalanceUsd, 'USD')" subtitle="Saldo Inicial USD"></v-list-item>
               </v-card>
@@ -359,7 +359,7 @@
                         <div class="report-info mb-4">
                             <v-row>
                                 <v-col cols="6">
-                                    <strong>Usuario:</strong> {{ dailyReport.reconciliation.user.username }}
+                                    <strong>Usuario:</strong> {{ dailyReport.reconciliation.user?.username || 'Usuario desconocido' }}
                                 </v-col>
                                 <v-col cols="6">
                                     <strong>Fecha de Apertura:</strong> {{ new Date(dailyReport.reconciliation.openingDate).toLocaleString() }}
