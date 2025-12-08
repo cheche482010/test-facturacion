@@ -150,5 +150,3 @@ import cashCountLogic from './CashCount.js'
 
 export default cashCountLogic
 </script>
-
-<style scoped src="./CashCount.scss"></style>

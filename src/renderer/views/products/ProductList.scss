@@ -1,21 +1,23 @@
 
+@use 'src/renderer/assets/styles/variables' as *;
+
 .product-list {
   &__filters {
-    background-color: #f8f9fa;
-    border-radius: 8px;
-    padding: 1rem;
-    margin-bottom: 1rem;
+    background-color: $background-dark;
+    border-radius: $border-radius-card;
+    padding: $margin-base;
+    margin-bottom: $margin-base;
   }
 
   &__table {
     .v-data-table__wrapper {
-      border-radius: 8px;
+      border-radius: $border-radius-card;
       overflow: hidden;
     }
   }
 
   &__product-image {
-    border-radius: 4px;
+    border-radius: $border-radius-base;
     object-fit: cover;
   }
 

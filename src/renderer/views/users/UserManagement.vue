@@ -189,12 +189,12 @@
               </v-col>
 
               <v-col cols="12" md="6">
-                <v-select v-model="userForm.role" :items="roleOptions" :rules="roleRules" label="Rol" required
+                <v-select v-model="userForm.role" :items="roleOptions" item-title="text" item-value="value" :rules="roleRules" label="Rol" required
                   variant="outlined" density="compact"></v-select>
               </v-col>
 
               <v-col cols="12" md="6">
-                <v-select v-model="userForm.isActive" :items="statusOptions" label="Estado" required variant="outlined"
+                <v-select v-model="userForm.isActive" :items="statusOptions" item-title="text" item-value="value" label="Estado" required variant="outlined"
                   density="compact"></v-select>
               </v-col>
 

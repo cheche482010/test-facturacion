@@ -1,9 +1,86 @@
-// _mixins.scss
+@use 'src/renderer/assets/styles/variables' as *;
 
-// Este archivo puede contener mixins de SCSS reutilizables.
-// Ejemplo:
-// @mixin flex-center {
-//   display: flex;
-//   justify-content: center;
-//   align-items: center;
-// }
+@mixin table-base {
+  width: 100%;
+  border-collapse: collapse;
+
+  th, td {
+    padding: $padding-base $padding-large;
+    border: 1px solid $border-color;
+    font-size: $font-size-small;
+  }
+
+  th {
+    background-color: $background-light;
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.87);
+  }
+}
+
+// Gradiente de fondo
+@mixin gradient-bg($start, $end) {
+  background: linear-gradient(135deg, $start, $end);
+}
+
+// Scrollbar personalizado
+@mixin scrollbar {
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: $border-radius-base;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: $border-radius-base;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+}
+
+// Estilos para tarjetas con hover
+@mixin card-hover {
+  transition: transform 0.2s ease-in-out;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+}
+
+// Flex center
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+// Estilos para botones de cantidad
+@mixin quantity-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+
+  .quantity-value {
+    min-width: 30px;
+    text-align: center;
+    font-weight: 500;
+    color: $primary-color;
+    font-size: 0.9rem;
+  }
+
+  .v-btn {
+    min-width: 24px;
+    width: 24px;
+    height: 24px;
+
+    .v-btn__content {
+      font-size: 14px;
+    }
+  }
+}

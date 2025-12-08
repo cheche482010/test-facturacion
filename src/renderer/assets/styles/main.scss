@@ -1,24 +1,31 @@
-@use 'variables';
-@use 'mixins';
-
+@use 'src/renderer/assets/styles/variables' as *;
+@use 'src/renderer/assets/styles/mixins';
 
 body {
-  font-family: var(--font-text, variables.$font-family-sans-serif);
+  font-family: var(--font-text, $font-family-sans-serif);
   font-size: var(--font-size-text, 14px);
 }
 
-.text-h1, .text-h2, .text-h3, .text-h4, .text-h5, .text-h6 {
-  font-family: var(--font-title, variables.$font-family-sans-serif) !important;
+.text-h1,
+.text-h2,
+.text-h3,
+.text-h4,
+.text-h5,
+.text-h6 {
+  font-family: var(--font-title, $font-family-sans-serif) !important;
   font-size: var(--font-size-title, inherit) !important;
 }
 
-.text-subtitle-1, .text-subtitle-2 {
-  font-family: var(--font-subtitle, variables.$font-family-sans-serif) !important;
+.text-subtitle-1,
+.text-subtitle-2 {
+  font-family: var(--font-subtitle, $font-family-sans-serif) !important;
   font-size: var(--font-size-subtitle, inherit) !important;
 }
 
-.text-body-1, .text-body-2, p {
-  font-family: var(--font-text, variables.$font-family-sans-serif) !important;
+.text-body-1,
+.text-body-2,
+p {
+  font-family: var(--font-text, $font-family-sans-serif) !important;
   font-size: var(--font-size-text, inherit) !important;
 }
 
@@ -29,4 +36,16 @@ body {
 
 .v-btn--variant-text.secondary {
   color: var(--v-theme-secondary) !important;
+}
+
+.v-btn {
+  margin-top: 10px;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-center {
+  text-align: center;
 }

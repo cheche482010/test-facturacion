@@ -1,15 +1,14 @@
+@use 'src/renderer/assets/styles/variables' as *;
+@use 'src/renderer/assets/styles/mixins';
+
 .dashboard {
   &__header {
-    margin-bottom: 1rem;
+    margin-bottom: $margin-base;
   }
 
   &__summary-cards {
     .v-card {
-      transition: transform 0.2s ease-in-out;
-
-      &:hover {
-        transform: translateY(-2px);
-      }
+      @include mixins.card-hover;
     }
   }
 

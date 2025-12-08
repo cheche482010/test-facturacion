@@ -1,5 +1,8 @@
+@use 'src/renderer/assets/styles/variables' as *;
+@use 'src/renderer/assets/styles/mixins';
+
 .printable-report {
-    font-family: 'Courier New', monospace;
+    font-family: $font-family-mono;
     line-height: 1.4;
 }
 
@@ -15,22 +18,21 @@
 }
 
 .sales-table {
-    width: 100%;
-    border-collapse: collapse;
+    @include mixins.table-base;
     margin-top: 10px;
     font-size: 0.9em;
-}
 
-.sales-table th,
-.sales-table td {
-    border: 1px solid #ddd;
-    padding: 6px;
-    text-align: left;
-}
+    th,
+    td {
+        border: 1px solid $border-light;
+        padding: 6px;
+        text-align: left;
+    }
 
-.sales-table th {
-    background-color: #f5f5f5;
-    font-weight: bold;
+    th {
+        background-color: $background-light;
+        font-weight: bold;
+    }
 }
 
 @media print {

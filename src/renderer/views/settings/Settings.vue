@@ -198,4 +198,3 @@ import settingsLogic from './Settings.js'
 
 export default settingsLogic
 </script>
-<style src="./Settings.scss" scoped></style>
