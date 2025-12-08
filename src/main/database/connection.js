@@ -54,8 +54,6 @@ const initializeDatabase = async () => {
     await sequelize.sync({ alter: true })
     console.log("Modelos sincronizados correctamente.")
 
-    const { runAllSeeders } = require("./seeders/index")
-    await runAllSeeders()
   } catch (error) {
     console.error("Error al conectar con la base de datos:", error)
     throw error

@@ -25,7 +25,9 @@
     "db:seed:cash-reconciliations": "node src/main/database/seeders/cashReconciliationSeeder.js",
     "db:reset": "node src/main/database/reset.js",
     "db:create": "node src/main/database/create.js",
-    "db:verify": "node src/main/database/verify.js"
+    "db:verify": "node src/main/database/verify.js",
+    "install:full": "npm run db:create && npm run db:migrate && npm run db:seed && npm run db:verify",
+    "dev:install": "npm run install:full && npm run dev"
   },
   "build": {
     "appId": "com.facturacion.app",

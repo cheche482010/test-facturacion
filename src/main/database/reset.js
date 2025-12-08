@@ -9,8 +9,8 @@ async function resetDatabase() {
     console.log("Base de datos reseteada correctamente.")
 
     console.log("Ejecutando seeders...")
-    const { seedDefaultData } = require("./seeders/defaultData")
-    await seedDefaultData()
+    const { runAllSeeders } = require("./seeders/index")
+    await runAllSeeders()
     console.log("Datos iniciales creados correctamente.")
 
     console.log("Base de datos reseteada exitosamente!")

@@ -236,23 +236,29 @@ NODE_ENV=development
 # DB_PASSWORD=tu_password
 ```
 
-### 4. Instalar el Sistema (Opción Recomendada)
+### 4. Instalar el Sistema
+
+Tienes dos opciones para instalar el sistema:
+
+#### Opción A: Instalación Completa Automática (Recomendada)
 
 Esta opción instala todo el sistema desde cero automáticamente:
 
 ```bash
-# Instalar completamente desde cero
+# Instalar completamente desde cero (borra BD existente)
 npm run db:reset
+
+# O instalar sin borrar datos existentes (solo si BD no existe)
+npm run install:full
 ```
 
-Este comando:
-- Borra la base de datos existente
-- Crea una nueva base de datos
-- Ejecuta todas las migraciones
-- Inserta datos de prueba
-- Verifica la instalación
+Estos comandos:
+- Crean la base de datos (si no existe)
+- Ejecutan todas las migraciones
+- Insertan datos de prueba
+- Verifican la instalación
 
-### 5. Instalación Paso a Paso (Opcional)
+#### Opción B: Instalación Paso a Paso (Manual)
 
 Si prefieres controlar cada paso:
 
@@ -276,7 +282,11 @@ npm run db:verify
 
 ```bash
 # Modo desarrollo (recomendado para desarrollo)
+# Inicia Vue.js + Electron sin ejecutar seeders automáticamente
 npm run dev
+
+# Instalación completa + inicio automático
+npm run dev:install
 
 # Modo producción
 npm run build
@@ -317,7 +327,9 @@ Después de la instalación, puedes acceder con estos usuarios:
 
 ### Desarrollo
 ```bash
-npm run dev              # Inicia modo desarrollo (Vue + Electron)
+npm run dev              # Inicia modo desarrollo (Vue + Electron, sin seeders)
+npm run dev:install      # Instalación completa + inicio automático
+npm run install:full     # Solo instalación completa (sin iniciar)
 npm run dev:vue          # Solo servidor de desarrollo Vue
 npm run dev:electron     # Solo proceso Electron
 npm run preview          # Vista previa de producción
@@ -403,6 +415,9 @@ netstat -an | grep :3001
 ```bash
 # Reset completo de base de datos
 npm run db:reset
+
+# Instalación completa sin reset
+npm run install:full
 
 # Ejecutar seeders individuales si es necesario
 npm run db:seed:users
