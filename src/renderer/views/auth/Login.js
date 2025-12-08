@@ -46,7 +46,6 @@ export default {
           throw new Error('Error al obtener información del usuario')
         }
       } catch (error) {
-        // Mostrar el mensaje de error que viene directamente del servidor
         this.error = error.message || 'Error al iniciar sesión'
       } finally {
         this.loading = false

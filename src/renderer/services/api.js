@@ -29,12 +29,10 @@ async function request(url, options = {}) {
     responseData = await response.json()
   }
 
-  // Si la respuesta tiene un campo error, es un error aunque el status sea 200
   if (responseData && responseData.error) {
     throw new Error(responseData.error)
   }
 
-  // Si el status no es ok, es un error
   if (!response.ok) {
     if (response.status === 401 && authStore.token) {
       authStore.logout()
@@ -42,7 +40,6 @@ async function request(url, options = {}) {
 
     let errorMessage = `Error ${response.status}: ${response.statusText}`
 
-    // Intentar usar el mensaje del servidor si existe
     if (responseData && (responseData.message || responseData.error)) {
       errorMessage = responseData.message || responseData.error
     }
@@ -50,7 +47,6 @@ async function request(url, options = {}) {
     throw new Error(errorMessage)
   }
 
-  // Si no hay error, devolver los datos o la respuesta
   return responseData || response
 }
 

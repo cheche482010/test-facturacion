@@ -408,7 +408,7 @@ const salesController = {
       if (format === "pdf") {
         res.status(501).json({ error: "Generación de PDF no implementada aún" })
       } else {
-        // Obtener datos de la empresa desde settings
+        
         const companySettings = await Settings.findAll({
           where: { category: 'company' }
         })

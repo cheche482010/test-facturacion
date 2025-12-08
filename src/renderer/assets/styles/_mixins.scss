@@ -17,12 +17,10 @@
   }
 }
 
-// Gradiente de fondo
 @mixin gradient-bg($start, $end) {
   background: linear-gradient(135deg, $start, $end);
 }
 
-// Scrollbar personalizado
 @mixin scrollbar {
   &::-webkit-scrollbar {
     width: 8px;
@@ -43,7 +41,6 @@
   }
 }
 
-// Estilos para tarjetas con hover
 @mixin card-hover {
   transition: transform 0.2s ease-in-out;
 
@@ -52,14 +49,12 @@
   }
 }
 
-// Flex center
 @mixin flex-center {
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-// Estilos para botones de cantidad
 @mixin quantity-control {
   display: flex;
   align-items: center;
