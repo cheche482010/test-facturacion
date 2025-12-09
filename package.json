@@ -10,6 +10,7 @@
     "build": "npm run build:vue && electron-builder",
     "build:vue": "vite build",
     "build:electron": "electron-builder",
+    "build:win": "npm run build:vue && electron-builder --win",
     "start": "electron dist/win-unpacked/resources/app",
     "preview": "vite preview",
     "db:migrate": "node src/main/database/migrate.js",
@@ -41,7 +42,7 @@
       "node_modules/**/*"
     ],
     "win": {
-      "target": "dir",
+      "target": "nsis",
       "icon": "assets/icon.ico"
     },
     "linux": {
